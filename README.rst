@@ -27,6 +27,15 @@ All the requests to BigML.io must be authenticated using your username
 and `API key <https://bigml.com/account/apikey>`_. and are always
 transmitted over HTTPS.
 
+This module will look for your username and API key in the environment variables BIGML_USERNAME and BIGML_API_KEY respectively. 
+You can add the following lines to your .bashrc or .bash_profile to set those variables automatically when you log in::
+
+    export BIGML_USERNAME=myusername
+    export BIGML_API_KEY=a11e579e7e53fb9abd646a6ff8aa99d4afe83ac2
+
+With that environment set up, connecting to BigML is a breeze::
+
+   $api = new BigML();
 
 You can initialize directly when instantiating the BigML
 class as follows::
