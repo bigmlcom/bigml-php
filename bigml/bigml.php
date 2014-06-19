@@ -68,7 +68,16 @@
 		 * @param string $domain
 		 * @return void
 		*/
-		public function __construct($username = null, $apiKey = null, $devMode = false, $storage=null, $domain = null, $locale=null, $version="andromeda") {
+		public function __construct($username=null, $apiKey=null, $devMode = false, $storage=null, $domain = null, $locale=null, $version="andromeda") {
+			
+			if ($username == null) {
+				$username = getenv("BIGML_USERNAME");
+			}
+
+			if ($apiKey == null) {
+				$apiKey = getenv("BIGML_API_KEY");
+			}
+
 			if ($username !== null && $apiKey !== null)
 				self::setAuth($username, $apiKey);
 
