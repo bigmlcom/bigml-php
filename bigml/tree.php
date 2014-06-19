@@ -394,11 +394,13 @@
 
 		}
 
-		public function rules($out, $ids_path=null, $subtree=true) {
+		/*public function rules($out, $ids_path=null, $subtree=true) {
 			/*
 				Prints out an IF-THEN rule version of the tree.
-			*/
-			# TODO	
+			*
+			foreach($this->sort_fields($this->fields) as $key => $field) {
+				print_r($this->fields->{$field[0]}->name);
+			}
 		}
 
 		/*private slugify($name, $reserved_keywords=null, $prefix='') {
@@ -419,13 +421,50 @@
 
 			return $name;
 		}
-
-		private sort_fields($fields) {
+*/
+		private function sort_fields($fields) {
 			/*
 				Sort fields by their column_number but put children after parents.
-            *
-			# TODO
-		}*/
-	
+			*/
+			$fathers = array();
+			$children = array();
+
+			$new_array_childs = array();
+			$new_array_fathers = array();
+
+			foreach($this->fields as $key => $value) {
+
+				if (property_exists($value, "auto_generated") ) {
+					$new_array_childs[$key] = $value->column_number;
+				} else {
+					$new_array_fathers[$key] = $value->column_number;
+				} 
+			}
+			 
+			arsort($new_array_childs);
+			asort($new_array_fathers);
+			
+			$fathers_keys = array(); 
+
+			foreach($new_array_childs as $key => $value) {
+				array_push($children, array($key, $fields->{$key}));
+			}
+
+			foreach($new_array_fathers as $key => $value) {
+				array_push($fathers, array($key, $fields->{$key}));	
+				array_push($fathers_keys, $key);
+			}
+
+			foreach($children as $child => $value) {
+			    $index = array_search($value[1]->parent_ids[0], $fathers_keys);
+				if ($index >=0) {
+					$fathers = array_slice($fathers, 0, $index, true) + array(array($value, $child)) + array_slice($fathers, $index+1, count($fathers), true);
+				} else {
+					array_push($fathers, array($value, $child));
+				}
+			}
+			
+			return $fathers;
+		}
 	}
 ?>

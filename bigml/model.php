@@ -165,6 +165,19 @@
 			}
 		}
 
+		/*function rules($out=STDOUT, $filter_id=null, $subtree=true)
+	    {
+			/*
+				Returns a IF-THEN rule set that implements the model.
+				`out` is file descriptor to write the rules.
+			*		
+			#$ids_path = $this->get_ids_path($filter_id);
+			#TODO
+			#$ids_path = null;
+			#return self::$tree->rules($out, $ids_path, $subtree);
+
+		}*/
+
 	}
 
 ?>
