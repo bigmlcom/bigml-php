@@ -24,7 +24,7 @@ Authentication
 --------------
 
 All the requests to BigML.io must be authenticated using your username
-and `API key <https://bigml.com/account/apikey>`_ and are always
+and `API key <https://bigml.com/account/apikey>`_. and are always
 transmitted over HTTPS.
 
 
@@ -208,7 +208,7 @@ Creating datasets
 -----------------
 
 Once you have created a source, you can create a dataset. The only required argument to create a dataset is a source id. 
-You can add all the additional arguments accepted by BigML and documented in `the Datasets section of the Developer’s documentation<https://bigml.com/developers/datasets>`_.
+You can add all the additional arguments accepted by BigML and documented in `the Datasets section of the Developer’s documentation <https://bigml.com/developers/datasets>`_.
 
 For example, to create a dataset named “my dataset” with the first 1024 bytes of a source, you can submit the following request::
 
@@ -239,7 +239,7 @@ Creating models
 Once you have created a dataset you can create a model from it. 
 If you don’t select one, the model will use the last field of the dataset as objective field. 
 The only required argument to create a model is a dataset id. 
-You can also include in the request all the additional arguments accepted by BigML and documented in `the Models section of the Developer’s documentation<https://bigml.com/developers/models>`_.
+You can also include in the request all the additional arguments accepted by BigML and documented in `the Models section of the Developer’s documentation <https://bigml.com/developers/models>`_.
 
 For example, to create a model only including the first two fields and the first 10 instances in the dataset, you can use the following invocation::
 
@@ -254,7 +254,7 @@ Creating clusters
 If your dataset has no fields showing the objective information to predict for the training data, 
 you can still build a cluster that will group similar data around some automatically chosen points (centroids). 
 Again, the only required argument to create a cluster is the dataset id. 
-You can also include in the request all the additional arguments accepted by BigML and documented in `the Clusters section of the Developer’s documentation<https://bigml.com/developers/clusters>`_.
+You can also include in the request all the additional arguments accepted by BigML and documented in `the Clusters section of the Developer’s documentation <https://bigml.com/developers/clusters>`_.
 
 Let’s create a cluster from a given dataset::
 
@@ -299,7 +299,7 @@ Creating evaluations
 Once you have created a model, you can measure its perfomance by running a dataset of test data through it 
 and comparing its predictions to the objective field real values. 
 Thus, the required arguments to create an evaluation are model id and a dataset id. 
-You can also include in the request all the additional arguments accepted by BigML and documented in `the Evaluations section of the Developer’s documentation<https://bigml.com/developers/evaluations>`_.
+You can also include in the request all the additional arguments accepted by BigML and documented in `the Evaluations section of the Developer’s documentation <https://bigml.com/developers/evaluations>`_.
 
 For instance, to evaluate a previously created model using at most 10000 rows from an existing dataset you can use the following call::
     
@@ -401,7 +401,7 @@ you will receive a dictionary with the following keys:
 Filtering Resources
 -------------------
 
-You can filter resources in listings using the syntax and fields labeled as filterable in the `BigML documentation<https://bigml.com/developers>`-. for each resource.
+You can filter resources in listings using the syntax and fields labeled as filterable in the `BigML documentation <https://bigml.com/developers>`_. for each resource.
 
 A few examples:
 
@@ -424,7 +424,7 @@ A few examples:
 Ordering Resources
 ------------------
 
-You can order resources in listings using the syntax and fields labeled as sortable in the `BigML documentation<https://bigml.com/developers>`-. for each resource.
+You can order resources in listings using the syntax and fields labeled as sortable in the `BigML documentation <https://bigml.com/developers>`_. for each resource.
 
 A few examples:
 
@@ -467,7 +467,7 @@ BigML will assign a numeric type to the field, but you might want it to be used 
     $api::update_source($source, array("fields"=> array("000001"=> array("optype"=> "categorical"))));
 
 where 000001 is the field id that corresponds to the updated field. 
-You will find detailed information about the updatable attributes of each resource in `BigML developer’s documentation<https://bigml.com/developers>`-.
+You will find detailed information about the updatable attributes of each resource in `BigML developer’s documentation <https://bigml.com/developers>`_.
 
 Deleting Resources
 ------------------
