@@ -1,6 +1,6 @@
 BigML Php Bindings
 =====================
-In this repository you'll find an open source Php client that gives you a simple binding to interact with `BigML <https://bigml.com>`
+In this repository you'll find an open source Php client that gives you a simple binding to interact with `BigML <https://bigml.com>`_.
 
 This module is licensed under the `Apache License, Version
 2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>`_.
