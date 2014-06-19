@@ -503,7 +503,7 @@ If you want to use a specfic connection object for the remote retrieval, you can
 
     $api = new BigML("username", "api_key", false, 'storage');
 
-    $model = api.get_model('model/538XXXXXXXXXXXXXXXXXXX2');
+    $model = api::get_model('model/538XXXXXXXXXXXXXXXXXXX2');
     $local_model = new Model(model);
    
 or::
