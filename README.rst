@@ -1,6 +1,6 @@
-BigML Php Bindings
+BigML PHP Bindings
 =====================
-In this repository you'll find an open source Php client that gives you a simple binding to interact with `BigML <https://bigml.com>`_.
+In this repository you'll find an open source PHP client that gives you a simple binding to interact with `BigML <https://bigml.com>`_.
 
 This module is licensed under the `Apache License, Version
 2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>`_.
@@ -12,7 +12,7 @@ To import the module::
 
     include 'bigml.php';
 
-Autoload Class in Php 5::
+Autoload Class in PHP 5::
 
     function __autoload($class_name) {
         if (!class_exists($class_name, false)){
