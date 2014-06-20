@@ -14,202 +14,202 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-	/*
-		A BasicModel resource.
-		This module defines a BasicModel to hold the main information of the model
-		resource in BigML. It becomes the starting point for the Model class, that
-		is used for local predictions.
-	*/
+/*
+   A BasicModel resource.
+   This module defines a BasicModel to hold the main information of the model
+   resource in BigML. It becomes the starting point for the Model class, that
+   is used for local predictions.
+*/
 
-	function strip_affixes($value, $field) 
-	{
-		/*
-			Strips prefixes and suffixes if present
-		*/
-		if (!mb_check_encoding($value,"UTF-8")) {
-			$value = mb_convert_encoding($value, "UTF-8");
-		}
+function strip_affixes($value, $field) 
+{
+   /*
+      Strips prefixes and suffixes if present
+   */
+   if (!mb_check_encoding($value,"UTF-8")) {
+      $value = mb_convert_encoding($value, "UTF-8");
+   }
 
-		if (array_key_exists('prefix', $field) && substr( $field->prefix, 0, 6 ) === "prefix") {
-			$value=substr($value, 6);
-		}
+   if (array_key_exists('prefix', $field) && substr( $field->prefix, 0, 6 ) === "prefix") {
+      $value=substr($value, 6);
+   }
 
-		if (array_key_exists('suffix', $field) && substr( $field->suffix, 0, 6 ) === "suffix") {
-			$value=substr($value, 6);
-		}
+   if (array_key_exists('suffix', $field) && substr( $field->suffix, 0, 6 ) === "suffix") {
+      $value=substr($value, 6);
+   }
 
-		return $value;
+   return $value;
 
-	}
+}
 
-	function cast($input_data, $fields) {
-		/*
-			Checks expected type in input data values, strips affixes and casts
-		*/
-		foreach($input_data as $key => $value) {
-			if ( ($fields->{$key}->optype == 'numeric' && is_string($value)) || 
-				 ($fields->{$key}->optype != 'numeric' && !is_string($value))) {
+function cast($input_data, $fields) {
+   /*
+      Checks expected type in input data values, strips affixes and casts
+   */
+   foreach($input_data as $key => $value) {
+      if ( ($fields->{$key}->optype == 'numeric' && is_string($value)) || 
+          ($fields->{$key}->optype != 'numeric' && !is_string($value))) {
 
-				if ($fields->{$key}->optype == 'numeric') {
-					$value = strip_affixes($value, $fields->{$key});
-					$input_data[$key] = intval($value); 
-				} else {
-					$input_data[$key] = strval($value);
-				}
-			}
-		}
+         if ($fields->{$key}->optype == 'numeric') {
+            $value = strip_affixes($value, $fields->{$key});
+            $input_data[$key] = intval($value); 
+         } else {
+            $input_data[$key] = strval($value);
+         }
+      }
+   }
 
-		return $input_data;
-	}
+   return $input_data;
+}
 
-	function extract_objective($objective_field) {
-        /*
-            Extract the objective field id from the model structure
-        */
-        if (is_array($objective_field) ) {
-            return $objective_field[0];
-        }
-        return $objective_field;
+function extract_objective($objective_field) {
+     /*
+         Extract the objective field id from the model structure
+     */
+     if (is_array($objective_field) ) {
+         return $objective_field[0];
+     }
+     return $objective_field;
 
-    }
+ }
 
-    function check_model_structure($model) {
-            /*
-                Checks the model structure to see if it contains all the needed keys
-            */
-            return ($model instanceof STDClass &&
-                     property_exists($model, "resource") &&
-                     $model->resource != null &&
-                    ((property_exists($model, "object") && property_exists($model->object, "model")) ||
-                      property_exists($model, "model")));
-   
-    }
-	
-	function invert_dictionary($dictionary, $field='name') {
-        /*Inverts a dictionary.
+function check_model_structure($model) {
+     /*
+       Checks the model structure to see if it contains all the needed keys
+     */
+     return ($model instanceof STDClass &&
+             property_exists($model, "resource") &&
+             $model->resource != null &&
+             ((property_exists($model, "object") && property_exists($model->object, "model")) ||
+             property_exists($model, "model")));
+
+}
+
+function invert_dictionary($dictionary, $field='name') {
+     /*Inverts a dictionary.
   
-            Useful to make predictions using fields' names instead of Ids.
-            It does not check whether new keys are duplicated though.
-        **/
-        $new_dictionary = null;
-        foreach((array_keys(get_object_vars($dictionary))) as $key) {
-            $new_dictionary->{$dictionary->{$key}->{$field}} = $key; 
-        }
-        return $new_dictionary;     
-    }
+         Useful to make predictions using fields' names instead of Ids.
+         It does not check whether new keys are duplicated though.
+     **/
+     $new_dictionary = null;
+     foreach((array_keys(get_object_vars($dictionary))) as $key) {
+         $new_dictionary->{$dictionary->{$key}->{$field}} = $key; 
+     }
+     return $new_dictionary;     
+ }
 
-	class ModelFields { 
-		/*
-			A lightweight wrapper of the field information in the model or cluster
-        	objects
-		*/
-		public static $objective_id;
-		public static $fields;
-		public static $inverted_fields;
+class ModelFields { 
+   /*
+      A lightweight wrapper of the field information in the model or cluster
+        objects
+   */
+   public static $objective_id;
+   public static $fields;
+   public static $inverted_fields;
 
-		public function __construct($fields, $objective_id=null) {
-			
-			if ($fields instanceof STDClass) {
-				self::$objective_id = $objective_id;
-				$fields = self::uniquify_varnames($fields);
-				self::$inverted_fields = invert_dictionary($fields);
-				self::$fields = $fields;
-			}
-		}
+   public function __construct($fields, $objective_id=null) {
+      
+      if ($fields instanceof STDClass) {
+         self::$objective_id = $objective_id;
+         $fields = self::uniquify_varnames($fields);
+         self::$inverted_fields = invert_dictionary($fields);
+         self::$fields = $fields;
+      }
+   }
 
-		private function uniquify_varnames($fields) {
-            /*
-            Tests if the fields names are unique. If they aren't, a
-            transformation is applied to ensure unicity.
-            */
-            $unique_names = array();
-            $len=0;
-            foreach($fields as $field) {
-                array_push($unique_names, $field->name);
-                $len+=1;
+   private function uniquify_varnames($fields) {
+      /*
+      Tests if the fields names are unique. If they aren't, a
+      transformation is applied to ensure unicity.
+      */
+      $unique_names = array();
+      $len=0;
+      foreach($fields as $field) {
+          array_push($unique_names, $field->name);
+          $len+=1;
+      }
+
+      $unique_names = array_unique($unique_names);
+
+      if (count($unique_names) < $len) {
+         $fields = self::$ransform_repeated_names($fields);
+      }
+
+      return $fields;
+   }
+
+   private function transform_repeated_names($fields) {
+      /*
+        If a field name is repeated, it will be transformed adding its
+        column number. If that combination is also a field name, the field id will be added.
+        The objective field treated first to avoid changing it
+      */
+      if (self::$objective_id != null) {
+         $unique_names =array($fields->{self::$objective_id->name});
+      } else {
+         $unique_names = array();
+      }
+
+      foreach($fields as $field_id => $field) {
+         $new_name = $field->name;
+         if (in_array($new_name, $unique_names) ) {
+             $new_name = $field->name . strval($field->column_number);
+
+             if (in_array($new_name, $unique_names) ) {
+                $new_name = $new_name . "_" . strval($field_id);
+             }  
+             $field->name = $new_name;
+         }
+         array_push($unique_names, $new_name);
+      }
+
+      return $fields;
+   }
+
+   public function filter_input_data($input_data, $by_name=true) 
+   {
+      /*
+         Filters the keys given in input_data checking against model fields
+      */
+
+      if (is_array($input_data)) {
+         $input_data = array_filter($input_data, array(__CLASS__, 'clean_empty_fields'));
+
+         $new_input_data = array();
+
+         if ($by_name) {
+            # We no longer check that the input data keys match some of
+            # the dataset fields. We only remove the keys that are not
+            # used as predictors in the model
+            foreach($input_data as $key => $value) { 
+
+               if (array_key_exists($key, self::$inverted_fields))
+               {
+                  $new_input_data[self::$inverted_fields->{$key}] = $value;
+               }
             }
 
-            $unique_names = array_unique($unique_names);
+         } else {
+            foreach($input_data as $key => $value) {
+               if (array_key_exists($key, self::$fields)) {
+                  $new_input_data[$key] = $value;
+               }   
+            }   
+         }
 
-            if (count($unique_names) < $len) {
-                $fields = self::$ransform_repeated_names($fields);
-            }
+         return $new_input_data;
 
-            return $fields;
-        }
+      } else {
+         error_log("Failed to read input data in the expected array {field=>value} format");
+         return array();
+      }
 
-		private function transform_repeated_names($fields) {
-            /*
-                If a field name is repeated, it will be transformed adding its
-                column number. If that combination is also a field name, the field id will be added.
-                The objective field treated first to avoid changing it
-            */
-			if (self::$objective_id != null) {
-				$unique_names =array($fields->{self::$objective_id->name});
-			} else {
-				$unique_names = array();
-			}
+   }
 
-			foreach($fields as $field_id => $field) {
-                $new_name = $field->name;
-                if (in_array($new_name, $unique_names) ) {
-                    $new_name = $field->name . strval($field->column_number);
+   protected function clean_empty_fields($var) {
+      return ($var != null && trim($var) != "");
+   }
 
-                    if (in_array($new_name, $unique_names) ) {
-                        $new_name = $new_name . "_" . strval($field_id);
-                    }  
-                    $field->name = $new_name;
-                }
-                array_push($unique_names, $new_name);
-            }
+}
 
-            return $fields;
-        }
-
-		public function filter_input_data($input_data, $by_name=true) 
-		{
-			/*
-				Filters the keys given in input_data checking against model fields
-			*/
-
-			if (is_array($input_data)) {
-				$input_data = array_filter($input_data, array(__CLASS__, 'clean_empty_fields'));
-
-				$new_input_data = array();
-
-				if ($by_name) {
-					# We no longer check that the input data keys match some of
-					# the dataset fields. We only remove the keys that are not
-					# used as predictors in the model
-					foreach($input_data as $key => $value) { 
-
-						if (array_key_exists($key, self::$inverted_fields))
-						{
-							$new_input_data[self::$inverted_fields->{$key}] = $value;
-						}
-					}
-
-				} else {
-					foreach($input_data as $key => $value) {
-						if (array_key_exists($key, self::$fields)) {
-							$new_input_data[$key] = $value;
-						}	
-					}	
-				}
-
-				return $new_input_data;
-
-			} else {
-				error_log("Failed to read input data in the expected array {field=>value} format");
-				return array();
-			}
-
-		}
-
-		protected function clean_empty_fields($var) {
-			return ($var != null && trim($var) != "");
-	    }
-
-	}
-	
 ?>

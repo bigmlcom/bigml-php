@@ -697,4 +697,38 @@ Similarly, local ensembles can also be created by giving a list of models to be 
 
     $ensemble->predict(array("petal length": 3, "petal width": 1));
 
+Rule Generation
+---------------
+You can also use a local model to generate a IF-THEN rule set that can be very helpful to understand how the model works internally::
+
+    $local_model->rules();
+    
+    IF petal_length > 2.45 AND
+       IF petal_width > 1.65 AND
+          IF petal_length > 5.05 THEN
+             species = Iris-virginica
+          IF petal_length <= 5.05 AND
+             IF sepal_width > 2.9 AND
+                IF sepal_length > 5.95 AND
+                   IF petal_length > 4.95 THEN
+                      species = Iris-versicolor
+                   IF petal_length <= 4.95 THEN
+                      species = Iris-virginica
+                IF sepal_length <= 5.95 THEN
+                   species = Iris-versicolor
+             IF sepal_width <= 2.9 THEN
+                species = Iris-virginica
+       IF petal_width <= 1.65 AND
+          IF petal_length > 4.95 AND
+             IF sepal_length > 6.05 THEN
+                species = Iris-virginica
+             IF sepal_length <= 6.05 AND
+                IF sepal_width > 2.45 THEN
+                  species = Iris-versicolor
+                IF sepal_width <= 2.45 THEN
+                  species = Iris-virginica
+          IF petal_length <= 4.95 THEN
+             species = Iris-versicolor
+    IF petal_length <= 2.45 THEN
+       species = Iris-setosa
 
