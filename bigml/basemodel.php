@@ -15,7 +15,7 @@
 # under the License.
 
 if (!class_exists('modelfields')) {
-   include('./modelfields.php');
+   include('modelfields.php');
 }
 
 class BaseModel extends ModelFields{

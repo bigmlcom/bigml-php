@@ -15,10 +15,10 @@
 # under the License.
 
 if (!class_exists('modelfields')) {
-   include('./modelfields.php');
+   include('modelfields.php');
 }
 if (!class_exists('centroid')) {
-   include('./centroid.php'); 
+   include('centroid.php'); 
 }
 
 function parse_terms($text, $case_sensitive=true) {

@@ -15,15 +15,15 @@
 # under the License.
 
 if (!class_exists('multimodel')) {
-  include('./multimodel.php');
+  include('multimodel.php');
 }
 
 if (!class_exists('multivote')) {
-  include('./multivote.php');
+  include('multivote.php');
 }
 
 if (!class_exists('model')) {
-  include('./model.php');
+  include('model.php');
 }
 
 class Ensemble {

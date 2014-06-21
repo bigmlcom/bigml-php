@@ -15,15 +15,15 @@
 # under the License.
 
 if (!class_exists('predicate')) {
-include('./predicate.php'); 
+include('predicate.php'); 
 }
 
 if (!class_exists('multivote')) {
-   include('./multivote.php'); 
+   include('multivote.php'); 
 }
 
 if (!class_exists('ChiSquare')) {
-   include('./ChiSquare.php'); 
+   include('ChiSquare.php'); 
 }
 
 function get_instances($distribution) {

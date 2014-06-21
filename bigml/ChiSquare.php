@@ -1,6 +1,6 @@
 <?php
-include('./ProbabilityDistribution.php');
-include('./Stats.php');
+include('ProbabilityDistribution.php');
+include('Stats.php');
 /**
  * ChiSquare class
  * 

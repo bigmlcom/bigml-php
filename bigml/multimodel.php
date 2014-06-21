@@ -15,7 +15,7 @@
 # under the License.
 
 if (!class_exists('model')) {
-   include('./model.php');
+   include('model.php');
 }
 
 function read_votes($votes_files, $model, $data_locale=null)
