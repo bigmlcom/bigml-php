@@ -25,10 +25,10 @@ class BaseModel extends ModelFields{
       Uses a BigML remote model to build a local version that contains the
       main features of a model, except its tree structure.
    */
-   public static $resource_id;
-   public static $description;
-   public static $field_importance;
-   public static $locale = 'en_US.UTF-8';
+   public $resource_id;
+   public $description;
+   public $field_importance;
+   public $locale = 'en_US.UTF-8';
 
    function objectToArray($d) {
       if (is_object($d)) {
@@ -53,7 +53,7 @@ class BaseModel extends ModelFields{
 
     public function __construct($model) {
       if (check_model_structure($model) ) {
-         self::$resource_id = $model->resource;
+         $this->resource_id = $model->resource;
       } 
          
       if (property_exists($model, "object") && $model->object instanceof STDClass) {
@@ -81,22 +81,22 @@ class BaseModel extends ModelFields{
              }
    
              parent::__construct($model->model->model_fields, extract_objective($model->objective_fields));
-             self::$description = $model->description;
-             self::$field_importance = property_exists($model->model, "importance") ? $model->model->importance : null;
+             $this->description = $model->description;
+             $this->field_importance = property_exists($model->model, "importance") ? $model->model->importance : null;
 
-             if (self::$field_importance  != null ) {
+             if ($this->field_importance  != null ) {
                $fields_importance= array();
-               foreach(self::$field_importance as $field) { 
-                  if ( property_exists(self::$fields, $field[0]) ) {
+               foreach($this->field_importance as $field) { 
+                  if ( property_exists($this->fields, $field[0]) ) {
                      array_push($fields_importance, $field[0]);
                   } 
                }      
                   
-               self::$field_importance = $fields_importance;
+               $this->field_importance = $fields_importance;
              }
 
              if (property_exists($model, "locale" && $model->locale != null ) ) {
-               self::$locale = $model->locale;
+               $this->locale = $model->locale;
              }
 
           } else {
@@ -124,7 +124,7 @@ class BaseModel extends ModelFields{
        $unique_names = array_unique($unique_names);
 
        if (count($unique_names) < $len) {
-         $fields = self::transform_repeated_names($fields);
+         $fields = $this->transform_repeated_names($fields);
        }
        return $fields;
     }
@@ -135,7 +135,7 @@ class BaseModel extends ModelFields{
          column number. If that combination is also a field name, the field id will be added.
          The objective field treated first to avoid changing it
        */
-       $unique_names =array($fields->{self::$objective_field}->name);
+       $unique_names =array($fields->{$this->objective_field}->name);
             
        foreach($fields as $field) { 
           $new_name = $field->name; 

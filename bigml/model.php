@@ -24,10 +24,10 @@ class Model extends BaseModel{
       to generate predictions locally.
    */
 
-   public static $ids_map; 
-   public static $terms;
-   public static $tree;
-   public static $regression_ready=false;
+   public $ids_map; 
+   public $terms;
+   public $tree;
+   public $regression_ready=false;
 
    public function __construct($model, $api=null, $storage="storage") {
 
@@ -63,12 +63,11 @@ class Model extends BaseModel{
 
          if ($model->status->code == BigMLRequest::FINISHED) {
 
-            self::$ids_map = array();
-            self::$terms = array();
-
-            $tree = new Tree($model->model->root, self::$fields, self::$objective_id, $model->model->distribution->training, null, self::$ids_map);
-            self::$tree = $tree;
-
+            $this->ids_map = array();
+            $this->terms = array();
+            $this->tree = new Tree($model->model->root, $this->fields, $this->objective_id, $model->model->distribution->training, null, $this->ids_map);
+            #self::$tree = clone $tree;
+           
          } else {
             throw new Exception("The model isn't finished yet");
          }
@@ -76,8 +75,8 @@ class Model extends BaseModel{
          throw new Exception("Cannot create the Model instance. Could not find the 'model' key in the resource:\n\n" . $model);
       }
 
-      if ($tree->regression) {
-         self::$regression_ready = true;
+      if ($this->tree->regression) {
+         $this->regression_ready = true;
       }
    }
 
@@ -93,18 +92,17 @@ class Model extends BaseModel{
 
       # Checks if this is a regression model, using PROPORTIONAL
       # missing_strategy
-      $tree = self::$tree;
+      $tree = $this->tree;
 
-      if ($tree->regression && $missing_strategy==Tree::PROPORTIONAL && !self::$regression_ready) {
+      if ($tree->regression && $missing_strategy==Tree::PROPORTIONAL && !$this->regression_ready) {
          throw new Exception("You needed to use proportional missing strategy, 
                          for regressions. Please install them before, using local predictions for the model."); 
       }
       # Checks and cleans input_data leaving the fields used in the model
-      $input_data = self::filter_input_data($input_data, $by_name);
+      $input_data = $this->filter_input_data($input_data, $by_name);
 
       # Strips affixes for numeric values and casts to the final field type
-      $input_data = cast($input_data, self::$fields);
-
+      $input_data = cast($input_data, $this->fields);
       $prediction_info = $tree->predict($input_data, null, $missing_strategy);
 
       $prediction = $prediction_info[0];
@@ -172,7 +170,7 @@ class Model extends BaseModel{
          `out` is file descriptor to write the rules.
       */ 
       $ids_path = $this->get_ids_path($filter_id);
-      return self::$tree->rules($out, $ids_path, $subtree);
+      return $this->tree->rules($out, $ids_path, $subtree);
 
    }
 

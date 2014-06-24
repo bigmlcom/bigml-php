@@ -103,17 +103,17 @@ class ModelFields {
       A lightweight wrapper of the field information in the model or cluster
         objects
    */
-   public static $objective_id;
-   public static $fields;
-   public static $inverted_fields;
+   public $objective_id;
+   public $fields;
+   public $inverted_fields;
 
    public function __construct($fields, $objective_id=null) {
       
       if ($fields instanceof STDClass) {
-         self::$objective_id = $objective_id;
-         $fields = self::uniquify_varnames($fields);
-         self::$inverted_fields = invert_dictionary($fields);
-         self::$fields = $fields;
+         $this->objective_id = $objective_id;
+         $fields = $this->uniquify_varnames($fields);
+         $this->inverted_fields = invert_dictionary($fields);
+         $this->fields = $fields;
       }
    }
 
@@ -132,7 +132,7 @@ class ModelFields {
       $unique_names = array_unique($unique_names);
 
       if (count($unique_names) < $len) {
-         $fields = self::$ransform_repeated_names($fields);
+         $fields = $this->ransform_repeated_names($fields);
       }
 
       return $fields;
@@ -144,8 +144,8 @@ class ModelFields {
         column number. If that combination is also a field name, the field id will be added.
         The objective field treated first to avoid changing it
       */
-      if (self::$objective_id != null) {
-         $unique_names =array($fields->{self::$objective_id->name});
+      if ($this->objective_id != null) {
+         $unique_names =array($fields->{$this->objective_id->name});
       } else {
          $unique_names = array();
       }
@@ -183,15 +183,15 @@ class ModelFields {
             # used as predictors in the model
             foreach($input_data as $key => $value) { 
 
-               if (array_key_exists($key, self::$inverted_fields))
+               if (array_key_exists($key, $this->inverted_fields))
                {
-                  $new_input_data[self::$inverted_fields->{$key}] = $value;
+                  $new_input_data[$this->inverted_fields->{$key}] = $value;
                }
             }
 
          } else {
             foreach($input_data as $key => $value) {
-               if (array_key_exists($key, self::$fields)) {
+               if (array_key_exists($key, $this->fields)) {
                   $new_input_data[$key] = $value;
                }   
             }   

@@ -26,6 +26,10 @@ if (!class_exists('model')) {
   include('model.php');
 }
 
+if (!class_exists('basemodel')) {
+  include('basemodel.php');
+}
+
 class Ensemble {
    /*
       A local predictive Ensemble.
@@ -95,10 +99,11 @@ class Ensemble {
          $models = array();
  
          foreach($this->models_splits[0] as $model_id) {
-            array_push($models, $api::retrieve_resource($model_id, $api::ONLY_MODEL));
+            $mo = $api::retrieve_resource($model_id, $api::ONLY_MODEL);
+            $models[] = clone $mo;
+            #array_push($models, $api::retrieve_resource($model_id, $api::ONLY_MODEL));
          }
-
-         $this->multi_model = new MultiModel($models);
+         $this->multi_model = new MultiModel($models, $this->api); 
       }
 
    }
@@ -135,7 +140,8 @@ class Ensemble {
             foreach($model_split as $model_id) {
                array_push($models, $api::retrieve_resource($model_id, $api::ONLY_MODEL));
             }
-            $multi_model = new MultiModel($models);
+
+            $multi_model = new MultiModel($models, $this->api);
             $votes_split = $multi_model->generate_votes($input_data, $by_name);
 
             foreach($votes_split->predictions as $prediction_info) {
@@ -149,13 +155,11 @@ class Ensemble {
 
       } else {
          # When only one group of models is found you use the
-            # corresponding multimodel to predict
-         $multi_model = $this->multi_model;
-         $votes_split = $multi_model->generate_votes($input_data, $by_name);
+         # corresponding multimodel to predict
+         $votes_split = $this->multi_model->generate_votes($input_data, $by_name);
          $votes = new MultiVote($votes_split->predictions);
          return $votes->combine($method, $with_confidence, $options);
-      }      
-
+      }  
    }
 
    function all_model_fields() {
@@ -167,7 +171,7 @@ class Ensemble {
       foreach($this->model_ids as $model_id) {
          $local_model=new Model($model_id, $this->api);
          $new_array = array();
-         foreach($local_model::$fields as $property => $value)  {   
+         foreach($local_model->fields as $property => $value)  {
             $new_array[$property] = $value; 
          }
 
@@ -176,6 +180,77 @@ class Ensemble {
 
       return $fields;
    }
+
+   function field_importance_data()
+   {
+      /*
+       Computes field importance based on the field importance information
+       of the individual models in the ensemble.
+      */
+      $field_importance = array();
+      $field_names = array();
+      $check_importance = false;
+
+      if ($this->distributions != null && is_array($this->distributions)) 
+      {
+         $check_importance = true;
+         $importances = array();
+         foreach($this->distributions as $distribution) {
+			if (array_key_exists('importance', $distribution)) {
+               array_push($importances, $distribution->importance); 
+            } else {
+				$check_importance = false;
+			}
+         }
+
+        if ($check_importance == true) {
+
+           foreach($importances as $model_info) {
+
+               foreach ($model_info as $field_info) {
+
+                  $field_id= $field_info[0];
+
+                  if (!array_key_exists($field_id, $field_importance)) {
+                     $field_importance[$field_id] = 0.0;
+                     $field_names[$field_id] = array('name' => $this->fields[$field_id]->name); 
+                  }
+
+                  $field_importance[$field_id]+=$field_info[1];
+
+               }
+           }
+        }
+
+        if ($this->distributions == null || !is_array($this->distributions) || $check_importance=false) 
+        {
+           # Old ensembles, extracts importance from model information
+           foreach($model_ids as $model_id) {
+              $local_model = new BaseModel($model_id, $this->api);
+              foreach($local_model->field_importance as $field_info) {
+                 $field_id = $field_info[0];
+                 if (!array_key_exists($field_id, $field_importance)) { 
+                    $field_importance[$field_id] = 0.0;
+                    $field_names[$field_id] = array('name' => $this->fields[$field_id]->name);
+                 }
+                 $field_importance[$field_id]+=$field_info[1];
+              }
+           }   
+        }
+
+        $number_of_models = count($this->model_ids);
+
+        foreach($field_importance as $key=>$value) { 
+           $field_importance[$key] /= $number_of_models; 
+        }
+         
+        arsort($field_importance);
+        ksort($field_names);
+        return array($field_importance, $field_names);
+ 
+      }
+   }
+
 }
 
 ?>

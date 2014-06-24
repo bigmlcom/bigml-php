@@ -118,10 +118,10 @@ class Predicate {
          $terms = array_merge($terms, $term_forms);
          $options = $fields->{$this->field}->$term_analysis;
 
-         return version_compare($this->term_matches($input_data[$this->field], $terms, $options), $this->value, $this->OPERATOR[$this->operator]);
+         return version_compare($this->term_matches($input_data[$this->field], $terms, $options), $this->value, self::$OPERATOR[$this->operator]);
       }
 
-      return version_compare($input_data[$this->field], $this->value, $this->OPERATOR[$this->operator]);
+      return version_compare($input_data[$this->field], $this->value, self::$OPERATOR[$this->operator]);
    }
 
    function term_matches($text, $forms_list, $options) {

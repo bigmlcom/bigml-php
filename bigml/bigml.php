@@ -197,7 +197,6 @@ class BigML {
       */
       $rest = self::get_resource_request($sourceId, "source", "UPDATE", null, true, $waitTime, $retries);
       if ($rest == null) return null;
-      return $rest->getResponse();
 
       $rest->setData(json_encode($data));
       $rest->setHeader('Content-Type', 'application/json');
@@ -259,9 +258,8 @@ class BigML {
          $resource = $r->resource;
       }
 
-      if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid)(\/)([a-f,0-9]{24}|[a-f,0-9]{27})$/i', $resource, $result)) {
+      if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
          $count = 0;
-
          $status = self::_check_resource_status($resource, $queryString); 
          while ($count<$retries && !$status["ready"]) {
             usleep($waitTime*1000); 
@@ -342,7 +340,6 @@ class BigML {
           
          $args[$resource['type']] = $resource['id'];
       }
-
       $rest = new BigMLRequest('CREATE', 'dataset');
       $rest->setData(json_encode($args));
       $rest->setHeader('Content-Type', 'application/json');
@@ -387,7 +384,6 @@ class BigML {
       */
       $rest = self::get_resource_request($datasetId, "dataset", "UPDATE", null, true, $waitTime, $retries);
       if ($rest == null) return null;
-      return $rest->getResponse();
 
       $rest->setData(json_encode($data));
       $rest->setHeader('Content-Type', 'application/json');
@@ -447,7 +443,7 @@ class BigML {
       return $rest->getResponse();
    }
 
-   public static function get_model($modelId, $queryString=null)
+   public static function get_model($modelId, $queryString=null, $shared_username=null,  $shared_api_key=null)
    {
       /*
          Retrieves a model.
@@ -460,7 +456,7 @@ class BigML {
          If this is a shared model, the username and sharing api key must
          also be provided.
       */
-      $rest = self::get_resource_request($modelId, "model", "GET", $queryString);
+      $rest = self::get_resource_request($modelId, "model", "GET", $queryString, true, 3000, 0, $shared_username, $shared_api_key);
       if ($rest == null) return null;
       return $rest->getResponse();
    }
@@ -585,7 +581,6 @@ class BigML {
       */
       $rest = self::get_resource_request($ensembleId, "ensemble", "UPDATE", null, true, 3000, 10);
       if ($rest == null) return null;
-      return $rest->getResponse();
 
       $rest->setData(json_encode($data));
       $rest->setHeader('Content-Type', 'application/json');
@@ -952,7 +947,7 @@ class BigML {
       return $rest->getResponse();
    }
 
-    public static function get_cluster($clusterId, $queryString=null)
+    public static function get_cluster($clusterId, $queryString=null, $shared_username=null, $shared_api_key=null)
     {
       /*
          Retrieves a cluster.
@@ -967,7 +962,7 @@ class BigML {
          If this is a shared cluster, the username and sharing api key must
          also be provided.
       */
-      $rest = self::get_resource_request($clusterId, "cluster", "GET", $queryString);
+      $rest = self::get_resource_request($clusterId, "cluster", "GET", $queryString, true, 3000, 0, $shared_username, $shared_api_key);
       if ($rest == null) return null;
       return $rest->getResponse();
    }
@@ -992,7 +987,6 @@ class BigML {
       */
       $rest = self::get_resource_request($clusterId, "cluster", "UPDATE", null, true,  $waitTime, $retries);
       if ($rest == null) return null;
-      return $rest->getResponse();
 
       $rest->setData(json_encode($data));
       $rest->setHeader('Content-Type', 'application/json');
@@ -1407,7 +1401,7 @@ class BigML {
 
    }
 
-   private static function get_resource_request($resourceId, $resourceType, $operation, $queryString=null, $checkStatus=true, $waitTime=3000, $retries=0) {
+   private static function get_resource_request($resourceId, $resourceType, $operation, $queryString=null, $checkStatus=true, $waitTime=3000, $retries=0, $shared_username=null, $shared_api_key=null) {
      $resource = self::_check_resource($resourceId, $queryString, $waitTime, $retries);
 
      if ($resource == null || $resource['type'] != $resourceType) {
@@ -1420,7 +1414,7 @@ class BigML {
         return null;
      }
 
-     $rest = new BigMLRequest($operation, $resource["id"]);
+     $rest = new BigMLRequest($operation, $resource["id"], $shared_username, $shared_api_key);
 
      if ($queryString!=null) {
         $rest->setQueryString($queryString);
@@ -1476,12 +1470,8 @@ class BigML {
    private $queryString;
 
    private $response_code;
-   # CREATE
-   # GET
-   # LIST
-   # DELETE
-   # UPDATE
-   function __construct($method='GET', $uri = 'source') {
+
+   function __construct($method='GET', $uri = 'source', $shared_username=null, $shared_api_key=null) {
 
       $this->endpoint=(BigML::getDomain() != null) ? BigML::getDomain() : BigML::BIGML_ENDPOINT . (BigML::isDevMode() == true ? '/dev' : '' ); 
       $this->method = $method;
@@ -1495,13 +1485,18 @@ class BigML {
       #$this->headers['Content-Type'] = 'application/json';
       #$this->resource = $this->uri;
 
-      if (BigML::hasAuth()) {
-         $this->setParameter("username", BigML::getUsername());
-         $this->setParameter("api_key", BigML::getApiKey());
-      } else {
-         error_log("Cannot find BIGML AUTH");
-      }
+      if ($shared_username != null && $shared_api_key != null) {
+         $this->setParameter("username", $shared_username);
+		 $this->setParameter("api_key", $shared_api_key);
+	  } else {
+        if (BigML::hasAuth()) {
+           $this->setParameter("username", BigML::getUsername());
+           $this->setParameter("api_key", BigML::getApiKey());
+        } else {
+           error_log("Cannot find BIGML AUTH");
+        }
 
+      }
       # set download uri
       $this->uri .= ($method == "DOWNLOAD" ? '/download' : '');
 
@@ -1583,7 +1578,7 @@ class BigML {
       $url = $this->endpoint.'/'.$this->version.'/'.$this->uri;
 
       try {
-         #echo "URL: " . $url;
+         #echo "URL: " . $url . "\n";
          $curl = curl_init();
          curl_setopt($curl, CURLOPT_URL, $url);
 
@@ -1624,14 +1619,22 @@ class BigML {
 
             $this->parseJsonResponse($body, $code, $header);
 
-         } elseif (in_array($code, array(BigMLRequest::HTTP_BAD_REQUEST, BigMLRequest::HTTP_UNAUTHORIZED, BigMLRequest::HTTP_NOT_FOUND, BigMLRequest::HTTP_TOO_MANY_REQUESTS))) {
+         } else if (in_array(intval($code), array(BigMLRequest::HTTP_BAD_REQUEST, BigMLRequest::HTTP_UNAUTHORIZED, BigMLRequest::HTTP_NOT_FOUND, BigMLRequest::HTTP_TOO_MANY_REQUESTS))) {
             $header_size = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
             $header = substr($response, 0, $header_size);
             $body = substr($response, $header_size);
+
             #$this->response->error = json_decode($response, true);
-            $this->response["error"]["status"]["message"] = $this->error_message(json_decode($body), $this->method);
+			$this->response["code"] = $code; 
+            $error_message = $this->error_message(json_decode($body), $this->method);
+            $this->response["error"]["status"]["message"] = $error_message["message"];
+            $this->response["error"]["status"]["code"] = $code;
+
+            if ($error_message["code"] != null)
+               $this->response["error"]["status"]["code"] = $error_message["code"];
+
          } else {
-            error_log("Unexpected error ".$code);
+            error_log("Unexpected error ". $code);
             $this->response->code = $HTTP_INTERNAL_SERVER_ERROR;
          }
 
@@ -1718,6 +1721,8 @@ class BigML {
       */
       $error = null;
       $error_info = null;
+      $error_response = array("message"=> null, "code"=>null);
+
       if ($resource instanceof STDClass) {
          if (property_exists($resource, "error")) {
             $error_info = $resource->error;
@@ -1726,17 +1731,28 @@ class BigML {
          }
       } 
 
-      if ( $error_info != null && property_exists($error_info, "code") )  {
+
+      if ($error_info != null && property_exists($error_info, "code") )  {
          $code = $error_info->code;
+         $error_response["code"] = $code;
 
          if (property_exists($error_info, "status") && property_exists($error_info->status, "message") ) {
             $error = $error_info->status->message;
-            $extra =( property_exists($error_info->status, "extra") ) ? $error_info->status->extra : null;
+            $extra = null;
+            if (property_exists($error_info->status, "extra")) {
+               $extra = $error_info->status->extra;
+            }
             if ($extra != null) {
-               if (is_array($extra) ){ 
-                  $extra = join("\n", $extra);
+               if ($extra instanceof STDClass) {
+                  $error = $error . ":"; 
+                  $error_response["code"] = $extra->error;
+                  foreach(get_object_vars($extra) as $key => $value) {
+                      $error = $error . $key . ": " . json_encode($value) . " ";
+                  }
+                  $error = $error . "\n"; 
+               } else {
+                 $error = $error . ": " . $extra;
                }
-               $error = $error . ": " . $extra;
             }
          }
 
@@ -1758,10 +1774,12 @@ class BigML {
             $error = $error.'\nYou\'ll need to buy some more credits to perform the chosen action';
          }
 
-         return $error;
+		 $error_response["message"] = $error;
+         return $error_response;
       }
 
-      return "Invalid" . $resource_type . "structure:\n\n" . $resource;
+      $error_response["message"] = "Invalid" . $resource_type . "structure:\n\n" . $resource;
+      return $error_response;
 
    }
 

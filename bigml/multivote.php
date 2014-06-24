@@ -170,16 +170,16 @@ class MultiVote {
 
    }
 
-   public function error_weighted($instance, $with_confidence=false) {
+   public function error_weighted($with_confidence=false) {
       /*
          Returns the prediction combining votes using error to compute weight
          If with_confidences is true, the combined confidence (as the
          error weighted average of the confidences of the multivote
          predictions) is also returned
       */
-      if (property_exists($instance, 'predictions') && $instance->predictions != null && $with_confidence) {
+      if (property_exists($this, 'predictions') && $this->predictions != null && $with_confidence) {
 
-         foreach($instance->predictions as $prediction) {
+         foreach($this->predictions as $prediction) {
             if (!array_key_exists('confidence', $prediction)) {
                throw new Exception('Not enough data to use the selected prediction method. Try creating your model anew.');
             }
@@ -190,7 +190,7 @@ class MultiVote {
       $result = 0.0;
       $top_range = 10;
       $combined_error = 0.0;
-      $normalization_factor = $instance->normalize_error($instance, $top_range);
+      $normalization_factor = $this->normalize_error($top_range);
 
       if ($normalization_factor  == 0) {
          if ($with_confidence) {
@@ -204,9 +204,10 @@ class MultiVote {
          $combined_error = 0.0;
       }
 
-      foreach($instance->predictions as $prediction) {
-         $result += $prediction["prediction"] * $prediction["_error_weight"];
+      foreach($this->predictions as $prediction) {
 
+         $result += $prediction["prediction"] * $prediction["_error_weight"];
+  
          if ($with_confidence) {
             $combined_error += ($prediction["confidence"] * $prediction["_error_weight"]);
          }
@@ -222,14 +223,14 @@ class MultiVote {
 
    }
 
-   public function normalize_error($instance, $top_range) {
+   public function normalize_error($top_range) {
       /*
          Normalizes error to a [0, top_range] and builds probabilities
       */
       $error_values = array();
-      if (property_exists($instance, 'predictions') ) {
+      if (property_exists($this, 'predictions') ) {
 
-         foreach($instance->predictions as $prediction) {
+         foreach($this->predictions as $prediction) {
             if (!array_key_exists('confidence', $prediction)) {
                throw new Exception('Not enough data to use the selected prediction method. Try creating your model anew.');
             }
@@ -246,19 +247,22 @@ class MultiVote {
          # Shifts and scales predictions errors to [0, top_range].
          # Then builds e^-[scaled error] and returns the normalization
          # factor to fit them between [0, 1]
-         foreach($instance->predictions as $prediction) {
+		 $new_predictions = array();
+         foreach($this->predictions as $prediction) {
             $delta = ($min_error - $prediction["confidence"]);
             $prediction["_error_weight"] = exp(($delta/$error_range)*$top_range);
             $normalize_factor+=$prediction["_error_weight"];
+			array_push($new_predictions, $prediction);
          }
+		 $this->predictions = $new_predictions;
       } else {
          $new_predictions = array();
-         foreach($instance->predictions as $prediction) {
+         foreach($this->predictions as $prediction) {
             $prediction["_error_weight"] = 1;
             array_push($new_predictions, $prediction);
          }
-         $instance->predictions = $new_predictions;
-         $normalize_factor = count($instance->predictions);
+         $this->predictions = $new_predictions;
+         $normalize_factor = count($this->predictions);
       }
 
       return $normalize_factor;
@@ -308,14 +312,18 @@ class MultiVote {
       }
 
       if ($this->is_regression()) {
+         $new_predictions = array();
          foreach($this->predictions as $prediction) {
             if ($prediction["confidence"] == null) {
                $prediction["confidence"] = 0;
             }
+			$new_predictions[] = $prediction;
          }
 
+         $this->predictions=$new_predictions;
+
          if ($method == MultiVote::CONFIDENCE) {
-            return $this->error_weighted($this, $with_confidence);
+            return $this->error_weighted($with_confidence);
          } else {
             return $this->avg($this, $with_confidence); 
          }
@@ -335,6 +343,7 @@ class MultiVote {
             $predictions->predictions = $this->probability_weight();
 
          }
+
          return $predictions->combine_categorical( (array_key_exists($method,  $this->COMBINATION_WEIGHTS)) ? 
                                          $this->COMBINATION_WEIGHTS[$method] : null, 
                                         $with_confidence);

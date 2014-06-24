@@ -95,22 +95,21 @@ class MultiModel{
    public $models;
 
    public function __construct($models, $api=null, $storage="storage") { 
-      $this->models = array();
+      #$this->models = array();
 
       if ($api == null) {
          $api = new BigML(null, null, null, $storage);
-      }
+	  }
 
       if (is_array($models)) {
-
-         foreach($models as $model) {
-            array_push($this->models, new Model($model, $api, $storage));
+         foreach($models as $mo) {
+            $m = new Model($mo, $api);
+            $this->models[] = clone $m;
          }
 
       } else {
          array_push($this->models, new Model($models, $api, $storage));
       }
-
    }
 
    public function predict($input_data, $by_name=true, $method=MultiVote::PLURALITY_CODE, $with_confidence=false, $options=null, $missing_strategy=Tree::LAST_PREDICTION) {
@@ -192,16 +191,18 @@ class MultiModel{
       */
       
       $votes = new MultiVote(array());
-      foreach (range(0, (count($this->models)-1)) as $order) {
-         $model = $this->models[$order];
+      $order = 0;
+      foreach ($this->models as $model) 
+      {
          $prediction_info = $model->predict($input_data, $by_name, false, STDOUT, true, $missing_strategy);
+
          array_push($votes->predictions, array("prediction" => $prediction_info[0], 
                       "confidence" => $prediction_info[1], 
                       "order" => $order, 
                       "distribution" => $prediction_info[2], 
                       "count" => $prediction_info[3]));
 
-
+          $order+=1;
       }
 
       return $votes;

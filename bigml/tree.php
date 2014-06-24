@@ -90,11 +90,10 @@ function splitChildren($children) {
    $field = array();
    foreach($children as $child) {
       $predicate = $child->predicate;
-      array_push($field, $predicate->{$field});
+      array_push($field, $predicate->field);
    }
 
    $field = array_unique($field);
-
    if (count($field) == 1) {
       return reset($field);
    }
@@ -329,16 +328,13 @@ class Tree {
  
       } else {
          if ($this->children != null  &&  array_key_exists(splitChildren($this->children), $input_data) ) {
-            #$predicate = $child::$predicate;
             foreach ($this->children as $child) {
-               $predicate = $child::$predicate; 
-               if ($predicate::apply($input_data, $this->fields)) {
-                  $new_rule = $predicate::to_rule($this->fields); 
-                  array_push($new_rule, $path);
-                  return $child::predict($input_data, $path);
+               if ($child->predicate->apply($input_data, $this->fields)) {
+                  $new_rule = $child->predicate->to_rule($this->fields); 
+                  array_push($path, $new_rule);
+                  return $child->predict($input_data, $path);
                }
             }
-
          }
 
          return array($this->output, $path, $this->confidence, $this->distribution, get_instances($this->distribution));
