@@ -4,8 +4,8 @@ include '../bigml/ensemble.php';
 
 class ApiTest extends PHPUnit_Framework_TestCase
 {
-    protected static $username = "antonio_machine";
-    protected static $api_key = "8f9a21db4318c4b6c1e89075ff610c935b2db359";
+    protected static $username = "you_username";
+    protected static $api_key = "your_api_key";
 
     protected static $api;
     protected static $sources;
