@@ -51,9 +51,23 @@ class BaseModel extends ModelFields{
       }
     }
 
-    public function __construct($model) {
+    public function __construct($model, $api=null) {
+
       if (check_model_structure($model) ) {
          $this->resource_id = $model->resource;
+      } else {
+         if ($api == null) {
+             $api = new BigML(null, null, null, $storage);
+         }
+ 
+         if (is_string($model)) {                                
+            if (!($api::_checkModelId($model)) ) {
+               error_log("Wrong model id");
+               return null;
+            }
+            $model = $api::retrieve_resource($model, $api::ONLY_MODEL);
+         } 
+
       } 
          
       if (property_exists($model, "object") && $model->object instanceof STDClass) {
@@ -62,33 +76,30 @@ class BaseModel extends ModelFields{
 
       if (property_exists($model, "model") && $model->model instanceof STDClass) {
          if ($model->status->code == BigMLRequest::FINISHED) {
-            if (property_exists($model->model, "model_fields")) {
 
-               $model_fields = get_object_vars($model->model->model_fields);
-               while($element = current($model_fields)) {
-                  if (!property_exists($model->model->fields, key($model_fields))) {
-                     throw new Exception("Some fields are missing to generate a local model " . key($model_fields) .  "  Please, provide a model with the complete list of fields.");
+            if (property_exists($model->model, "model_fields")) {
+              
+               foreach($model->model->model_fields as $key => $value) {
+			      if (!property_exists($model->model->fields, $key)) {
+                     throw new Exception("Some fields are missing to generate a local model " . $key .  "  Please, provide a model with the complete list of fields.");
+                  }	
+                  if (property_exists($model->model->fields->{$key}, "summary")) {
+                     $model->model->model_fields->{$key}->summary = $model->model->fields->{$key}->summary;
                   }
-                  #$k = key($model_fields);
-                  $field_info = $model->model->fields->{key($model_fields)};
-                  if (property_exists($field_info, "summary")) {
-                     $model->model->model_fields->{key($model_fields)}->summary = $field_info->summary;
-                  }
-                  $model->model->model_fields->{key($model_fields)}->name = $field_info->name;
-                  next($model_fields);
+                  $model->model->model_fields->{$key}->name = $model->model->fields->{$key}->name;
                }
-               
+
              }
-   
+              
              parent::__construct($model->model->model_fields, extract_objective($model->objective_fields));
              $this->description = $model->description;
              $this->field_importance = property_exists($model->model, "importance") ? $model->model->importance : null;
 
              if ($this->field_importance  != null ) {
-               $fields_importance= array();
-               foreach($this->field_importance as $field) { 
-                  if ( property_exists($this->fields, $field[0]) ) {
-                     array_push($fields_importance, $field[0]);
+               $fields_importance=array();
+               foreach($this->field_importance as $field => $value) {
+                  if (property_exists($model->model->model_fields, $value[0]) ) {
+                     array_push($fields_importance, $value);
                   } 
                }      
                   

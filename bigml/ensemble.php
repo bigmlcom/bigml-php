@@ -221,11 +221,11 @@ class Ensemble {
                }
            }
         }
-
+      }
         if ($this->distributions == null || !is_array($this->distributions) || $check_importance=false) 
         {
            # Old ensembles, extracts importance from model information
-           foreach($model_ids as $model_id) {
+           foreach($this->model_ids as $model_id) {
               $local_model = new BaseModel($model_id, $this->api);
               foreach($local_model->field_importance as $field_info) {
                  $field_id = $field_info[0];
@@ -235,7 +235,7 @@ class Ensemble {
                  }
                  $field_importance[$field_id]+=$field_info[1];
               }
-           }   
+           }  
         }
 
         $number_of_models = count($this->model_ids);
@@ -247,8 +247,7 @@ class Ensemble {
         arsort($field_importance);
         ksort($field_names);
         return array($field_importance, $field_names);
- 
-      }
+      
    }
 
 }

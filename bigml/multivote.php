@@ -475,15 +475,14 @@ class MultiVote {
          
       }
 
-      function sort_mode_items($a, $b) {
+      /*function sort_mode_items($a, $b) {
          $retval = $b["count"] - $a["count"];
          
          if (!$retval) $retval= $a["order"] - $b["order"];
 
          return $retval;
-      }
-
-      uasort($mode, "sort_mode_items");
+      }*/
+      uasort($mode, array($this, "sort_mode_items"));
       reset($mode);
 
       $prediction = key($mode);
@@ -504,6 +503,14 @@ class MultiVote {
       }
 
       return $prediction;
+   }
+
+   private function sort_mode_items($a, $b) {
+      $retval = $b["count"] - $a["count"];
+
+      if (!$retval) $retval= $a["order"] - $b["order"];
+
+      return $retval;
    }
 
    function combine_distribution($weight_label='probability') {

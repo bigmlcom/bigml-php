@@ -209,7 +209,7 @@ class BigML {
       /*
          Deletes a source
       */
-      $rest = self::get_resource_request($sourceId, "source", "DELETE", null, false);
+      $rest = self::get_resource_request($sourceId, "source", "DELETE", null);
       if ($rest == null) return null;
       return $rest->getResponse();
    }
@@ -243,7 +243,7 @@ class BigML {
       $statusCode = $status->code;
       $message = $status->message;
 
-      return array('ready'=>$code!=null && $code==BigMLRequest::HTTP_OK && $statusCode!=null && $statusCode==BigMLRequest::FINISHED, 'code'=>$statusCode, 'message'=> $message);
+      return array('ready'=>$code!=null && $code==BigMLRequest::HTTP_OK && $statusCode!=null && $statusCode==BigMLRequest::FINISHED, 'code'=>$statusCode, 'message'=> $message, 'resource'=>$item);
 
    }
 
@@ -267,7 +267,7 @@ class BigML {
             $status=self::_check_resource_status($resource, $queryString);
          }
 
-         return array('type'=> strtolower($result[1]), 'id'=> $resource, 'status'=> $status["code"], 'message' => $status["message"]);
+         return array('type'=> strtolower($result[1]), 'id'=> $resource, 'status'=> $status["code"], 'message' => $status["message"], 'resource' => $status["item"]);
       }
 
       return null;
@@ -395,7 +395,7 @@ class BigML {
       /*
         Delete a dataset
       */
-      $rest = self::get_resource_request($datasetId, "dataset", "DELETE", null, false);
+      $rest = self::get_resource_request($datasetId, "dataset", "DELETE", null);
       if ($rest == null) return null;
       return $rest->getResponse();
    }
@@ -493,7 +493,7 @@ class BigML {
       /*
         Deletes a model
       */
-      $rest = self::get_resource_request($modelId, "model", "DELETE", null, false);
+      $rest = self::get_resource_request($modelId, "model", "DELETE", null);
       if ($rest == null) return null;
       return $rest->getResponse();
    }
@@ -592,7 +592,7 @@ class BigML {
       /*
         Deletes a ensemble 
       */
-      $rest = self::get_resource_request($ensembleId, "ensemble", "DELETE", null, false);
+      $rest = self::get_resource_request($ensembleId, "ensemble", "DELETE", null);
       if ($rest == null) return null;
       return $rest->getResponse();
    }
@@ -676,7 +676,7 @@ class BigML {
       /*
         Deletes a  prediction
       */
-      $rest = self::get_resource_request($predictionId, "prediction", "DELETE", null, false);
+      $rest = self::get_resource_request($predictionId, "prediction", "DELETE", null);
       if ($rest == null) return null;
       return $rest->getResponse();
    }
@@ -803,7 +803,7 @@ class BigML {
       /*
          Deletes a batch prediction 
       */
-      $rest = self::get_resource_request($batchPredictionId, "batchprediction", "DELETE", null, false);
+      $rest = self::get_resource_request($batchPredictionId, "batchprediction", "DELETE", null);
       if ($rest == null) return null;
       return $rest->getResponse();
    }
@@ -824,8 +824,8 @@ class BigML {
 
       $resource = self::_check_resource($modelId, null, $waitTime, $retries);
 
-      if ($resource == null || $resource['type'] != "model") {
-         error_log("Wrong model id. A model id is needed to create a evaluation");
+      if ($resource == null || !in_array($resource['type'],array("model","ensemble"))) {
+         error_log("Wrong model or ensemble id. A model or ensemble id is needed to create a evaluation");
          return null;
       } elseif ($resource["status"] != BigMLRequest::FINISHED) {
          error_log($resource['message']);
@@ -900,7 +900,7 @@ class BigML {
       /*
          Deletes a evaluation
       */
-      $rest = self::get_resource_request($evaluationId, "evaluation", "DELETE", null, false);
+      $rest = self::get_resource_request($evaluationId, "evaluation", "DELETE", null);
       if ($rest == null) return null;
       return $rest->getResponse();
    }
@@ -998,7 +998,7 @@ class BigML {
    	  /*
         Deletes a cluster
       */
-      $rest = self::get_resource_request($clusterId, "cluster", "DELETE", null, false);
+      $rest = self::get_resource_request($clusterId, "cluster", "DELETE", null);
       if ($rest == null) return null;
       return $rest->getResponse();
    }
@@ -1077,7 +1077,7 @@ class BigML {
       /*  
         Deletes a centroid.
       */
-      $rest = self::get_resource_request($centroId, "centroid", "DELETE", null, false);
+      $rest = self::get_resource_request($centroId, "centroid", "DELETE", null);
       if ($rest == null) return null;
       return $rest->getResponse();
    }
@@ -1200,7 +1200,7 @@ class BigML {
       /*
          Deletes a batch centroid.
       */
-      $rest = self::get_resource_request($batchcentroId, "batchcentroid", "DELETE",null, false);
+      $rest = self::get_resource_request($batchcentroId, "batchcentroid", "DELETE",null);
 	  if ($rest == null) return null;
 
       return $rest->getResponse();
@@ -1401,10 +1401,45 @@ class BigML {
 
    }
 
-   private static function get_resource_request($resourceId, $resourceType, $operation, $queryString=null, $checkStatus=true, $waitTime=3000, $retries=0, $shared_username=null, $shared_api_key=null) {
-     $resource = self::_check_resource($resourceId, $queryString, $waitTime, $retries);
+   private static function check_resource_type($resourceId, $resourceType) {
+     
+      $resource = null;
+      if ($resourceId instanceof STDClass && property_exists($resourceID, "resource")) {
+         $resource = $resourceId->resource;
+      } else if (is_string($resourceId)) {
+         $resource = $resourceId;
+      } else {
+         error_log("Wrong ". $resourceType . " id");
+         return null;
+      }
+ 
+      if (preg_match('/('.$resourceType. ')(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
+         return $resource; 
+      } else {
+         error_log("Wrong ". $resourceType . " id");
+         return null;
+      }
+   }
 
-     if ($resource == null || $resource['type'] != $resourceType) {
+   private static function get_resource_request($resourceId, $resourceType, $operation, $queryString=null, $checkStatus=false, $waitTime=3000, $retries=0, $shared_username=null, $shared_api_key=null) {
+
+     $resource=self::check_resource_type($resourceId,  $resourceType);
+
+     if ($resource == null) {
+        error_log("Wrong ". $resourceType . " id");
+        return null;
+     }
+
+     if ($checkStatus) {
+        $resource = self::_check_resource($resourceId, $queryString, $waitTime, $retries);
+        if ($resource["status"] != BigMLRequest::FINISHED) {
+           error_log($resource['message']);
+           return null;
+        }
+        $resource = $resource["id"];
+     }
+
+     /*if ($resource == null || $resource['type'] != $resourceType) {
         error_log("Wrong ". $resourceType . " id");
         return null;
      }
@@ -1412,9 +1447,9 @@ class BigML {
      if ($checkStatus && $resource["status"] != BigMLRequest::FINISHED) {
         error_log($resource['message']);
         return null;
-     }
+     }*/
 
-     $rest = new BigMLRequest($operation, $resource["id"], $shared_username, $shared_api_key);
+     $rest = new BigMLRequest($operation, $resource, $shared_username, $shared_api_key);
 
      if ($queryString!=null) {
         $rest->setQueryString($queryString);

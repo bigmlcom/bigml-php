@@ -132,7 +132,7 @@ class ModelFields {
       $unique_names = array_unique($unique_names);
 
       if (count($unique_names) < $len) {
-         $fields = $this->ransform_repeated_names($fields);
+         $fields = $this->transform_repeated_names($fields);
       }
 
       return $fields;
@@ -145,7 +145,7 @@ class ModelFields {
         The objective field treated first to avoid changing it
       */
       if ($this->objective_id != null) {
-         $unique_names =array($fields->{$this->objective_id->name});
+         $unique_names =array($fields->{$this->objective_id}->name);
       } else {
          $unique_names = array();
       }
