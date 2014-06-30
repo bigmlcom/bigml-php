@@ -735,8 +735,12 @@ You can also use a local model to generate a IF-THEN rule set that can be very h
 Testing
 -------
 To run the tests::
-     cd tests 
-     ./phpunit.phar bigmlTest.php
+
+     cd tests
+
+     phpunit.phar bigmlTest.php
+
+You can download phpunit.phar from `http://phpunit.de/#download <http://phpunit.de/#download>`_.
 
 Before to set up your authentication variables inside bigmlTest.php::
 
