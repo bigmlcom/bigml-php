@@ -32,7 +32,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
         $items = $api::list_centroids();
         while (count($items->resources) > 0) {
             foreach($items->resources as $resource) {
-                print_r($api::delete_centroid($resource->resource));
+                $api::delete_centroid($resource->resource);
             }
             $items = $api::list_centroids();
         }
@@ -40,7 +40,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
         $items = $api::list_clusters();
         while (count($items->resources) > 0) {
             foreach($items->resources as $resource) {
-                print_r($api::delete_cluster($resource->resource));
+                $api::delete_cluster($resource->resource);
             }
             $items = $api::list_clusters();
         }
@@ -48,7 +48,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
         $items = $api::list_ensembles();
         while (count($items->resources) > 0) {
             foreach($items->resources as $resource) {
-                print_r($api::delete_ensemble($resource->resource));
+                $api::delete_ensemble($resource->resource);
             }
             $items = $api::list_ensembles();
         }
@@ -56,7 +56,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
         $items = $api::list_models();
         while (count($items->resources) > 0) {
             foreach($items->resources as $resource) {
-                print_r($api::delete_model($resource->resource));
+                $api::delete_model($resource->resource);
             }
             $items = $api::list_models();
         }
@@ -64,7 +64,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
         $items = $api::list_evaluations();
         while (count($items->resources) > 0) {
             foreach($items->resources as $resource) {
-                print_r($api::delete_evaluation($resource->resource));
+                $api::delete_evaluation($resource->resource);
             }
             $items = $api::list_evaluations();
         }
@@ -72,7 +72,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
         $items = $api::list_datasets();
         while (count($items->resources) > 0) {
             foreach($items->resources as $resource) {
-                print_r($api::delete_dataset($resource->resource));
+                $api::delete_dataset($resource->resource);
             }
             $items = $api::list_datasets();
         }
@@ -80,7 +80,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
         $items = $api::list_sources();
         while (count($items->resources) > 0) {
             foreach($items->resources as $resource) {
-                print_r($api::delete_source($resource->resource));
+                $api::delete_source($resource->resource);
             }
             $items = $api::list_sources();
         }
