@@ -98,9 +98,9 @@ class Model extends BaseModel{
          throw new Exception("You needed to use proportional missing strategy, 
                          for regressions. Please install them before, using local predictions for the model."); 
       }
+    
       # Checks and cleans input_data leaving the fields used in the model
       $input_data = $this->filter_input_data($input_data, $by_name);
-
       # Strips affixes for numeric values and casts to the final field type
       $input_data = cast($input_data, $this->fields);
       $prediction_info = $tree->predict($input_data, null, $missing_strategy);
@@ -137,12 +137,12 @@ class Model extends BaseModel{
       $tree = $this->tree;
       $objective_id = $tree->objective_id;
 
-      if ($this->fields[$objective_id]['optype'] == 'numeric' ) {
+      if ($this->fields->{$objective_id}->optype == 'numeric' ) {
          if ($data_locale==null) {
             $data_locale = $this->locale;
          }
          find_locale($data_locale);
-         $datatype = $this->fields[$objective_id]['datatype'];
+         $datatype = $this->fields->{$objective_id}->datatype;
 
          if ($datatype == "double" || $datatype == "float") {
             return floatval($value_as_string);

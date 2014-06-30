@@ -25,6 +25,66 @@ class BigMLTest extends PHPUnit_Framework_TestCase
     protected static $models_tag_list;
     protected static $local_multimodel;
     protected static $batch_predictions;
+    protected static $votes;
+
+    static function clean_all($api) {
+        print "DELETE CENTROIDS\n";
+        $items = $api::list_centroids();
+        while (count($items->resources) > 0) {
+            foreach($items->resources as $resource) {
+                print_r($api::delete_centroid($resource->resource));
+            }
+            $items = $api::list_centroids();
+        }
+        print "DELETE CLUSTERS\n";
+        $items = $api::list_clusters();
+        while (count($items->resources) > 0) {
+            foreach($items->resources as $resource) {
+                print_r($api::delete_cluster($resource->resource));
+            }
+            $items = $api::list_clusters();
+        }
+        print "DELETE ENSEMBLES\n";
+        $items = $api::list_ensembles();
+        while (count($items->resources) > 0) {
+            foreach($items->resources as $resource) {
+                print_r($api::delete_ensemble($resource->resource));
+            }
+            $items = $api::list_ensembles();
+        }
+        print "DELETE MODELS\n";
+        $items = $api::list_models();
+        while (count($items->resources) > 0) {
+            foreach($items->resources as $resource) {
+                print_r($api::delete_model($resource->resource));
+            }
+            $items = $api::list_models();
+        }
+        print "DELETE EVALUATIONS\n";
+        $items = $api::list_evaluations();
+        while (count($items->resources) > 0) {
+            foreach($items->resources as $resource) {
+                print_r($api::delete_evaluation($resource->resource));
+            }
+            $items = $api::list_evaluations();
+        }
+        print "DELETE DATASETS\n";
+        $items = $api::list_datasets();
+        while (count($items->resources) > 0) {
+            foreach($items->resources as $resource) {
+                print_r($api::delete_dataset($resource->resource));
+            }
+            $items = $api::list_datasets();
+        }
+        print "DELETE SOURCES\n";
+        $items = $api::list_sources();
+        while (count($items->resources) > 0) {
+            foreach($items->resources as $resource) {
+                print_r($api::delete_source($resource->resource));
+            }
+            $items = $api::list_sources();
+        }
+    }
 
     public static function setUpBeforeClass() {
        self::$api =  new BigML(self::$username, self::$api_key, true);
@@ -38,6 +98,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        self::$evaluations = array();
        self::$models_tag_list = array();
        self::$batch_predictions = array();
+       #self::clean_all(self::$api);
 	}
 
     public function test_i_create_a_source_uploading_local_file() {
@@ -59,7 +120,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
     public function test_i_wait_until_the_source_is_ready() {
        print "check local source is ready\n";
 	   foreach(self::$sources as $source) {
-          $resource = self::$api->_check_resource($source, null, 3000, 20);
+          $resource = self::$api->_check_resource($source, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 	   }	  
     }
@@ -74,7 +135,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
     public function test_i_wait_until_the_dataset_is_ready() {
        print "check the dataset is ready\n";
-       $resource = self::$api->_check_resource(self::$datasets[0], null, 3000, 20);
+       $resource = self::$api->_check_resource(self::$datasets[0], null, 3000, 30);
        $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
     }
 
@@ -87,7 +148,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
     public function test_i_wait_until_the_model_is_ready() {
        print "check model is ready\n";
-       $resource = self::$api->_check_resource(self::$models[0], null, 3000, 20);
+       $resource = self::$api->_check_resource(self::$models[0], null, 3000, 30);
        $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
     }
 
@@ -131,7 +192,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
  
     public function test_i_wait_until_the_centroid_is_ok() {
        print "check centroid is ok\n";
-       $resource = self::$api->_check_resource(self::$centroids[0], null, 3000, 20);
+       $resource = self::$api->_check_resource(self::$centroids[0], null, 3000, 30);
        $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
        $centroid = self::$api->get_centroid(self::$centroids[0]);
        $this->assertEquals(BigMLRequest::HTTP_OK, $centroid->code);
@@ -188,7 +249,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
     public function test_i_wait_the_prediction_for_ensemble_is_ready() {
        print "check the prediction is ready\n";
-       $resource = self::$api->_check_resource(self::$predictions[1], null, 3000, 20);
+       $resource = self::$api->_check_resource(self::$predictions[1], null, 3000, 30);
        $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
     }
 
@@ -230,7 +291,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
     public function test_i_wait_until_the_model_1_is_ready() {
        print "check from model is ready\n";
-       $resource = self::$api->_check_resource(self::$models[1], null, 3000, 20);
+       $resource = self::$api->_check_resource(self::$models[1], null, 3000, 30);
        $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
     }
 
@@ -243,7 +304,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
   
     public function test_i_wait_until_the_model_2_is_ready() {
        print "check from model is ready\n";
-       $resource = self::$api->_check_resource(self::$models[2], null, 3000, 20);
+       $resource = self::$api->_check_resource(self::$models[2], null, 3000, 30);
        $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
     }
  
@@ -256,7 +317,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
     public function test_i_wait_until_the_model_3_is_ready() {
        print "check from model is ready\n";
-       $resource = self::$api->_check_resource(self::$models[3], null, 3000, 20);
+       $resource = self::$api->_check_resource(self::$models[3], null, 3000, 30);
        $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
     }
 
@@ -349,7 +410,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
     public function test_i_wait_until_the_dataset_2_is_ready() {
        print "check from dataset is ready\n";
-       $resource = self::$api->_check_resource(self::$datasets[2], null, 3000, 20);
+       $resource = self::$api->_check_resource(self::$datasets[2], null, 3000, 30);
        $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
     }
 
@@ -362,7 +423,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
     public function test_i_wait_until_the_model_with_dataset_list_is_ready() {
        print "check a new model from datasets is ready\n";
-       $resource = self::$api->_check_resource(self::$models[4], null, 3000, 20);
+       $resource = self::$api->_check_resource(self::$models[4], null, 3000, 30);
        $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
     }
 
@@ -381,7 +442,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
     public function test_i_wait_until_the_model_1_with_tag_is_ready() {
        print "check a model is ready\n";  
-       $resource = self::$api->_check_resource(self::$models[5], null, 3000, 20);
+       $resource = self::$api->_check_resource(self::$models[5], null, 3000, 30);
        $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
     }
 
@@ -394,7 +455,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
     public function test_i_wait_until_the_model_2_with_tag_is_ready() {
        print "check a model is ready\n"; 
-       $resource = self::$api->_check_resource(self::$models[6], null, 3000, 20);
+       $resource = self::$api->_check_resource(self::$models[6], null, 3000, 30);
        $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
     }
 
@@ -407,7 +468,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
     public function test_i_wait_until_the_model_3_with_tag_is_ready() {
        print "check a model is ready\n";
-       $resource = self::$api->_check_resource(self::$models[7], null, 3000, 20);
+       $resource = self::$api->_check_resource(self::$models[7], null, 3000, 30);
        $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
     }
 
@@ -448,7 +509,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
     public function test_i_wait_until_the_dataset_with_options_is_ready() {
        print "check the dataset with options is ready\n";
-       $resource = self::$api->_check_resource(end(self::$datasets), null, 3000, 20);
+       $resource = self::$api->_check_resource(end(self::$datasets), null, 3000, 30);
        $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
     } 
    
@@ -461,7 +522,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
     public function test_i_wait_until_the_model_with_options_is_ready() {
        print "check model is ready\n";
-       $resource = self::$api->_check_resource(self::$models[8], null, 3000, 20);
+       $resource = self::$api->_check_resource(self::$models[8], null, 3000, 30);
        $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
     }   
 
@@ -495,14 +556,86 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        $filename = self::$api->download_batch_prediction(self::$batch_predictions[0], "./tmp/batch_predictions.csv");
        $this->assertNotNull($filename);
     }
-/*
-features/missing_and_errors.feature
-features/create_batch_prediction.feature
-features/create_batch_prediction_multi_model.feature
-features/compare_predictions.feature
-features/compute_multivote_predictions.feature
+
+	public function test_i_compare_the_prediction_file_is_correct() {
+	   print "i compare the prediction file is correct\n";
+       $this->assertTrue(compareFiles("./tmp/batch_predictions.csv", "./checkfiles/batch_predictions.csv"));
+    }
+
+    public function test_create_a_batch_prediction_from_multimodel_and_save_it() {
+       print "create a batch prediction from multimodel and save it";
+       $data = array(array("petal width"=>0.5), 
+                     array("petal length"=>6, "petal width"=> 2),
+                     array("petal length"=>4,"petal width"=> 1.5));
+
+       self::$local_multimodel->batch_predict($data, "./tmp");
+    }
+
+    public function test_i_combine_the_votes() {
+       print "combine the votes\n";
+       #world.votes = world.local_model.batch_votes(directory)
+       self::$votes=self::$local_multimodel->batch_votes("./tmp");
+    }
+
+    public function test_the_plurality_combined_prediction() {
+       print "test the plurarity combined prediction\n";
+       $predictions = array("Iris-setosa", "Iris-virginica", "Iris-versicolor");
+       $i=0;
+       foreach(self::$votes as $vote) {
+          $this->assertEquals($predictions[$i], $vote->combine()); 
+          $i+=1;
+       }
+    }
  
-	 */
+    public function test_the_confidence_weighted_prediction() {
+       print "test the confidence weighted prediction\n";
+       $predictions = array("Iris-setosa", "Iris-virginica", "Iris-versicolor");
+       $i=0;
+       foreach(self::$votes as $vote) {
+          $this->assertEquals($predictions[$i], $vote->combine(1));
+          $i+=1; 
+       }
+    }
+
+    public function test_compute_multivote_predictions() {
+       $results = array(array("file"=> "./data/predictions_c.json", "data"=>array(array(0, "a", 0.450471270879), array(1,"a",0.552021302649), array(2, "a", 0.403632421178))),
+                  array("file"=> "./data/predictions_r.json", "data"=>array(array(0, 1.55555556667, 0.400079152063), array(1,1.59376845074,0.248366474212), array(2, 1.55555556667,0.400079152063))));
+
+       foreach($results as $item) {
+          $file_data = file_get_contents($item["file"]);
+          $json_c=json_decode($file_data,true);
+          $multivote = new MultiVote($json_c);
+          print "test compute multivote predictions " . $item["file"] . "\n";
+          
+          foreach($item["data"] as $result) {
+             print "compute the prediction without confidence using method " . $result[0] . "\n";
+             $prediction = $multivote->combine($result[0], true);
+             $combined_prediction=$prediction[0];
+             $combined_confidence=$prediction[1];
+
+             $prediction = $result[1];
+             $confidence = $result[2];
+             $combined_prediction_not_confidence = $multivote->combine($result[0], false);
+
+             print "check the combined prediction \n"; 
+             if ($multivote->is_regression()) {
+                $this->assertEquals(round($combined_prediction,6), round($prediction,6));
+             } else {
+                $this->assertEquals($combined_prediction, $prediction);
+             }
+             print "check the combined prediction without confidence \n";
+             if ($multivote->is_regression()) {
+                $this->assertEquals(round($combined_prediction_not_confidence,6), round($prediction,6));
+             } else {
+                $this->assertEquals($combined_prediction_not_confidence, $prediction);
+             }
+             print "check the confidence for the combined prediction\n";
+             $this->assertEquals(round($combined_confidence, 6),round($confidence,6)); 
+          }
+          
+       }
+
+    }
 }
 
 ?>

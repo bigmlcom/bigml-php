@@ -27,8 +27,15 @@ function ws_confidence($prediction, $distribution, $ws_z=1.96, $ws_n=null) {
               provided distribution
    */
 
-   $ws_p = floatval($distribution[strval($prediction)]);
+   if (!array_keys($distribution) !== range(0, count($distribution) -1)) {
+      $new_distribution = array();
+      foreach($distribution as $item) {
+         $new_distribution[$item[0]] = $item[1];
+      }
+      $distribution = $new_distribution;
+   } 
 
+   $ws_p = floatval($distribution[strval($prediction)]);
    if ($ws_p < 0)
    {
       throw new Exception("The distribution weight must be a positive value");
@@ -343,7 +350,6 @@ class MultiVote {
             $predictions->predictions = $this->probability_weight();
 
          }
-
          return $predictions->combine_categorical( (array_key_exists($method,  $this->COMBINATION_WEIGHTS)) ? 
                                          $this->COMBINATION_WEIGHTS[$method] : null, 
                                         $with_confidence);
@@ -462,7 +468,7 @@ class MultiVote {
                $weight = $prediction[$weight_label];
             }
          }
-
+ 
          $category = $prediction["prediction"];
          if (array_key_exists(strval($category),  $mode) ) {
             $mode[strval($category)] = array("count" => $mode[strval($category)]["count"] + $weight,
@@ -483,20 +489,19 @@ class MultiVote {
          return $retval;
       }*/
       uasort($mode, array($this, "sort_mode_items"));
+      
       reset($mode);
 
       $prediction = key($mode);
 
       if ($with_confidence) {
-
-         if (!array_key_exists('confidence', $this->predictions[0])) {
+         if (array_key_exists('confidence', $this->predictions[0])) {
             return $this->weighted_confidence($prediction, $weight_label);
          } else {
             $combined_distribution = $this->combine_distribution();
             $distribution = $combined_distribution[0];
             $count = $combined_distribution[1];
             $combined_confidence = ws_confidence($prediction, $distribution, 1.96, $count); 
-
             return array($prediction, $combined_confidence); 
          }
 
@@ -506,11 +511,16 @@ class MultiVote {
    }
 
    private function sort_mode_items($a, $b) {
-      $retval = $b["count"] - $a["count"];
-
-      if (!$retval) $retval= $a["order"] - $b["order"];
-
-      return $retval;
+      if ($a["count"] < $b["count"]) {
+         return 1;
+      } else if ($a["count"] > $b["count"]) {
+         return -1;
+      }  else {
+         if ($a["order"] < $b["order"]) {
+            return -1;
+         }
+         return 0;
+      }    
    }
 
    function combine_distribution($weight_label='probability') {
@@ -529,7 +539,7 @@ class MultiVote {
              throw new Exception("Not enough data to use the selected prediction method. Try creating your model anew.");
          }
 
-         if (!array_key_exists($distribution, $prediction["prediction"]) ) {   
+         if (!array_key_exists($prediction["prediction"], $distribution) ) {   
             $distribution[$prediction["prediction"]] = 0.0; 
          }
 
@@ -540,16 +550,30 @@ class MultiVote {
       if ($total > 0) {
          $new_distribution = array();
          foreach($distribution as $key => $value) {
-            array_push($new_predictions, array($key,$value)); 
+            array_push($new_distribution, array($key,$value)); 
          }
-  
+         $distribution = $new_distribution; 
       } else {
          $distribution = array();
       }
          
       return array($distribution, $total);
    }
-
+/*
+distribution = {}
+        total = 0
+        for prediction in self.predictions:
+            if not prediction['prediction'] in distribution:
+                distribution[prediction['prediction']] = 0.0
+            distribution[prediction['prediction']] += prediction[weight_label]
+            total += prediction['count']
+        if total > 0:
+            distribution = [[key, value] for key, value in
+                            distribution.items()]
+        else:
+            distribution = []
+        return distribution, total
+*/
    function weighted_confidence($combined_prediction, $weight_label) {
       /*
          Compute the combined weighted confidence from a list of predictions
@@ -566,7 +590,7 @@ class MultiVote {
          }
       }
 
-      if (($weight_label != null && !is_string($weight_label)) || (!$check_confidence_and_weight_label) ) {
+      if ($weight_label != null && (!is_string($weight_label) || (!$check_confidence_and_weight_label)) ) {
          throw new Exception("Not enough data to use the selected prediction method. Lacks " . $weight_label . " information.");
       }
 

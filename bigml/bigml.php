@@ -1508,7 +1508,8 @@ class BigML {
 
    function __construct($method='GET', $uri = 'source', $shared_username=null, $shared_api_key=null) {
 
-      $this->endpoint=(BigML::getDomain() != null) ? BigML::getDomain() : BigML::BIGML_ENDPOINT . (BigML::isDevMode() == true ? '/dev' : '' ); 
+      $this->endpoint=(BigML::getDomain() != null) ? BigML::getDomain() : BigML::BIGML_ENDPOINT;
+      $this->endpoint.=(BigML::isDevMode() == true) ? '/dev' : '' ; 
       $this->method = $method;
       $this->version = BigML::getVersion();
       $this->uri = $uri;
@@ -1670,7 +1671,7 @@ class BigML {
 
          } else {
             error_log("Unexpected error ". $code);
-            $this->response->code = $HTTP_INTERNAL_SERVER_ERROR;
+            $this->response["code"] = $HTTP_INTERNAL_SERVER_ERROR;
          }
 
          curl_close($curl);
@@ -1863,6 +1864,15 @@ function maybe_save($resource, $path, $code, $location)
       fclose($fp);
 
      }
+}
+
+function compareFiles($file_a, $file_b)
+{
+   if (filesize($file_a) == filesize($file_b) && 
+       md5_file($file_a) == md5_file($file_b) ) {
+      return true;
+   }
+   return false;
 }
 
 ?>

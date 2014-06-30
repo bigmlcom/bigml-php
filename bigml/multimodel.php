@@ -140,9 +140,7 @@ class MultiModel{
       */
 
       foreach($this->models as $model) {
-
-         $output_file = get_predictions_file_name($model::$resource_id, $output_file_path);
-
+         $output_file = get_predictions_file_name($model->resource_id, $output_file_path);
          if ($reuse) {
                 try {
                     $predictions_file = fopen($output_file, "r");
@@ -165,7 +163,6 @@ class MultiModel{
                if (is_string($prediction[0])) {
                   $prediction[0] = utf8_encode($prediction[0]);
                }
-
                $res = array();
                foreach ($prediction as $value) {
                   if (is_array($value)) {
@@ -216,7 +213,7 @@ class MultiModel{
       */
       $votes_files = array();
       foreach($this->models as $model) {
-         array_push($votes_files, get_predictions_file_name($model::$resource_id, $predictions_file_path));
+         array_push($votes_files, get_predictions_file_name($model->resource_id, $predictions_file_path));
       }
 
       return read_votes($votes_files, $this->models[0], $data_locale); 

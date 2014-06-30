@@ -171,10 +171,8 @@ class ModelFields {
       /*
          Filters the keys given in input_data checking against model fields
       */
-
       if (is_array($input_data)) {
          $input_data = array_filter($input_data, array(__CLASS__, 'clean_empty_fields'));
-
          $new_input_data = array();
 
          if ($by_name) {
@@ -207,9 +205,14 @@ class ModelFields {
    }
 
    protected function clean_empty_fields($var) {
-      return ($var != null && trim($var) != "");
+      return ($var != null);
    }
 
+}
+
+function isAssoc($arr)
+{
+  return array_keys($arr) !== range(0, count($arr) - 1);
 }
 
 ?>
