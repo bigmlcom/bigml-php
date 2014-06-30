@@ -732,3 +732,20 @@ You can also use a local model to generate a IF-THEN rule set that can be very h
     IF petal_length <= 2.45 THEN
        species = Iris-setosa
 
+Testing
+-------
+To run the tests::
+     cd tests 
+     ./phpunit.phar bigmlTest.php
+
+Before to set up your authentication variables inside bigmlTest.php::
+
+     protected static $username = "you_username";
+     protected static $api_key = "your_api_key";
+
+All tests models, datasets, sources etc... will be created in the development environment. 
+You can delete all uncommenting the following line in bigmlTest.php::
+    
+     self::clean_all(self::$api);
+
+
