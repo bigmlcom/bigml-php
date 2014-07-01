@@ -412,21 +412,21 @@ You can filter resources in listings using the syntax and fields labeled as filt
 
 A few examples:
 
-    - Ids of the first 5 sources created before April 1st, 2012::
+- Ids of the first 5 sources created before April 1st, 2012::
 
-        $api::list_sources("limit=5;created__lt=2012-04-1");
+    $api::list_sources("limit=5;created__lt=2012-04-1");
 
-    - Name of the first 10 datasets bigger than 1MB::
+- Name of the first 10 datasets bigger than 1MB::
 
-        $api::list_datasets("limit=10;size__gt=1048576");
+    $api::list_datasets("limit=10;size__gt=1048576");
 
-    - Name of models with more than 5 fields (columns)::
+- Name of models with more than 5 fields (columns)::
 
-        $api.list_models("columns__gt=5");
+    $api.list_models("columns__gt=5");
 
-    - Ids of predictions whose model has not been deleted::
-  
-        $api::list_predictions("model_status=true");
+- Ids of predictions whose model has not been deleted::
+ 
+    $api::list_predictions("model_status=true");
 
 Ordering Resources
 ------------------
@@ -435,20 +435,21 @@ You can order resources in listings using the syntax and fields labeled as sorta
 
 A few examples:
 
-    - Name of sources ordered by size::
-        $api::list_sources("order_by=size");
+- Name of sources ordered by size::
+    
+     $api::list_sources("order_by=size");
 
-    - Number of instances in datasets created before April 1st, 2012 ordered by size::
+- Number of instances in datasets created before April 1st, 2012 ordered by size::
 
-        $api::list_datasets("created__lt=2012-04-1;order_by=size");
+     $api::list_datasets("created__lt=2012-04-1;order_by=size");
 
-    - Model ids ordered by number of predictions (in descending order)::
+- Model ids ordered by number of predictions (in descending order)::
   
-        $api::list_models("order_by=-number_of_predictions");
+     $api::list_models("order_by=-number_of_predictions");
 
-    - Name of predictions ordered by name::
-  
-        $api::list_predictions("order_by=name");
+- Name of predictions ordered by name::
+ 
+     $api::list_predictions("order_by=name");
 
 Updating Resources
 ------------------
@@ -533,12 +534,11 @@ Once you have a local model you can use to generate predictions locally::
 
 Local predictions have three clear advantages:
     
-    - Removing the dependency from BigML to make new predictions.
+- Removing the dependency from BigML to make new predictions.
 
-    - No cost (i.e., you do not spend BigML credits).
+- No cost (i.e., you do not spend BigML credits).
 
-    - Extremely low latency to generate predictions for huge volumes of data.
-
+- Extremely low latency to generate predictions for huge volumes of data.
 
 Local Clusters
 --------------
