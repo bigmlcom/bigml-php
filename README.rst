@@ -395,17 +395,15 @@ You can list resources with the appropriate api method::
 
 you will receive a dictionary with the following keys:
 
-    code: If the request is successful you will get a bigml.api.HTTP_OK (200) status code. 
-          Otherwise, it will be one of the standard HTTP error codes. See BigML documentation on status codes for more info.
-    meta: A dictionary including the following keys that can help you paginate listings:
-    previous: Path to get the previous page or None if there is no previous page.
-    next: Path to get the next page or None if there is no next page.
-    offset: How far off from the first entry in the resources is the first one listed in the resources key.
-    limit: Maximum number of resources that you will get listed in the resources key.
-    total_count: The total number of resources in BigML.
-    objects: A list of resources as returned by BigML.
-    error: If an error occurs and the resource cannot be created, it will contain an additional code and a description of the error. 
-           In this case, meta, and resources will be None.
+-  **code**: If the request is successful you will get a bigml.api.HTTP_OK (200) status code. Otherwise, it will be one of the standard HTTP error codes. See BigML documentation on status codes for more info.
+-  **meta**: A dictionary including the following keys that can help you paginate listings:
+-  **previous**: Path to get the previous page or None if there is no previous page.
+-  **next**: Path to get the next page or None if there is no next page.
+-  **offset**: How far off from the first entry in the resources is the first one listed in the resources key.
+-  **limit**: Maximum number of resources that you will get listed in the resources key.
+-  **total_count**: The total number of resources in BigML.
+-  **objects**: A list of resources as returned by BigML.
+-  **error**: If an error occurs and the resource cannot be created, it will contain an additional code and a description of the error. In this case, meta, and resources will be None.
 
 Filtering Resources
 -------------------
@@ -414,19 +412,19 @@ You can filter resources in listings using the syntax and fields labeled as filt
 
 A few examples:
 
-    Ids of the first 5 sources created before April 1st, 2012::
+    - Ids of the first 5 sources created before April 1st, 2012::
 
         $api::list_sources("limit=5;created__lt=2012-04-1");
 
-    Name of the first 10 datasets bigger than 1MB::
+    - Name of the first 10 datasets bigger than 1MB::
 
         $api::list_datasets("limit=10;size__gt=1048576");
 
-    Name of models with more than 5 fields (columns)::
+    - Name of models with more than 5 fields (columns)::
 
         $api.list_models("columns__gt=5");
 
-    Ids of predictions whose model has not been deleted::
+    - Ids of predictions whose model has not been deleted::
   
         $api::list_predictions("model_status=true");
 
@@ -437,18 +435,18 @@ You can order resources in listings using the syntax and fields labeled as sorta
 
 A few examples:
 
-    Name of sources ordered by size::
+    - Name of sources ordered by size::
         $api::list_sources("order_by=size");
 
-    Number of instances in datasets created before April 1st, 2012 ordered by size::
+    - Number of instances in datasets created before April 1st, 2012 ordered by size::
 
         $api::list_datasets("created__lt=2012-04-1;order_by=size");
 
-    Model ids ordered by number of predictions (in descending order)::
+    - Model ids ordered by number of predictions (in descending order)::
   
         $api::list_models("order_by=-number_of_predictions");
 
-    Name of predictions ordered by name::
+    - Name of predictions ordered by name::
   
         $api::list_predictions("order_by=name");
 
