@@ -84,6 +84,14 @@ class BigMLTest extends PHPUnit_Framework_TestCase
             }
             $items = $api::list_sources();
         }
+        print "DELETE PREDICTIONS\n";
+        $items = $api::list_predictions();
+        while (count($items->resources) > 0) {
+            foreach($items->resources as $resource) {
+                $api::delete_prediction($resource->resource);
+            }
+            $items = $api::list_predictions();
+        }
     }
 
     public static function setUpBeforeClass() {
