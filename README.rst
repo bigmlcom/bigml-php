@@ -295,10 +295,15 @@ Give the method a cluster identifier and the input data to obtain the centroid.
 You can also give the centroid predicition a name::
 
     $centroid = $api::create_centroid($cluster,
-                                      array("sepal length" => 5,
-                                            "sepal width" => 2.5,
-                                            "petal length" => 2,
-                                            "petal width" => 4),
+                                      array("pregnancies"=> 0,
+                                            "plasma glucose"=> 118,
+                                            "blood pressure"=> 84,
+                                            "triceps skin thickness"=> 47,
+                                            "insulin"=> 230,
+                                            "bmi"=> 45.8,
+                                            "diabetes pedigree"=> 0.551,
+                                            "age"=> 31,
+                                            "diabetes"=> "true"),
                                       array("name"=> "my centroid"));
 
 
@@ -570,8 +575,17 @@ Local Centroids
 
 Using the local cluster object, you can predict the centroid associated to an input data set::
 
-    $local_cluster->centroid(array('petal length'=> 1, 'petal width'=> 1,'sepal length'=> 1, 'sepal width'=> 1, 'species'=> 'Iris-setosa'));
+    $local_cluster->centroid(array("pregnancies"=> 0,
+                                   "plasma glucose"=> 118,
+                                   "blood pressure"=> 84,
+                                   "triceps skin thickness"=> 47,
+                                   "insulin"=> 230,
+                                   "bmi"=> 45.8,
+                                   "diabetes pedigree"=> 0.551,
+                                   "age"=> 31,
+                                   "diabetes"=> "true"));
 
+    array('distance'=> 0.454110207355, 'centroid_name'=> 'Cluster 4', 'centroid_id'=> '000004');
 
 You must keep in mind, though, that to obtain a centroid prediction, input data must have values for all the numeric fields. No missing values for the numeric fields are allowed.
 As in the local model predictions, producing local centroids can be done independently of BigML servers, so no cost or connection latencies are involved.

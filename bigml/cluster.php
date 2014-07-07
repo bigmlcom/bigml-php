@@ -111,7 +111,7 @@ class Cluster extends ModelFields {
 
             foreach($this->scales as $field_id=>$field) {
             
-               if (!property_exists(self::$fields, $field_id) )  {
+               if (!property_exists($this->fields, $field_id) )  {
                   throw new Exception("Some fields are missing  to generate a local cluster. Please, provide a cluster with the complete list of fields.");   
                }
             }
@@ -130,21 +130,17 @@ class Cluster extends ModelFields {
       /*
          Returns the id of the nearest centroid
       */
-
       # Checks and cleans input_data leaving the fields used in the model
       $input_data = $this->filter_input_data($input_data, $by_name);
-
       # Checks that all numeric fields are present in input data
-      foreach(self::$fields as $field_id=>$field) {
+      foreach($this->fields as $field_id=>$field) {
          if (!in_array($field->optype, array('categorical', 'text')) && !array_key_exists($field_id, $input_data) ) {
             throw new Exception("Failed to predict a centroid. Input data must contain values for all numeric fields to find a centroid.");
          } 
       }
-
       #Strips affixes for numeric values and casts to the final field type
-      $input_data = cast($input_data, self::$fields);
+      $input_data = cast($input_data, $this->fields);
       $unique_terms = array();
-
       foreach($this->term_forms as $field_id => $field) {
 
          if ( array_key_exists($field_id, $input_data) ) {

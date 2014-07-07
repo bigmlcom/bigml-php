@@ -755,7 +755,7 @@ class BigML {
          and saved locally. A file-like object is returned otherwise.
       */
 
-      $rest = self::get_resource_request($batchPredictionId, "batchprediction", "DOWNLOAD", $queryString); 
+      $rest = self::get_resource_request($batchPredictionId, "batchprediction", "DOWNLOAD"); 
       if ($rest == null) return null;
 
       $data = $rest->download();
@@ -1143,7 +1143,7 @@ class BigML {
       return $rest->getResponse();
    }
 
-   public static function download_batch_centroid($batchCentroid, $filename=null) {
+   public static function download_batch_centroid($batchCentroId, $filename=null) {
       /*
          Retrieves the batch centroid file.
 
@@ -1151,9 +1151,8 @@ class BigML {
          a path is given in filename, the contents of the file are downloaded
          and saved locally. A file-like object is returned otherwise.
    	 */
-      $rest = self::get_resource_request($batchcentroId, "batchcentroid", "DOWNLOAD");
+      $rest = self::get_resource_request($batchCentroId, "batchcentroid", "DOWNLOAD");
       if ($rest == null) return null;
-
       $data = $rest->download();
 
       if ($data == false) {
@@ -1625,6 +1624,7 @@ class BigML {
             curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_POSTFIELDS, $this->data);
          } elseif ($this->method == "UPDATE") {
+	    #curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
             curl_setopt($curl, CURLOPT_POSTFIELDS, $this->data);
          } elseif ($this->method == "DELETE") {

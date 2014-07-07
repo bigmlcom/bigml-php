@@ -1,6 +1,7 @@
 <?php
 include '../bigml/bigml.php';
 include '../bigml/ensemble.php';
+include '../bigml/cluster.php';
 #include '../bigml/multimodel.php';
 
 class BigMLTest extends PHPUnit_Framework_TestCase
@@ -21,6 +22,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
     protected static $remote_localfile = 'http://jkcray.maths.ul.ie/ms4024/R-Files/SampleRDataFiles/Iris.txt';
     protected static $local_ensemble;
     protected static $local_model;
+    protected static $local_cluster;
     protected static $evaluations;
     protected static $models_tag_list;
     protected static $local_multimodel;
@@ -107,7 +109,203 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        self::$models_tag_list = array();
        self::$batch_predictions = array();
        #self::clean_all(self::$api);
-	}
+    }
+
+    public function test_successfully_creating_a_batch_centroid_from_a_cluster() {
+       $data = array(array("filename"=> "./data/diabetes.csv",
+                           "local_file" => "./tmp/batch_predictions.csv",
+                           "predictions_file" => "./checkfiles/batch_predictions_c.csv"
+                          )
+                    );
+       print "Successfully creating a batch centroid from a cluster\n";
+       foreach($data as $item)
+       {
+          print "I create a data source uploading a ". $data["filename"]. " file\n";
+          $source = self::$api->create_source($item["filename"]);
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
+          $this->assertEquals(1, $source->object->status->code);
+
+          print "I wait until the source is ready\n";
+          $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "I create a dataset\n";
+          $dataset = self::$api->create_dataset($source->resource);
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
+          $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
+
+          print "I wait until the dataset is ready\n";
+          $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "create a cluster\n";
+          $cluster = self::$api->create_cluster($dataset->resource, array('seed'=>'BigML tests'));
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $cluster->code);
+          $this->assertEquals(BigMLRequest::QUEUED, $cluster->object->status->code);
+
+          print "I wait until the cluster is ready\n";
+          $resource = self::$api->_check_resource($cluster->resource, null, 3000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "I create a batch centroid for the dataset\n";
+          $cluster = self::$api->get_cluster($cluster->resource);
+          $dataset = self::$api->get_dataset($dataset->resource);
+          $batch_centroid = self::$api->create_batch_centroid($cluster, $dataset);
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $batch_centroid->code);
+
+          print "I wait until the batch centroid  is ready\n";
+          $resource = self::$api->_check_resource($batch_centroid->resource, null, 3000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "i download the batch centroid to local file " .$item["local_file"] . " \n";
+          $filename = self::$api->download_batch_centroid($batch_centroid->resource, $item["local_file"]);
+          $this->assertNotNull($filename);
+
+          print "then the batch centroid file is like " .$item["predictions_file"] . " \n";
+          $this->assertTrue(compareFiles($item["predictions_file"], $item["local_file"]));
+
+       }
+    }
+
+    public function test_successfully_creating_a_centroid_and_the_associated_dataset() {
+       $data = array(array("filename"=> "./data/diabetes.csv",
+                           "input_data"=> array("pregnancies" => 0,
+                                                "plasma glucose" => 118,
+                                                "blood pressure" => 84,
+                                                "triceps skin thickness" => 47,
+                                                "insulin" => 230,
+                                                "bmi"=> 45.8,
+                                                "diabetes pedigree"=> 0.551,
+                                                "age" => 31,
+                                                "diabetes" => "true"),
+                           "centroid" => "Cluster 4"
+                    ));
+
+       print "Successfully creating a centroid and the associated dataset\n";
+       foreach($data as $item)
+       {
+          print "I create a data source uploading a ". $data["filename"]. " file\n";
+          $source = self::$api->create_source($item["filename"]);
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
+          $this->assertEquals(1, $source->object->status->code);
+
+          print "I wait until the source is ready\n";
+          $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "I create a dataset\n";
+          $dataset = self::$api->create_dataset($source->resource);
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
+          $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
+
+          print "I wait until the dataset is ready\n";
+          $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "create a cluster\n";
+          $cluster = self::$api->create_cluster($dataset->resource, array('seed'=>'BigML tests'));
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $cluster->code);
+          $this->assertEquals(BigMLRequest::QUEUED, $cluster->object->status->code);
+
+          print "I wait until the cluster is ready\n";
+          $resource = self::$api->_check_resource($cluster->resource, null, 3000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "create a centroid\n";
+          $centroid = self::$api->create_centroid($cluster->resource, $item["input_data"]);
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $centroid->code);
+
+          print "the centroid is " . $item["centroid"] . "\n";
+          $this->assertEquals($item["centroid"], $centroid->object->centroid_name);
+
+          print "I create a dataset from the cluster and the centroid";
+          $dataset =self::$api->create_dataset($cluster->resource, array("centroid" => $centroid->object->centroid_id));
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
+
+          print "I wait until the dataset is ready\n";
+          $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "I check that the dataset is created for the cluster and the centroid\n";
+          $cluster = self::$api->get_cluster($cluster->resource);
+          $this->assertEquals(BigMLRequest::HTTP_OK, $cluster->code);
+          $this->assertEquals("dataset/" . $cluster->object->cluster_datasets->{$centroid->object->centroid_id}, $dataset->resource);
+
+       }
+    }
+
+    public function test_successfully_comparing_centroids_with_or_without_text_options() {
+
+       $data = array(array("filename"=> "./data/diabetes.csv",
+                           "options" => array("fields"=> new stdClass()),
+                           "input_data"=> array("pregnancies" =>0,
+                                          "plasma glucose"=>118,
+                                          "blood pressure"=> 84,
+                                          "triceps skin thickness"=>47,
+                                          "insulin" => 230,
+                                          "bmi"=>45.8,
+                                          "diabetes pedigree"=>"0.551",
+                                          "age"=>31,
+                                          "diabetes" => "true"),
+                           "centroid"=>"Cluster 4",
+                           "distance"=>0.45411));
+
+       print "Successfully comparing centroids with or without text options\n";
+       foreach($data as $item)
+       {
+          print "I create a data source uploading a ". $data["filename"]. " file\n";
+
+          $source = self::$api->create_source($item["filename"]);
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
+          $this->assertEquals(1, $source->object->status->code);
+
+          print "I wait until the source is ready\n";
+          $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "I update the source\n";
+          $source = self::$api->update_source($source->resource, $item["options"]);
+          $this->assertEquals(BigMLRequest::HTTP_ACCEPTED, $source->code);
+
+          print "I create a dataset\n";
+          $dataset = self::$api->create_dataset($source->resource);
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
+          $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
+
+          print "I wait until the dataset is ready\n";
+          $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "create a cluster\n";
+          $cluster = self::$api->create_cluster($dataset->resource, array('seed'=>'BigML tests'));
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $cluster->code);
+          $this->assertEquals(BigMLRequest::QUEUED, $cluster->object->status->code);
+
+          print "I wait until the cluster is ready\n";
+          $resource = self::$api->_check_resource($cluster->resource, null, 3000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "I create a local cluster\n";
+          $this->local_cluster = new Cluster($cluster->resource, self::$api);
+
+          print "create a centroid\n";
+          $centroid = self::$api->create_centroid($cluster->resource, $item["input_data"]);
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $centroid->code);
+
+          print "the centroid is " . $item["centroid"] . " with distance " . $item["distance"] . "\n";
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $centroid->code);
+          $this->assertEquals($item["centroid"], $centroid->object->centroid_name);
+          $this->assertEquals($item["distance"], round($centroid->object->distance, 6));
+
+          print "create a local centroid\n";
+          $local_centroid = $this->local_cluster->centroid($item["input_data"]);
+
+          print "the local centroid is " . $item["centroid"] . " with distance " . $item["distance"] . "\n";
+          $this->assertEquals($item["centroid"], $local_centroid["centroid_name"]);
+          $this->assertEquals($item["distance"], round($local_centroid["distance"], 6));
+
+       }
+    }
 
     public function test_i_create_a_source_uploading_local_file() {
        print "create_a_source_uploading_local_file\n";
@@ -644,6 +842,8 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        }
 
     }
+    
+
 }
 
 ?>

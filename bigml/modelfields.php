@@ -52,13 +52,16 @@ function cast($input_data, $fields) {
 
          if ($fields->{$key}->optype == 'numeric') {
             $value = strip_affixes($value, $fields->{$key});
-            $input_data[$key] = intval($value); 
+            if ($fields->{$key}->optype == "numeric") {
+               $input_data[$key] = floatval($value); 
+            } else {
+               $input_data[$key] = utf8_encode($value);
+            }
          } else {
-            $input_data[$key] = strval($value);
+            $input_data[$key] = utf8_encode($value);
          }
       }
    }
-
    return $input_data;
 }
 
@@ -174,7 +177,6 @@ class ModelFields {
       if (is_array($input_data)) {
          $input_data = array_filter($input_data, array(__CLASS__, 'clean_empty_fields'));
          $new_input_data = array();
-
          if ($by_name) {
             # We no longer check that the input data keys match some of
             # the dataset fields. We only remove the keys that are not
@@ -205,6 +207,8 @@ class ModelFields {
    }
 
    protected function clean_empty_fields($var) {
+      $k = $var != null;
+      if (is_int($var) && $var == 0) return true;
       return ($var != null);
    }
 
