@@ -56,6 +56,7 @@ class BigML {
      */
    private static $domain = false;
 
+   private static $debug = false;
 
    private static $version = "andromeda";
 
@@ -103,6 +104,10 @@ class BigML {
       self::$__apiKey = $apiKey;
    }
 
+   public static function setDebug($debug=false) {
+      self::$debug = $debug;
+   }
+
    /**
     * Check if BigML keys have been set
     *
@@ -136,6 +141,9 @@ class BigML {
       return self::$storage;
    }
 
+   public static function getDebug() {
+      return self::$debug;
+   }
    ##########################################################################
    #
    # Sources 
@@ -155,7 +163,8 @@ class BigML {
       } elseif (filter_var($data, FILTER_VALIDATE_URL)) {
          return self::_create_remote_source($data, $options);
       } else {
-         return self::_create_inline_source($data,$options);
+         error_log("Wrong source file or url");
+         return null;
       } 
    }
 
@@ -1222,7 +1231,7 @@ class BigML {
       return $rest->getResponse();
    }
 
-   private function _create_inline_source($data_string, $options=array()) {
+   public static function create_inline_source($data_string, $options=array()) {
       $rest = new BigMLRequest('CREATE', 'source');
       $options['data'] = $data_string;
       $rest->setData(json_encode($options));
@@ -1613,7 +1622,9 @@ class BigML {
       $url = $this->endpoint.'/'.$this->version.'/'.$this->uri;
 
       try {
-         #echo "URL: " . $url . "\n";
+	 if (BigML::getDebug() != null && BigML::getDebug() == true)
+             echo "URL: " . $url . "\n";
+
          $curl = curl_init();
          curl_setopt($curl, CURLOPT_URL, $url);
 

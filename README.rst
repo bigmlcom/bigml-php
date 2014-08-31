@@ -5,6 +5,11 @@ In this repository you'll find an open source PHP client that gives you a simple
 This module is licensed under the `Apache License, Version
 2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>`_.
 
+Requirements
+------------
+
+PHP 5.3.2 or higher are currently supported by these bindings.
+
 Importing the module
 --------------------
 
@@ -90,7 +95,7 @@ You can easily generate a prediction following these steps::
 
     $api = new BigML("myusername", "my_api_key");
 
-    $source = $api::create_source('./data/iris.csv');
+    $source = $api::create_source('./tests/data/iris.csv');
     $dataset = $api::create_dataset($source);
     $model = $api::create_model($dataset);
     $prediction = $api::create_prediction($model, array('sepal length'=> 5, 'sepal width'=> 2.5));
@@ -101,7 +106,7 @@ You can easily generate a prediction following these steps::
 
 also generate an evaluation for the model by using::
 
-    $test_source = $api::create_source('./data/iris.csv');
+    $test_source = $api::create_source('./tests/data/iris.csv');
     $test_dataset = $api::create_dataset($test_source);
     $evaluation = $api::create_evaluation($model, $test_dataset);
 
@@ -207,7 +212,7 @@ To create a source from a local data file, you can use the create_source method.
 
 Here’s a sample invocation::
    
-    $source = $api::create_source('./data/iris.csv', array('name'=> 'my source'));
+    $source = $api::create_source('./tests/data/iris.csv', array('name'=> 'my source'));
 
 or you may want to create a source from a file in a remote location::
 
@@ -746,18 +751,15 @@ You can also use a local model to generate a IF-THEN rule set that can be very h
 
 Testing
 -------
+To run the test you need phpunit that you can download from here `http://phpunit.de/#download <http://phpunit.de/#download>`_.
+
+Make sure that you have set up your authentication variables in your environment.
+
 To run the tests::
 
      cd tests
 
      phpunit.phar bigmlTest.php
-
-You can download phpunit.phar from `http://phpunit.de/#download <http://phpunit.de/#download>`_.
-
-Before to set up your authentication variables inside bigmlTest.php::
-
-     protected static $username = "you_username";
-     protected static $api_key = "your_api_key";
 
 All tests models, datasets, sources etc... will be created in the development environment. 
 You can delete all uncommenting the following line in bigmlTest.php::

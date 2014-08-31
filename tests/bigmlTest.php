@@ -6,8 +6,8 @@ include '../bigml/cluster.php';
 
 class BigMLTest extends PHPUnit_Framework_TestCase
 {
-    protected static $username = "you_username";
-    protected static $api_key = "your_api_key";
+    protected static $username; # "you_username"
+    protected static $api_key; # "your_api_key"
 
     protected static $api;
     protected static $sources;
@@ -434,7 +434,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
     public function test_i_create_a_ensemble_of_5_models_and_1_tlp() {
        print "create a ensemble from 5 models and tlp 1\n";
-       $ensemble = self::$api->create_ensemble(self::$datasets[0], array("number_of_models"=> 5, "tlp"=>1, "sample_rate"=>0.70, "seed" => 'BigML'));
+       $ensemble = self::$api->create_ensemble(self::$datasets[0], array("number_of_models"=> 5, "tlp"=>1));#, "sample_rate"=>0.70, "seed" => 'BigML'));
        $this->assertEquals(BigMLRequest::HTTP_CREATED, $ensemble->code);
        array_push(self::$ensembles, $ensemble->resource);
     }
@@ -459,11 +459,11 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
     }
 
-    public function test_the_prediction_ensemble_for_000004_is_Iris_setosa() {
-       print "the prediction ensemble for 000004 is Iris-setosa\n";
+    public function test_the_prediction_ensemble_for_000004_is_Iris_versicolor() {
+       print "the prediction ensemble for 000004 is Iris-versicolor\n";
        $prediction = self::$predictions[1];
        $objective = "000004";
-       $this->assertEquals("Iris-setosa", $prediction->object->prediction->{$objective});
+       $this->assertEquals("Iris-versicolor", $prediction->object->prediction->{$objective});
     }
 
     public function test_i_create_a_local_ensemble() {
@@ -479,13 +479,13 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        array_push(self::$predictions, $prediction);
     }
 
-    public function test_the_prediction_local_ensemble_is_Iris_setosa() {
-       print "the prediction for local ensemble is equals Iris-setosa\n";
+    public function test_the_prediction_local_ensemble_is_Iris_versicolor() {
+       print "the prediction for local ensemble is equals Iris_versicolor\n";
        $prediction = self::$predictions[2]; 
        if (is_array($prediction)) {
           $prediction = $prediction[0];
        }
-       $this->assertEquals("Iris-setosa", $prediction);
+       $this->assertEquals("Iris-versicolor", $prediction);
     }
 
     public function test_create_new_model_params_1() {
@@ -842,7 +842,6 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        }
 
     }
-    
 
 }
 
