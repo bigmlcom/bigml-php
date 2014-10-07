@@ -21,6 +21,10 @@ function plural($text, $num) {
    return $text . $num>1 ? 's' : '';
 }
 
+function endsWith( $str, $sub ) {
+    return ( substr( $str, strlen( $str ) - strlen( $sub ) ) == $sub );
+}
+
 class Predicate {
    /*
       A predicate to be evaluated in a tree's node.
@@ -34,10 +38,12 @@ class Predicate {
    
    private static $OPERATOR = array("<"=> "<",
                             "<="=> "<=",
-                             "="=> "=",
-                             "!="=> "!=",
+                            "="=> "==",
+                            "!="=> "!=",
+                            "/=" => "!=",
                             ">="=> ">=",
-                            ">"=>  ">");
+                            ">"=>  ">",
+                            "in" => "in");
 
    private static $RELATIONS = array('<=' => 'no more than %s %s', 
                   '>=' => '%s %s at most',
@@ -48,12 +54,19 @@ class Predicate {
    public $field;
    public $value;
    public $term;
+   public $missing;
 
    public function __construct($operator, $field, $value, $term=null) {
          $this->operator = $operator;
          $this->field = $field;
          $this->value = $value;
          $this->term = $term;
+         $this->missing = false;
+
+         if (endsWith($this->operator, "*") ) {
+            $this->operator = substr($this->operator, 0, -1);
+            $this->missing = true;
+         }
    }
 
    function is_full_term($fields) {
@@ -81,6 +94,11 @@ class Predicate {
       */
       $name=$fields->{$this->field}->{$label};
       $full_term = $this->is_full_term($fields);
+      $relation_missing = '';
+
+      if ($this->missing) {
+          $relation_missing =' or missing';
+      }
 
       if ($this->term != null ) {
 
@@ -98,16 +116,32 @@ class Predicate {
             }
          }
 
-         return $name . " " . $relation_literal . " " . $this->term . " " . $relation_suffix;
+         return $name . " " . $relation_literal . " " . $this->term . " " . $relation_suffix . $relation_missing;
       }
 
-      return $name . " " . $this->operator . " ". $this->value;
+      if (is_null($this->value)) {
+         if ($this->operator == "=")
+             return $name . " is None";
+         else
+             return $name . " is not None";
+      }
+
+      return $name . " " . $this->operator . " ". $this->value . $relation_missing;
+ 
    }
 
    function apply($input_data, $fields) {
       /*
          Applies the operators defined in the predicate as strings toi the provided input data
       */
+
+      // for missing operators
+      if (!array_key_exists($this->field, $input_data) ) {
+        return ( $this->missing || ($this->operator == '=' && is_null($this->value)) ); 
+      } else if ($this->operator == "!=" && is_null($this->value)) {
+        return true;
+      }
+
       if ($this->term != null ) {
          $term_forms = property_exists($fields->{$this->field}->summary, 'term_forms') ? 
                      property_exists($fields->{$this->field}->summary->term_forms->{$this->term}) ? $fields->{$this->field}->summary->term_forms->{$this->term} 
@@ -121,7 +155,10 @@ class Predicate {
          return version_compare($this->term_matches($input_data[$this->field], $terms, $options), $this->value, self::$OPERATOR[$this->operator]);
       }
 
-      return version_compare($input_data[$this->field], $this->value, self::$OPERATOR[$this->operator]);
+      if ($this->operator != "in")
+          return version_compare($input_data[$this->field], $this->value, self::$OPERATOR[$this->operator]);
+      else
+          return in_array($this->value, $input_data[$this->field]);
    }
 
    function term_matches($text, $forms_list, $options) {

@@ -81,7 +81,8 @@ class Model extends BaseModel{
    }
 
 
-   public function predict($input_data, $by_name=true,$print_path=false, $out=STDOUT, $with_confidence=false, $missing_strategy=Tree::LAST_PREDICTION) 
+   public function predict($input_data, $by_name=true,$print_path=false, $out=STDOUT, $with_confidence=false, $missing_strategy=Tree::LAST_PREDICTION,
+                           $add_confidence=false, $add_path=false,$add_distribution=false,$add_count=false)
    {
       /*
          Makes a prediction based on a number of field values.
@@ -117,11 +118,33 @@ class Model extends BaseModel{
          fclose($out);
       }         
 
+      $output = $prediction;
+
       if ($with_confidence == true) {
-         return array($prediction, $confidence, $distribution, $instances);
+         $output = array($prediction, $confidence, $distribution, $instances);
       }
 
-      return $prediction;
+      if ($add_confidence || $add_path || $add_distribution || $add_count) {
+         $output = array('prediction'=> $prediction);
+
+         if ($add_confidence) {
+            $output['confidence'] = $confidence;
+         }
+
+         if ($add_path) {
+            $output['path'] = $path;
+         }
+
+         if ($add_distribution) {
+            $output['distribution'] = $distribution;
+         }
+
+         if ($add_count) {
+            $output['count'] = $instances;
+         }
+      }
+
+      return $output;
 
    }
 

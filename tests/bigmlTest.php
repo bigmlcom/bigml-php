@@ -108,7 +108,141 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        self::$evaluations = array();
        self::$models_tag_list = array();
        self::$batch_predictions = array();
-       #self::clean_all(self::$api);
+       self::clean_all(self::$api);
+       ini_set('memory_limit', '512M');
+    }
+
+    public function test_create_an_anomaly_detector_from_a_dataset_or_dataset_list() {
+       $datasetIds = array();
+
+       print "create_a_source_uploading_local_file\n";
+       $source = self::$api->create_source(self::$data_localfile, $options=array('name'=>'test_source'));
+       $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
+       $this->assertEquals(1, $source->object->status->code);
+  
+       print "check local source is ready\n";
+       $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
+       $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+ 
+       print "I create a dataset\n";
+       $dataset = self::$api->create_dataset($source->resource);
+       $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
+       $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
+
+       print "I wait until the dataset is ready\n";
+       $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
+       $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+       print "Then I create an anomaly detector from a dataset\n";
+       $anomaly = self::$api->create_anomaly($dataset->resource);
+
+       print "I wait until the anomaly detector is ready\n";
+       $resource = self::$api->_check_resource($anomaly->resource, null, 3000, 30);
+       $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+       $anomaly = self::$api->get_anomaly($anomaly->resource);
+
+       print "I check the anomaly detector stems from the original dataset\n";
+       $this->assertEquals($anomaly->object->dataset, $dataset->resource);
+
+       array_push($datasetIds, $dataset->resource);
+
+       print "I create a dataset\n";
+       $dataset = self::$api->create_dataset($source->resource);
+       $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
+       $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
+
+       print "I wait until the dataset is ready\n";
+       $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
+       $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+       array_push($datasetIds, $dataset->resource);
+       print "Then I create an anomaly detector from a dataset\n";
+       $anomaly = self::$api->create_anomaly($datasetIds);
+
+       print "I wait until the anomaly detector is ready\n";
+       $resource = self::$api->_check_resource($anomaly->resource, null, 3000, 30);
+       $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+       $anomaly = self::$api->get_anomaly($anomaly->resource);
+       print "I check the anomaly detector stems from the original dataset list\n";
+       $this->assertEquals($anomaly->object->datasets, $datasetIds);
+
+    }
+
+    public function test_creating_an_anomaly_score() {
+       print "create_a_source_uploading_local_file\n";
+       $source = self::$api->create_source('./data/tiny_kdd.csv', $options=array('name'=>'tiny_source'));
+       $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
+       $this->assertEquals(1, $source->object->status->code);
+
+       print "check local source is ready\n";
+       $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
+       $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+       print "I create a dataset\n";
+       $dataset = self::$api->create_dataset($source->resource);
+       $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
+       $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
+
+       print "I wait until the dataset is ready\n";
+       $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
+       $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+       print "Then I create an anomaly detector from a dataset\n";
+       $anomaly = self::$api->create_anomaly($dataset->resource);
+
+       print "I wait until the anomaly detector is ready\n";
+       $resource = self::$api->_check_resource($anomaly->resource, null, 3000, 30);
+       $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+       $resource = self::$api->create_anomaly_score($anomaly->resource, array("src_bytes"=>350));
+
+       $this->assertEquals($resource->object->score, 0.92618);
+
+    }
+
+    function test_creating_a_batch_anomaly_score_from_an_anomaly_detector() {
+       print "create_a_source_uploading_local_file\n";
+       $source = self::$api->create_source('./data/tiny_kdd.csv', $options=array('name'=>'tiny_source'));
+       $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
+       $this->assertEquals(1, $source->object->status->code);
+
+       print "check local source is ready\n";
+       $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
+       $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+       print "I create a dataset\n";
+       $dataset = self::$api->create_dataset($source->resource);
+       $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
+       $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
+
+       print "I wait until the dataset is ready\n";
+       $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
+       $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+       print "Then I create an anomaly detector from a dataset\n";
+       $anomaly = self::$api->create_anomaly($dataset->resource);
+
+       print "I wait until the anomaly detector is ready\n";
+       $resource = self::$api->_check_resource($anomaly->resource, null, 3000, 30);
+       $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+       print "I create a batch anomaly score\n";
+       $batch_anomaly_score = self::$api->create_batch_anomaly_score($anomaly->resource, $dataset->resource);
+       $this->assertEquals(BigMLRequest::HTTP_CREATED, $batch_anomaly_score->code);
+
+       print "I check the batch anomaly score is ok\n";
+       $resource = self::$api->_check_resource($batch_anomaly_score, null, 3000, 50);
+       $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+       print "I download the created anomaly score file to local file\n";
+       $filename = self::$api->download_batch_anomaly_score($batch_anomaly_score->resource, "./tmp/batch_predictions_score.csv");
+       $this->assertNotNull($filename);
+
+       print "Then the batch anomaly score file is like <predictions_file>";
+       $this->assertTrue(compareFiles("./tmp/batch_predictions_score.csv", "./checkfiles/batch_predictions_a.csv"));
+
     }
 
     public function test_successfully_creating_a_batch_centroid_from_a_cluster() {
@@ -434,7 +568,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
     public function test_i_create_a_ensemble_of_5_models_and_1_tlp() {
        print "create a ensemble from 5 models and tlp 1\n";
-       $ensemble = self::$api->create_ensemble(self::$datasets[0], array("number_of_models"=> 5, "tlp"=>1));#, "sample_rate"=>0.70, "seed" => 'BigML'));
+       $ensemble = self::$api->create_ensemble(self::$datasets[0], array("number_of_models"=> 5, "tlp"=>1, "sample_rate"=>0.70, "seed" => 'BigML'));
        $this->assertEquals(BigMLRequest::HTTP_CREATED, $ensemble->code);
        array_push(self::$ensembles, $ensemble->resource);
     }
@@ -459,11 +593,11 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
     }
 
-    public function test_the_prediction_ensemble_for_000004_is_Iris_versicolor() {
-       print "the prediction ensemble for 000004 is Iris-versicolor\n";
+    public function test_the_prediction_ensemble_for_000004_is_Iris_virginica() {
+       print "the prediction ensemble for 000004 is Iris-virginica\n";
        $prediction = self::$predictions[1];
        $objective = "000004";
-       $this->assertEquals("Iris-versicolor", $prediction->object->prediction->{$objective});
+       $this->assertEquals("Iris-virginica", $prediction->object->prediction->{$objective});
     }
 
     public function test_i_create_a_local_ensemble() {
@@ -479,13 +613,13 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        array_push(self::$predictions, $prediction);
     }
 
-    public function test_the_prediction_local_ensemble_is_Iris_versicolor() {
-       print "the prediction for local ensemble is equals Iris_versicolor\n";
+    public function test_the_prediction_local_ensemble_is_Iris_virginica() {
+       print "the prediction for local ensemble is equals Iris_virginica\n";
        $prediction = self::$predictions[2]; 
        if (is_array($prediction)) {
           $prediction = $prediction[0];
        }
-       $this->assertEquals("Iris-versicolor", $prediction);
+       $this->assertEquals("Iris-virginica", $prediction);
     }
 
     public function test_create_new_model_params_1() {

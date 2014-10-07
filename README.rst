@@ -172,6 +172,234 @@ As for in the model’s case, the cluster is a white-box resource and can be ret
 
     $cluster = $api::get_cluster($cluster_id)
 
+Anomaly detector
+----------------
+
+For anomaly detection problems, BigML anomaly detector uses iforest as an unsupervised kind of model that detects anomalous data in a dataset. The information it returns encloses a top_anomalies block that contains a list of the most anomalous points. For each, we capture a score from 0 to 1. The closer to 1, the more anomalous. We also capture the row which gives values for each field in the order defined by input_fields. Similarly we give a list of importances which match the row values. These importances tell us which values contributed most to the anomaly score. Thus, the structure of an anomaly detector is similar to::
+
+    {   'category': 0,
+    'code': 200,
+    'columns': 14,
+    'constraints': False,
+    'created': '2014-09-08T18:51:11.893000',
+    'credits': 0.11653518676757812,
+    'credits_per_prediction': 0.0,
+    'dataset': 'dataset/540dfa9d9841fa5c88000765',
+    'dataset_field_types': {   'categorical': 21,
+                               'datetime': 0,
+                               'numeric': 21,
+                               'preferred': 14,
+                               'text': 0,
+                               'total': 42},
+    'dataset_status': True,
+    'dataset_type': 0,
+    'description': '',
+    'excluded_fields': [],
+    'fields_meta': {   'count': 14,
+                       'limit': 1000,
+                       'offset': 0,
+                       'query_total': 14,
+                       'total': 14},
+    'forest_size': 128,
+    'input_fields': [   '000004',
+                        '000005',
+                        '000009',
+                        '000016',
+                        '000017',
+                        '000018',
+                        '000019',
+                        '00001e',
+                        '00001f',
+                        '000020',
+                        '000023',
+                        '000024',
+                        '000025',
+                        '000026'],
+    'locale': 'en_US',
+    'max_columns': 42,
+    'max_rows': 200,
+    'model': {   'fields': {   '000004': {   'column_number': 4,
+                                             'datatype': 'int16',
+                                             'name': 'src_bytes',
+                                             'optype': 'numeric',
+                                             'order': 0,
+                                             'preferred': True,
+                                             'summary': {   'bins': [   [   143,
+                                                                            2],
+                                                                        ...
+                                                                        [   370,
+                                                                            2]],
+                                                            'maximum': 370,
+                                                            'mean': 248.235,
+                                                            'median': 234.57157,
+                                                            'minimum': 141,
+                                                            'missing_count': 0,
+                                                            'population': 200,
+                                                            'splits': [   159.92462,
+                                                                          173.73312,
+                                                                          188,
+                                                                          ...
+                                                                          339.55228],
+                                                            'standard_deviation': 49.39869,
+                                                            'sum': 49647,
+                                                            'sum_squares': 12809729,
+                                                            'variance': 2440.23093}},
+                               '000005': {   'column_number': 5,
+                                             'datatype': 'int32',
+                                             'name': 'dst_bytes',
+                                             'optype': 'numeric',
+                                             'order': 1,
+                                             'preferred': True,
+                                              ...
+                                                            'sum': 1030851,
+                                                            'sum_squares': 22764504759,
+                                                            'variance': 87694652.45224}},
+                               '000009': {   'column_number': 9,
+                                             'datatype': 'string',
+                                             'name': 'hot',
+                                             'optype': 'categorical',
+                                             'order': 2,
+                                             'preferred': True,
+                                             'summary': {   'categories': [   [   '0',
+                                                                                  199],
+                                                                              [   '1',
+                                                                                  1]],
+                                                            'missing_count': 0},
+                                             'term_analysis': {   'enabled': True}},
+                               '000016': {   'column_number': 22,
+                                             'datatype': 'int8',
+                                             'name': 'count',
+                                             'optype': 'numeric',
+                                             'order': 3,
+                                             'preferred': True,
+                                                            ...
+                                                            'population': 200,
+                                                            'standard_deviation': 5.42421,
+                                                            'sum': 1351,
+                                                            'sum_squares': 14981,
+                                                            'variance': 29.42209}},
+                               '000017': { ... }}},
+                 'kind': 'iforest',
+                 'mean_depth': 12.314174107142858,
+                 'top_anomalies': [   {   'importance': [   0.06768,
+                                                            0.01667,
+                                                            0.00081,
+                                                            0.02437,
+                                                            0.04773,
+                                                            0.22197,
+                                                            0.18208,
+                                                            0.01868,
+                                                            0.11855,
+                                                            0.01983,
+                                                            0.01898,
+                                                            0.05306,
+                                                            0.20398,
+                                                            0.00562],
+                                          'row': [   183.0,
+                                                     8654.0,
+                                                     '0',
+                                                     4.0,
+                                                     4.0,
+                                                     0.25,
+                                                     0.25,
+                                                     0.0,
+                                                     123.0,
+                                                     255.0,
+                                                     0.01,
+                                                     0.04,
+                                                     0.01,
+                                                     0.0],
+                                          'score': 0.68782},
+                                      {   'importance': [   0.05645,
+                                                            0.02285,
+                                                            0.0015,
+                                                            0.05196,
+                                                            0.04435,
+                                                            0.0005,
+                                                            0.00056,
+                                                            0.18979,
+                                                            0.12402,
+                                                            0.23671,
+                                                            0.20723,
+                                                            0.05651,
+                                                            0.00144,
+                                                            0.00612],
+                                          'row': [   212.0,
+                                                     1940.0,
+                                                     '0',
+                                                     1.0,
+                                                     2.0,
+                                                     0.0,
+                                                     0.0,
+                                                     1.0,
+                                                     1.0,
+                                                     69.0,
+                                                     1.0,
+                                                     0.04,
+                                                     0.0,
+                                                     0.0],
+                                          'score': 0.6239},
+                                          ...],
+                 'trees': [   {   'root': {   'children': [   {   'children': [   {   'children': [   {   'children': [   {   'children':[   {   'population': 1,
+                                                                                                                              'predicates': [   {   'field': '00001f',
+                                                                                                                                                    'op': '>',
+                                                                                                                                                    'value': 35.54357}]},
+
+                                                                                                                          {   'population': 1,
+                                                                                                                              'predicates': [   {   'field': '00001f',
+                                                                                                                                                    'op': '<=',
+                                                                                                                                                    'value': 35.54357}]}],
+                                                                                                          'population': 2,
+                                                                                                          'predicates': [   {   'field': '000005',
+                                                                                                                                'op': '<=',
+                                                                                                                                'value': 1385.5166}]}],
+                                                                                      'population': 3,
+                                                                                      'predicates': [   {   'field': '000020',
+                                                                                                            'op': '<=',
+                                                                                                            'value': 65.14308},
+                                                                                                        {   'field': '000019',
+                                                                                                            'op': '=',
+                                                                                                            'value': 0}]}],
+                                                                  'population': 105,
+                                                                  'predicates': [   {   'field': '000017',
+                                                                                        'op': '<=',
+                                                                                        'value': 13.21754},
+                                                                                    {   'field': '000009',
+                                                                                        'op': 'in',
+                                                                                        'value': [   '0']}]}],
+                                              'population': 126,
+                                              'predicates': [   True,
+                                                                {   'field': '000018',
+                                                                    'op': '=',
+                                                                    'value': 0}]},
+                                  'training_mean_depth': 11.071428571428571}]},
+    'name': "tiny_kdd's dataset anomaly detector",
+    'number_of_batchscores': 0,
+    'number_of_public_predictions': 0,
+    'number_of_scores': 0,
+    'out_of_bag': False,
+    'price': 0.0,
+    'private': True,
+    'project': None,
+    'range': [1, 200],
+    'replacement': False,
+    'resource': 'anomaly/540dfa9f9841fa5c8800076a',
+    'rows': 200,
+    'sample_rate': 1.0,
+    'sample_size': 126,
+    'seed': 'BigML',
+    'shared': False,
+    'size': 30549,
+    'source': 'source/540dfa979841fa5c7f000363',
+    'source_status': True,
+    'status': {   'code': 5,
+                  'elapsed': 32397,
+                  'message': 'The anomaly detector has been created',
+                  'progress': 1.0},
+    'subscription': False,
+    'tags': [],
+    'updated': '2014-09-08T23:54:28.647000',
+    'white_box': False}
 
 Statuses
 --------
@@ -194,16 +422,19 @@ See the documentation on status codes for the listing of potential states and th
 
 You can query the status of any resource with the status method::
     
-    $api::status(source)
-    $api::status(dataset)
-    $api::status(model)
-    $api::status(prediction)
-    $api::status(evaluation)
-    $api::status(ensemble)
-    $api::status(batch_prediction)
-    $api::status(cluster)
-    $api::status(centroid)
-    $api::status(batch_centroid)
+    $api::status($source)
+    $api::status($dataset)
+    $api::status($model)
+    $api::status($prediction)
+    $api::status($evaluation)
+    $api::status($ensemble)
+    $api::status($batch_prediction)
+    $api::status($cluster)
+    $api::status($centroid)
+    $api::status($batch_centroid)
+    $api::status($anomaly)
+    $api::status($anomaly_score)
+    $api::status($batch_anomaly_score)
 
 Creating sources
 ----------------
@@ -277,6 +508,15 @@ Let’s create a cluster from a given dataset::
 that will create a cluster with 5 centroids.    
 
 
+Creating anomaly detectors
+--------------------------
+
+If your problem is finding the anomalous data in your dataset, you can build an anomaly detector, that will use iforest to single out the anomalous records. Again, the only required argument to create an anomaly detector is the dataset id. You can also include in the request all the additional arguments accepted by BigML and documented in the `Anomaly detectors section of the Developer’s documentation <https://bigml.com/developers/anomalies>`_.
+
+Let’s create an anomaly detector from a given dataset::
+
+    $anomaly = $api::create_anomaly($dataset, array("name"=>"my anomaly"})
+
 Creating predictions
 --------------------
 
@@ -310,6 +550,18 @@ You can also give the centroid predicition a name::
                                             "age"=> 31,
                                             "diabetes"=> "true"),
                                       array("name"=> "my centroid"));
+
+
+Creating anomaly scores
+-----------------------
+
+To obtain the anomaly score associated to new input data, you can now use the
+create_anomaly_score method. Give the method an anomaly detector identifier and the input data to obtain the score::
+
+     $anomaly_score = $api::create_anomaly_score($anomaly, 
+                                                 array("src_bytes"=> 350),
+                                                 array("name"=> "my score"));
+
 
 
 Creating evaluations
@@ -387,6 +639,17 @@ The create_batch_centroid call will need the id of the dataset and the cluster t
                                                         "header"=> true));
 
 
+Creating batch anomaly scores
+-----------------------------
+
+Input data can also be assigned an anomaly score in batch. You train an anomaly detector with your training data and then build a dataset from your input data. The create_batch_anomaly_score call will need the id of the dataset and of the anomaly detector to assign an anomaly score to each input data instance::
+
+   $batch_anomaly_score = $api::create_batch_anomaly_score($anomaly, 
+                                                           $dataset, 
+                                                           array("name" => "my batch anomaly score"
+                                                                 "all_fields" => true,
+                                                                 "header" => true))
+
 Listing Resources
 -----------------
 
@@ -402,6 +665,9 @@ You can list resources with the appropriate api method::
     $api::list_clusters()
     $api::list_centroids()
     $api::list_batch_centroids()
+    $api::list_anomalies()
+    $api::list_anomaly_scores()
+    $api::list_batch_anomaly_scores()
 
 you will receive a dictionary with the following keys:
 
@@ -432,7 +698,7 @@ A few examples:
 
 - Name of models with more than 5 fields (columns)::
 
-    $api.list_models("columns__gt=5");
+    $api::list_models("columns__gt=5");
 
 - Ids of predictions whose model has not been deleted::
  
@@ -477,6 +743,11 @@ However the status code will be bigml.api.HTTP_ACCEPTED if the resource can be u
     $api::update_cluster($cluster, array("name"=> "new name"));
     $api::update_centroid($centroid, array("name"=> "new name"));
     $api::update_batch_centroid($batch_centroid, array("name"=> "new name"));
+    $api::update_anomaly($anomaly, array("name"=> "new name"));
+    $api::update_anomaly_score($anomaly_score, array("name": "new name"));
+    $api::update_batch_anomaly_score($batch_anomaly_score, array("name": "new name"));
+
+
 
 Updates can change resource general properties, such as the name or description attributes of a dataset, or specific properties. 
 As an example, let’s say that your source has a certain field whose contents are numeric integers. 
@@ -501,7 +772,9 @@ Resources can be deleted individually using the corresponding method for each ty
     $api::delete_cluster($cluster);
     $api::delete_centroid($centroid);
     $api::delete_batch_centroid($batch_centroid);
-
+    $api::delete_anomaly(anomaly);
+    $api::delete_anomaly_score(anomaly_score);
+    $api::delete_batch_anomaly_score(batch_anomaly_score);
 
 Each of the calls above will return a dictionary with the following keys:
 
@@ -594,6 +867,37 @@ Using the local cluster object, you can predict the centroid associated to an in
 
 You must keep in mind, though, that to obtain a centroid prediction, input data must have values for all the numeric fields. No missing values for the numeric fields are allowed.
 As in the local model predictions, producing local centroids can be done independently of BigML servers, so no cost or connection latencies are involved.
+
+Local Anomaly Detector
+----------------------
+
+You can also instantiate a local version of a remote anomaly.::
+
+    $local_anomaly = new Anomaly('anomaly/502fcbff15526876610002435');
+
+This will retrieve the remote anomaly detector information, using an implicitly built BigML() connection object (see the Authentication section for more details on how to set your credentials) and return an Anomaly object that you can use to make local anomaly scores. If you want to use a specfic connection object for the remote retrieval, you can set it as second parameter::
+
+    $api = new BigML("username", "password");
+    $local_anomaly = new Anomaly('anomaly/502fcbff15526876610002435',
+                                 $api);
+
+or even use the remote anomaly information retrieved previously to build the local anomaly detector object::
+
+    $api = new BigML()
+    $anomaly = $api::get_anomaly('anomaly/502fcbff15526876610002435',
+                                 'limit=-1')
+
+Note that in this example we used a limit=-1 query string for the anomaly retrieval. This ensures that all fields are retrieved by the get method in the same call (unlike in the standard calls where the number of fields returned is limited).
+
+Local Anomaly Scores
+--------------------
+
+Using the local anomaly detector object, you can predict the anomaly score associated to an input data set::
+
+    $local_anomaly->anomaly_score(array("src_bytes"=> 350))
+    0.9268527808726705
+
+As in the local model predictions, producing local anomaly scores can be done independently of BigML servers, so no cost or connection latencies are involved.
 
 Multi Models
 ------------

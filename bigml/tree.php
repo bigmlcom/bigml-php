@@ -173,6 +173,44 @@ function mean($distribution) {
 
 }
 
+function missing_brach($children) {
+   /*
+     Checks if the missing values are assigned to a special branch
+   */
+   foreach($children as $child) {
+      $predicate = $child->predicate;
+      if ($predicate->missing == true) {
+         return true;
+      }
+   }
+
+   return false;
+}
+
+function null_value($children) {
+   /*
+     Checks if the predicate has a None value
+   */
+
+   foreach($children as $child) {
+      $predicate = $child->predicate;
+      if (is_null($predicate->value)) {
+         return true;
+      }
+   }
+
+   return false;
+}
+
+function one_branch($children, $input_data) {
+   /*
+    Check if there's only one branch to be followed
+    */
+   $missing = array_key_exists(splitChildren($children), $input_data); 
+
+   return ($missing || missing_branch($children) || null_value($children));
+}
+
 class Tree {
 
    const LAST_PREDICTION = 0;
@@ -292,10 +330,28 @@ class Tree {
       }
 
       if ($missing_strategy == Tree::PROPORTIONAL) {
-         $final_distribution = $this->predict_proportional($input_data, $path);
+         $predict_pro = $this->predict_proportional($input_data, $path);
+
+         $final_distribution = $predict_pro[0];
+         $last_node = $predict_pro[1];
+ 
          $distribution = array(); 
 
          if ($this->regression) {
+          
+            // singular case
+            // when the prediction is the one given in a 1-instance node
+            if (count($final_distribution) == 1) {
+               $fd = reset($final_distribution);
+
+               $prediction = $fd[0];
+               $intances =  $fd[1];
+               
+               if ($intances == 1) {
+                  return array($last_node->output, $path, $last_node->confidence, $last_node->distribution, $instances);
+               }
+
+            }
 
             ksort($final_distribution);
 
@@ -343,13 +399,15 @@ class Tree {
 
    }
 
-   function predict_proportional($input_data, $path=null) {
+   function predict_proportional($input_data, $path=null, $missing_found=false) {
       /*
          Makes a prediction based on a number of field values averaging
          the predictions of the leaves that fall in a subtree.
 
          Each time a splitting field has no value assigned, we consider
-         both branches of the split to be true, merging their predictions
+         both branches of the split to be true, merging their predictions.
+         The function returns the merged distribution and the
+         last node reached by a unique path.
       */
 
       if ($path==null) {
@@ -367,25 +425,28 @@ class Tree {
          return merge_distributions(array(), $a);
       }
 
-      if (array_key_exists(splitChildren($this->children), $input_data)) {
+      if (one_branch($this->children, $input_data)) {
+      #if (array_key_exists(splitChildren($this->children), $input_data)) {
          foreach($this->children as $child) {
             $predicate = $child::$predicate;
 
             if ($predicate::apply($input_data, $this->fields)) {
                $new_rule = $predicate::to_rule($this->fields);
-               if (!in_array($new_rule, $path)) {
+               if (!in_array($new_rule, $path) && !$missing_found) {
                   array_push($new_rule, $path);
                }
-               return $child::predict_proportional($input_data, $path);
+               return $child::predict_proportional($input_data, $path, $missing_found);
             }
  
          }
       } else {
+         $missing_found = true;
+
          foreach($this->children as $child) {
-            $final_distribution = merge_distributions($final_distribution, 
-                                                      $child::predict_proportional($input_data, $path));
+	    $predict_pro = $child::predict_proportional($input_data, $path);
+            $final_distribution = merge_distributions($final_distribution, $predict_pro[0]);
          }
-         return $final_distribution;
+         return array($final_distribution, $this);
       }
 
    }
@@ -415,7 +476,7 @@ class Tree {
       if ($children != null) {
          foreach($children as $child) {
              $a = str_repeat($INDENT,$depth);
-			 $b = $child->predicate->to_rule($this->fields, 'slug');
+             $b = $child->predicate->to_rule($this->fields, 'slug');
              $c = ($child->children != null ) ? "AND" : "THEN";
              $d = $child->generate_rules($depth+1, $ids_path, $subtree); 
 

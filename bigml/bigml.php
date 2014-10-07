@@ -267,7 +267,7 @@ class BigML {
          $resource = $r->resource;
       }
 
-      if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
+      if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid|anomaly|anomalyscore)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
          $count = 0;
          $status = self::_check_resource_status($resource, $queryString); 
          while ($count<$retries && !$status["ready"]) {
@@ -1214,6 +1214,308 @@ class BigML {
       return $rest->getResponse();
    }
 
+   ##########################################################################
+   #
+   # Anomaly detector 
+   # https://bigml.com/developers/anomaly
+   #
+   ##########################################################################
+   public static function get_anomaly($anomalyId, $queryString=null)
+   {
+      /*
+        Retrieves an anomaly detector.
+        The anomaly parameter should be a string containing the
+        anomaly id or the dict returned by create_anomaly.
+        As the anomaly detector is an evolving object that is processed
+        until it reaches the FINISHED or FAULTY state, the function will
+        return a dict that encloses the model values and state info
+        available at the time it is called.
+
+        If this is a shared anomaly detector, the username and sharing api
+        key must also be provided.
+      */
+      $rest = self::get_resource_request($anomalyId, "anomaly", "GET", $queryString);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
+
+   public static function create_anomaly($datasetIds, $data=array(), $waitTime=3000, $retries=10) {
+      /*
+         Creates a anomaly from a `dataset` or a list of `datasets`
+      */
+
+      $datasets= array();
+
+      if (!is_array($datasetIds)) {
+         $datasetIds=array($datasetIds);
+      }
+
+      foreach ($datasetIds as $var => $datasetId) {
+         $resource = self::_check_resource($datasetId, null, $waitTime, $retries);
+         if ($resource == null || $resource['type'] != "dataset") {
+            error_log("Wrong dataset id");
+            return null;
+         } elseif ($resource["status"] != BigMLRequest::FINISHED) {
+            error_log($resource['message']);
+            return null;
+         }
+         array_push($datasets, $resource["id"]);
+      }
+
+      $rest = new BigMLRequest('CREATE', 'anomaly');
+
+      if (sizeof($datasets) > 1) {
+         $data["datasets"] = $datasets;
+      } else {
+         $data["dataset"] = $datasets[0];
+      }
+
+      $rest->setData(json_encode($data));
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+   public static function list_anomalies($queryString=null)
+   {
+      /*
+         List all your anomalies 
+      */
+      $rest = new BigMLRequest('LIST', 'anomaly');
+
+      if ($queryString!=null) {
+         $rest->setQueryString($queryString);
+      }
+
+      return $rest->getResponse();
+   }
+
+   public static function update_anomaly($anomalyId, $data, $waitTime=3000, $retries=10) {
+      /*
+         Updates a anomaly
+      */
+      $rest = self::get_resource_request($anomalyId, "anomaly", "UPDATE", null, true,  $waitTime, $retries);
+      if ($rest == null) return null;
+
+      $rest->setData(json_encode($data));
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+   public static function delete_anomaly($anomalyId) {
+          /*
+        Deletes a anomaly
+      */
+      $rest = self::get_resource_request($anomalyId, "anomaly", "DELETE", null);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
+
+
+   ##########################################################################
+   #
+   # Anomaly scores 
+   # https://bigml.com/developers/anomalyscore
+   #
+   ##########################################################################
+   public static function get_anomaly_score($anomalyscoreId, $queryString=null)
+   {
+      /*
+        Retrieves an anomaly score.
+      */
+      $rest = self::get_resource_request($anomalyscoreId, "anomalyscore", "GET", $queryString);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
+
+   public static function create_anomaly_score($anomalyId, $inputData=array(), $args=array(), $waitTime=3000, $retries=10) {
+      /*
+         Creates a new centroid
+      */
+      $args = $args == null? array() : $args;
+
+      $resource = self::_check_resource($anomalyId);
+      if ($resource == null || $resource['type'] != "anomaly") {
+         error_log("Wrong anomaly id");
+         return null;
+      } elseif ($resource["status"] != BigMLRequest::FINISHED) {
+         error_log($resource['message']);
+         return null;
+      }
+
+      $args["anomaly"] = $resource["id"];
+      $args["input_data"] = $inputData == null? array() : $inputData;
+
+      $rest = new BigMLRequest('CREATE', 'anomalyscore');
+
+      $rest->setData(json_encode($args));
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($args)));
+      return $rest->getResponse();
+   }
+
+   public static function list_anomaly_scores($queryString=null)
+   {
+      /*
+         List all your anomalies score 
+      */
+      $rest = new BigMLRequest('LIST', 'anomalyscore');
+
+      if ($queryString!=null) {
+         $rest->setQueryString($queryString);
+      }
+
+      return $rest->getResponse();
+   }
+
+   public static function update_anomaly_score($anomalyscoreId, $data, $waitTime=3000, $retries=10) {
+      /*
+         Updates a anomaly score
+      */
+      $rest = self::get_resource_request($anomalyscoreId, "anomalyscore", "UPDATE", null, true,  $waitTime, $retries);
+      if ($rest == null) return null;
+
+      $rest->setData(json_encode($data));
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+   public static function delete_anomaly_score($anomalyscoreId) {
+          /*
+        Deletes a anomaly score
+      */
+      $rest = self::get_resource_request($anomalyId, "anomalyscore", "DELETE", null);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
+
+   ##########################################################################
+   #
+   # Batch Anomaly Scores
+   # https://bigml.com/developers/batch_anomalyscores
+   #
+   ##########################################################################
+   public static function create_batch_anomaly_score($anomalyId, $datasetId, $args=array(), $waitTime=3000, $retries=10) {
+      /*
+         Creates a new batch centroid.
+      */
+      $args = $args == null? array() : $args;
+
+      $resource = self::_check_resource($anomalyId, null, $waitTime, $retries);
+
+      if ($resource == null || $resource['type'] != "anomaly" ) {
+         error_log("Wrong anomaly id");
+         return null;
+      } elseif ($resource["status"] != BigMLRequest::FINISHED) {
+         error_log($resource['message']);
+         return null;
+      }
+
+      $args[$resource['type']] = $resource['id'];
+
+      $resource = self::_check_resource($datasetId, null, $waitTime, $retries);
+      if ($resource == null || $resource['type'] != "dataset" ) {
+          error_log("Wrong dataset id");
+          return null;
+      } elseif ($resource["status"] != BigMLRequest::FINISHED) {
+          error_log($resource['message']);
+          return null;
+      }
+
+      $args[$resource['type']] = $resource['id'];
+
+      $rest = new BigMLRequest('CREATE', 'batchanomalyscore');
+
+      $rest->setData(json_encode($args));
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($args)));
+
+      return $rest->getResponse();
+   }
+
+   public static function get_batch_anomaly_score($batch_anomaly_score_Id, $queryString=null)
+   {
+      /*
+        Retrieves a batch anomaly score.
+
+        The batch_anomaly_score parameter should be a string containing the
+        batch_anomaly_score id or the dict returned by
+        create_batch_anomaly_score.
+        As batch_anomaly_score is an evolving object that is processed
+        until it reaches the FINISHED or FAULTY state, the function will
+        return a dict that encloses the batch_anomaly_score values and state
+        info available at the time it is called.
+      */
+      $rest = self::get_resource_request($batch_anomaly_score_Id, "batchanomalyscore", "GET", $queryString);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
+
+   public static function download_batch_anomaly_score($batch_anomaly_score_Id, $filename=null){
+      /*
+        Retrieves the batch anomaly score file.
+
+        Downloads anomaly scores, that are stored in a remote CSV file. If
+        a path is given in filename, the contents of the file are downloaded
+        and saved locally. A file-like object is returned otherwise.
+      */
+
+      $rest = self::get_resource_request($batch_anomaly_score_Id, "batchanomalyscore", "DOWNLOAD");
+      if ($rest == null) return null;
+
+      $data = $rest->download();
+
+      if ($data == false) {
+         error_log("Error downloading file");
+         return null;
+      }
+
+      if ($filename != null) {
+         file_put_contents($filename, $data);
+      }
+
+      return $data;
+   }
+
+   public static function list_batch_anomaly_score($queryString=null)
+   {
+      /*
+       Lists all your batch anomaly scores.
+      */
+      $rest = new BigMLRequest('LIST', 'batchanomalyscore');
+
+      if ($queryString!=null) {
+         $rest->setQueryString($queryString);
+      }
+
+      return $rest->getResponse();
+   }
+
+   public static function update_batch_anomaly_score($batch_anomaly_score_Id, $data, $waitTime=3000, $retries=10) {
+      /*
+       Updates a batch anomaly scores.
+      */
+      $rest = self::get_resource_request($batch_anomaly_score_Id, "batchanomalyscore", "UPDATE", null, true, $waitTime, $retries);
+      if ($rest == null) return null;
+
+      $rest->setData(json_encode($data));
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+   public static function delete_batch_anomaly_score($batch_anomaly_score_Id) {
+      /*
+         Deletes a batch prediction 
+      */
+      $rest = self::get_resource_request($batch_anomaly_score_Id, "batchanomalyscore", "DELETE", null);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
+
+
    private function _create_local_source($file_name, $options=array()) {
       $rest = new BigMLRequest('CREATE', 'source');
       $options['file'] = '@' . realpath($file_name);
@@ -1278,6 +1580,10 @@ class BigML {
 
    private function _checkBatchCentroId($stringID) {
       return preg_match("/^batchcentroid\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
+   }
+
+   private function _checkAnomalyId($stringID) {
+      return preg_match("/^anomaly\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
    public function get_fields($resource) {
