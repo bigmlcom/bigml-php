@@ -18,6 +18,23 @@ if (!class_exists('modelfields')) {
    include('modelfields.php');
 }
 
+function print_importance($instance, $out=STDOUT) {
+   /*
+     Print a field importance structure
+   */
+   $count=1;
+   $data = $instance->field_importance_data();
+   $field_importance = $data[0];
+   $fields = $data[1];
+   
+   foreach($field_importance as $field => $importance) {
+     fwrite($out, utf8_encode("    " . $count . "." .  $fields->${field}->name . ": " . round($importance)*100  . "\n" ));
+     flush($out);
+     $count+=1; 
+   }   
+
+}
+
 class BaseModel extends ModelFields{
    /*
       A lightweight wrapper of the basic model information
@@ -161,6 +178,27 @@ class BaseModel extends ModelFields{
        }
 
        return $fields;
+    }
+
+    function resource() {
+       /*
+        Returns the model resource ID
+       */
+       return $this->resource_id;
+    }
+
+    function field_importance_data() {
+       /*
+        Returns field importance related info
+       */ 
+       return array($this->field_importance, $this->fields);
+    }
+
+    function print_importance($out=STDOUT) {
+       /*
+        Prints the importance data
+       */
+       print_importance($out);
     }
 
 }

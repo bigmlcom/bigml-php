@@ -409,6 +409,66 @@ class BigML {
       return $rest->getResponse();
    }
 
+   public static function download_dataset($datasetId, $filename=null){
+      /*
+       Downloads dataset contents to a csv file or file object
+      */
+
+      $rest = self::get_resource_request($datasetId, "dataset", "DOWNLOAD");
+      if ($rest == null) return null;
+
+      $data = $rest->download();
+
+      if ($data == false) {
+         error_log("Error downloading file");
+         return null;
+      }
+
+      if ($filename != null) {
+         file_put_contents($filename, $data);
+      }
+
+      return $data;
+   }
+
+   public static function error_counts($dataset, $raise_on_error=true, $waitTime=3000, $retries=10) {
+
+      if (!is_string($dataset)) {
+        if ($dataset instanceof STDClass && property_exists($dataset, "resource")) {
+	   $resource = $dataset->resource;
+        } else {
+	   error_log("Wrong dataset id");
+	   return null;
+	} 
+      }
+
+      $resource = self::_check_resource($resource, null, $waitTime, $retries);
+
+      if ($resource == null || $resource['type'] != "dataset") {
+         error_log("Wrong dataset id");
+         return null;
+      } elseif ($resource["status"] != BigMLRequest::FINISHED) {
+         error_log($resource['message']);
+         return null;
+      }
+
+      $errors_dict = array();
+      $errors = array();
+
+      try {
+         $errors = $dataset->object->status->field_errors;
+      } catch  (Exception $e) {
+      }
+
+
+      foreach ($errors as $field_id => $value) {
+         $errors_dict[$field_id] = $value->total;
+      }
+
+      return $errors_dict;
+ 
+   }
+
    ##########################################################################
    #
    # Models
@@ -1718,7 +1778,7 @@ class BigML {
    private static function check_resource_type($resourceId, $resourceType) {
      
       $resource = null;
-      if ($resourceId instanceof STDClass && property_exists($resourceID, "resource")) {
+      if ($resourceId instanceof STDClass && property_exists($resourceId, "resource")) {
          $resource = $resourceId->resource;
       } else if (is_string($resourceId)) {
          $resource = $resourceId;

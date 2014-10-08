@@ -345,9 +345,9 @@ class Tree {
                $fd = reset($final_distribution);
 
                $prediction = $fd[0];
-               $intances =  $fd[1];
+               $instances =  $fd[1];
                
-               if ($intances == 1) {
+               if ($instances == 1) {
                   return array($last_node->output, $path, $last_node->confidence, $last_node->distribution, $instances);
                }
 

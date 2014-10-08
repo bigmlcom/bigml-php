@@ -2,6 +2,7 @@
 include '../bigml/bigml.php';
 include '../bigml/ensemble.php';
 include '../bigml/cluster.php';
+include '../bigml/fields.php';
 #include '../bigml/multimodel.php';
 
 class BigMLTest extends PHPUnit_Framework_TestCase
@@ -19,6 +20,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
     protected static $ensembles;
     protected static $data;
     protected static $data_localfile = './data/iris.csv';
+    protected static $data_missingfile ='./data/iris_missing.csv';
     protected static $remote_localfile = 'http://jkcray.maths.ul.ie/ms4024/R-Files/SampleRDataFiles/Iris.txt';
     protected static $local_ensemble;
     protected static $local_model;
@@ -110,6 +112,43 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        self::$batch_predictions = array();
        self::clean_all(self::$api);
        ini_set('memory_limit', '512M');
+    }
+
+    public function test_obtaining_missing_values_counts_and_error_counts() {
+       print "create_a_source_uploading_local_file "  . self::$data_missingfile . "\n";
+       $source = self::$api->create_source(self::$data_missingfile, $options=array('name'=>'local_test_source'));
+       $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
+       $this->assertEquals(1, $source->object->status->code);
+
+       print "check local source is ready\n";
+       $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
+       $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+       print "I update the source with params\n";
+       self::$api->update_source($source->resource, array("fields"=> array("000000"=> array("optype" => "numeric"))));
+
+       print "create dataset with local source\n";
+       $dataset = self::$api->create_dataset($source->resource);
+       $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
+       $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
+       print "check the dataset is ready\n";
+
+       $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
+       $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+       $dataset = self::$api->get_dataset($dataset->resource);
+       print "I ask for the missing values counts in the fields\n";
+       $fields = new Fields($dataset->object->fields);
+
+       print "Then the missing values counts dict is missing_values\n";
+       $this->assertEquals($fields->missing_counts(), array("000000" => "1"));
+
+       print "I ask for the error counts in the fields\n";
+       $error_counts = self::$api->error_counts($dataset);
+
+       print "Then the error counts dict is missing_values\n";
+       $this->assertEquals($error_counts, array("000000" => "1"));
+
     }
 
     public function test_create_an_anomaly_detector_from_a_dataset_or_dataset_list() {
@@ -619,7 +658,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        if (is_array($prediction)) {
           $prediction = $prediction[0];
        }
-       $this->assertEquals("Iris-virginica", $prediction);
+       $this->assertEquals("Iris-versicolor", $prediction);
     }
 
     public function test_create_new_model_params_1() {
