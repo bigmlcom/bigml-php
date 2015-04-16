@@ -100,6 +100,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
     public static function setUpBeforeClass() {
        self::$api =  new BigML(self::$username, self::$api_key, true);
+       #self::$api->setDebug(true);
        self::$sources = array();
        self::$datasets = array();
        self::$models = array();
@@ -112,6 +113,58 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        self::$batch_predictions = array();
        self::clean_all(self::$api);
        ini_set('memory_limit', '512M');
+    }
+    
+    public function test_local_ensemble() {
+      print "create_a_source_uploading_local_file\n";
+      $source = self::$api->create_source(self::$data_localfile, $options=array('name'=>'local_test_source'));
+      $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
+      $this->assertEquals(1, $source->object->status->code);
+
+      print "check local source is ready\n";
+      $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
+      $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+      print "create dataset with local source\n";
+      $dataset = self::$api->create_dataset($source->resource);
+      $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
+      $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
+
+      print "check the dataset is ready\n";
+      $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
+      $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+      print "create model\n";
+      $model = self::$api->create_model($dataset->resource);
+      $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
+
+      print "check model is ready\n";
+      $resource = self::$api->_check_resource($model->resource, null, 3000, 30);
+      $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+      print "create a ensemble from 5 models and tlp 1\n";
+      $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> 5, "tlp"=>1, "sample_rate"=>0.70, "seed" => 'BigML'));
+      $this->assertEquals(BigMLRequest::HTTP_CREATED, $ensemble->code);
+		     
+      print "check the ensemble is ready\n";
+      $resource = self::$api->_check_resource($ensemble->resource, null, 3000, 50);
+      $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+      print "create a local ensemble:\n";
+   
+      $ensemble = self::$api->get_ensemble($ensemble->resource);
+      self::$local_ensemble = new Ensemble($ensemble, self::$api);
+
+      print "create prediction for local ensemble\n";
+      $data = array("petal width" => 0.5);
+      $prediction = self::$local_ensemble->predict($data);
+
+      print "the prediction for local ensemble is equals Iris_virginica\n";
+      if (is_array($prediction)) {
+	 $prediction = $prediction[0];
+      }
+      $this->assertEquals("Iris-versicolor", $prediction);
+
     }
 
     public function test_obtaining_missing_values_counts_and_error_counts() {
@@ -283,7 +336,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        $this->assertTrue(compareFiles("./tmp/batch_predictions_score.csv", "./checkfiles/batch_predictions_a.csv"));
 
     }
-
+    // TODO
     public function test_successfully_creating_a_batch_centroid_from_a_cluster() {
        $data = array(array("filename"=> "./data/diabetes.csv",
                            "local_file" => "./tmp/batch_predictions.csv",
@@ -293,7 +346,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        print "Successfully creating a batch centroid from a cluster\n";
        foreach($data as $item)
        {
-          print "I create a data source uploading a ". $data["filename"]. " file\n";
+          print "I create a data source uploading a ". $item["filename"]. " file\n";
           $source = self::$api->create_source($item["filename"]);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
@@ -340,6 +393,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        }
     }
 
+    // TODO
     public function test_successfully_creating_a_centroid_and_the_associated_dataset() {
        $data = array(array("filename"=> "./data/diabetes.csv",
                            "input_data"=> array("pregnancies" => 0,
@@ -357,7 +411,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        print "Successfully creating a centroid and the associated dataset\n";
        foreach($data as $item)
        {
-          print "I create a data source uploading a ". $data["filename"]. " file\n";
+          print "I create a data source uploading a ". $item["filename"]. " file\n";
           $source = self::$api->create_source($item["filename"]);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
@@ -406,7 +460,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
        }
     }
-
+  // TODO
     public function test_successfully_comparing_centroids_with_or_without_text_options() {
 
        $data = array(array("filename"=> "./data/diabetes.csv",
@@ -426,7 +480,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        print "Successfully comparing centroids with or without text options\n";
        foreach($data as $item)
        {
-          print "I create a data source uploading a ". $data["filename"]. " file\n";
+          print "I create a data source uploading a ". $item["filename"]. " file\n";
 
           $source = self::$api->create_source($item["filename"]);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
@@ -459,7 +513,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
           print "I create a local cluster\n";
-          $this->local_cluster = new Cluster($cluster->resource, self::$api);
+          self::$local_cluster = new Cluster($cluster->resource, self::$api);
 
           print "create a centroid\n";
           $centroid = self::$api->create_centroid($cluster->resource, $item["input_data"]);
@@ -479,7 +533,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
        }
     }
-
+    
     public function test_i_create_a_source_uploading_local_file() {
        print "create_a_source_uploading_local_file\n";
        $source = self::$api->create_source(self::$data_localfile, $options=array('name'=>'local_test_source'));
@@ -744,7 +798,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
     public function test_i_create_an_evaluation_for_the_model_with_the_dataset() {
        print "create an evaluation for the model with the dataset\n";
        $evaluation = self::$api->create_evaluation(self::$models[0], self::$datasets[0]);
-       $this->assertEquals(BigMLRequest::HTTP_CREATED, $evaluation>code);
+       $this->assertEquals(BigMLRequest::HTTP_CREATED, $evaluation->code);
        array_push(self::$evaluations, $evaluation->resource); 
     }
 
@@ -763,7 +817,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
     public function test_i_create_an_evaluation_for_the_ensemble_with_the_dataset() {
        print "create an evaluation for the ensemble with the dataset\n";
        $evaluation = self::$api->create_evaluation(self::$ensembles[0], self::$datasets[0]);
-       $this->assertEquals(BigMLRequest::HTTP_CREATED, $evaluation>code);
+       $this->assertEquals(BigMLRequest::HTTP_CREATED, $evaluation->code);
        array_push(self::$evaluations, $evaluation->resource);
     }
  

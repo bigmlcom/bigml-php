@@ -111,7 +111,7 @@ class MultiVote {
 
       foreach($this->predictions as $prediction) {
 
-         if (!array_key_exists($order, $prediction) ) {
+         if (!array_key_exists('order', $prediction) ) {
             $has_order = false;
             break;
          }

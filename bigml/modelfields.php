@@ -96,7 +96,7 @@ function invert_dictionary($dictionary, $field='name') {
      **/
      $new_dictionary = null;
      foreach((array_keys(get_object_vars($dictionary))) as $key) {
-         $new_dictionary->{$dictionary->{$key}->{$field}} = $key; 
+         $new_dictionary[$dictionary->{$key}->{$field}] = $key; 
      }
      return $new_dictionary;     
  }
@@ -185,7 +185,7 @@ class ModelFields {
 
                if (array_key_exists($key, $this->inverted_fields))
                {
-                  $new_input_data[$this->inverted_fields->{$key}] = $value;
+                  $new_input_data[$this->inverted_fields[$key]] = $value;
                }
             }
 

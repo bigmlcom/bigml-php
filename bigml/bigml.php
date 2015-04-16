@@ -223,7 +223,7 @@ class BigML {
       return $rest->getResponse();
    }
 
-   private function _check_resource_status($resource, $queryString=null) 
+   private static function _check_resource_status($resource, $queryString=null) 
    {
       $rest = new BigMLRequest('GET', $resource);
       if ($queryString!=null) {
@@ -256,7 +256,7 @@ class BigML {
 
    }
 
-   public function _check_resource($resource, $queryString=null, $waitTime=3000, $retries=0)
+   public static function _check_resource($resource, $queryString=null, $waitTime=3000, $retries=0)
    {
       
       $r = $resource;
@@ -275,8 +275,7 @@ class BigML {
             $count++;
             $status=self::_check_resource_status($resource, $queryString);
          }
-
-         return array('type'=> strtolower($result[1]), 'id'=> $resource, 'status'=> $status["code"], 'message' => $status["message"], 'resource' => $status["item"]);
+         return array('type'=> strtolower($result[1]), 'id'=> $resource, 'status'=> $status["code"], 'message' => $status["message"], 'resource' => $status["resource"]);
       }
 
       return null;
@@ -1576,15 +1575,20 @@ class BigML {
    }
 
 
-   private function _create_local_source($file_name, $options=array()) {
+   private static function _create_local_source($file_name, $options=array()) {
       $rest = new BigMLRequest('CREATE', 'source');
-      $options['file'] = '@' . realpath($file_name);
+
+      if (phpversion() < 5.5) {
+         $options['file'] = '@' . realpath($file_name);
+      } else {
+         $options['file'] = new CurlFile(realpath($file_name));
+      }	 
       $rest->setData($options);
       $rest->setHeader('Content-Type', 'multipart/form-data');
       return $rest->getResponse();
    }
 
-   private function _create_remote_source($file_url, $options=array()) {
+   private static function _create_remote_source($file_url, $options=array()) {
       $rest = new BigMLRequest('CREATE', 'source');
       $options['remote'] = $file_url;
       $rest->setData(json_encode($options));
@@ -1602,47 +1606,47 @@ class BigML {
       return $rest->getResponse();
    }
 
-   private function _checkSourceId($stringID) {
+   private static function _checkSourceId($stringID) {
       return preg_match("/^source\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
-   private function _checkDatasetId($stringID) {
+   private static function _checkDatasetId($stringID) {
       return preg_match("/^(public\/)?dataset\/[a-f,0-9]{24}$|^shared\/dataset\/[a-f,0-9]{27}$/i", $stringID) ? true : false;
    }
 
-   public function _checkModelId($stringID) {
+   public static function _checkModelId($stringID) {
       return preg_match("/^(public\/)?model\/[a-f,0-9]{24}$|^shared\/model\/[a-f,0-9]{27}$/i", $stringID) ? true : false;
    }
 
-   private function _checkPredictionId($stringID) {
+   private static function _checkPredictionId($stringID) {
       return preg_match("/^prediction\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
-   private function _checkEvaluationId($stringID) {
+   private static function _checkEvaluationId($stringID) {
       return preg_match("/^evaluation\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
-   public function _checkEnsembleId($stringID) {
+   public static function _checkEnsembleId($stringID) {
       return preg_match("/^ensemble\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
-   private function _checkBatchPredictionId($stringID) {
+   private static function _checkBatchPredictionId($stringID) {
       return preg_match("/^batchprediction\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
-   public function _checkClusterId($stringID) {
+   public static function _checkClusterId($stringID) {
       return preg_match("/^(public\/)?cluster\/[a-f,0-9]{24}$|^shared\/cluster\/[a-f,0-9]{27}$/i", $stringID) ? true : false;
    }
 
-   private function _checkCentroId($stringID) {
+   private static function _checkCentroId($stringID) {
       return preg_match("/^centroid\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
-   private function _checkBatchCentroId($stringID) {
+   private static function _checkBatchCentroId($stringID) {
       return preg_match("/^batchcentroid\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
-   private function _checkAnomalyId($stringID) {
+   private static function _checkAnomalyId($stringID) {
       return preg_match("/^anomaly\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
@@ -1680,7 +1684,7 @@ class BigML {
       return null;
    }
 
-   public function retrieve_resource($resource_id, $query_string=null)
+   public static function retrieve_resource($resource_id, $query_string=null)
    {
       /*
          Retrieves resource info either from a local repo or from the remote server
@@ -1729,7 +1733,7 @@ class BigML {
       return $rest->getResponse();
    }
 
-   public function pprint($resource, $out=STDOUT) 
+   public static function pprint($resource)
    {
       /*
          Pretty prints a resource or part of it.
@@ -1738,8 +1742,7 @@ class BigML {
 
          $resource_id = $resource->resource;
          if (preg_match('/(source|dataset|model|evaluation|ensemble|cluster)(\/)([a-f,0-9]{24}|[a-f,0-9]{27})$/i', $resource_id, $result)) {
-            fwrite($out, $resource->object->name . "(" . $resource->object->size  . " bytes)\n");
-            fflush($out);
+	    print_r($resource->object->name . "(" . $resource->object->size  . " bytes)\n");
          } elseif (self::_checkPredictionId($resource_id)) {
 
             $objective_field_name = $resource->object->fields->{$resource->object->objective_fields[0]}->name;
@@ -1752,12 +1755,11 @@ class BigML {
 
             $prediction = $resource->object->prediction->{$resource->object->objective_fields[0]};
             $str = $objective_field_name . " for " . json_encode($input_data) . " is " . $prediction . "\n";
-            fwrite($out, $str); 
-            fflush($out);
+	    print_r($str);
          } 
          
       } else {
-         fwrite($out, print_r($resource));
+         print_r($resource);
       } 
       
    }
@@ -1883,6 +1885,8 @@ class BigML {
    function __construct($method='GET', $uri = 'source', $shared_username=null, $shared_api_key=null) {
 
       $this->endpoint=(BigML::getDomain() != null) ? BigML::getDomain() : BigML::BIGML_ENDPOINT;
+      $this->headers['Host'] = str_replace('https://','', $this->endpoint);
+
       $this->endpoint.=(BigML::isDevMode() == true) ? '/dev' : '' ; 
       $this->method = $method;
       $this->version = BigML::getVersion();
@@ -1890,7 +1894,6 @@ class BigML {
  
       #$this->uri = $uri !== '' ? '/'.str_replace('%2F', '/', rawurlencode($uri)) : '/';
 
-      $this->headers['Host'] = str_replace('https://','', $endpoint);
       $this->headers['Date'] = gmdate('D, d M Y H:i:s T');
       #$this->headers['Content-Type'] = 'application/json';
       #$this->resource = $this->uri;
@@ -1996,6 +1999,8 @@ class BigML {
 
          curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
          curl_setopt($curl, CURLOPT_HEADER, true);
+         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false );
+	 curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false );
 
          if ($this->method == "CREATE") {
             curl_setopt($curl, CURLOPT_POST, true);
@@ -2020,7 +2025,10 @@ class BigML {
              if (strlen($value) > 0) $headers[] = $header.': '.$value;
 
          curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-
+         
+	 if (BigML::getDebug() != null && BigML::getDebug() == true) {
+	    curl_setopt($curl, CURLOPT_VERBOSE, true);
+	 }
          $response = curl_exec($curl);
          $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
@@ -2036,19 +2044,18 @@ class BigML {
             $header_size = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
             $header = substr($response, 0, $header_size);
             $body = substr($response, $header_size);
-
             #$this->response->error = json_decode($response, true);
 			$this->response["code"] = $code; 
             $error_message = $this->error_message(json_decode($body), $this->method);
             $this->response["error"]["status"]["message"] = $error_message["message"];
             $this->response["error"]["status"]["code"] = $code;
-
+	    error_log($this->response["error"]["status"]["message"]);
             if ($error_message["code"] != null)
                $this->response["error"]["status"]["code"] = $error_message["code"];
 
          } else {
             error_log("Unexpected error ". $code);
-            $this->response["code"] = $HTTP_INTERNAL_SERVER_ERROR;
+            $this->response["code"] = BigMLRequest::HTTP_INTERNAL_SERVER_ERROR;
          }
 
          curl_close($curl);
@@ -2061,6 +2068,7 @@ class BigML {
    }
 
    private function parseJsonResponse($response, $code, $headers) {
+      $location = null;
       $r =json_decode($response,true);
 
       if ($this->method ==  "LIST") { 
@@ -2077,6 +2085,7 @@ class BigML {
              if (stripos($header, 'Location:') !== false) {
                $cad = explode("Location:", $header);
                $this->response["location"] =trim($cad[1]);
+	       $location = $this->response["location"];
                break;
              }
          }
@@ -2086,7 +2095,7 @@ class BigML {
          $this->response["error"] = null;
          $this->response["object"] = $r;
 
-         maybe_save($this->response, BigML::getStorage(), $code, $url);
+         maybe_save($this->response, BigML::getStorage(), $code, $location);
       }
    }
 
@@ -2164,7 +2173,7 @@ class BigML {
                   }
                   $error = $error . "\n"; 
                } else {
-                 $error = $error . ": " . $extra;
+                 $error = $error . ": " . $extra[0];
                }
             }
          }

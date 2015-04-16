@@ -20,9 +20,6 @@
    resource in BigML. It becomes the starting point for the Model class, that
    is used for local predictions.
 */
-$DEFAULT_MISSING_TOKENS = array("", "N/A", "n/a", "NULL", "null", "-", "#DIV/0",
-                          "#REF!", "#NAME?", "NIL", "nil", "NA", "na",
-                          "#VALUE!", "#NULL!", "NaN", "#N/A", "#NUM!", "?");
 
 function get_fields_structure($resource) {
    /*
@@ -89,6 +86,9 @@ class Fields {
        # structure. The structure is checked and fields structure is returned
        # if a resource type is matched.
 
+       $DEFAULT_MISSING_TOKENS = array("", "N/A", "n/a", "NULL", "null", "-", "#DIV/0",
+                                       "#REF!", "#NAME?", "NIL", "nil", "NA", "na",
+				       "#VALUE!", "#NULL!", "NaN", "#N/A", "#NUM!", "?");
        try {
            $resource_info = get_fields_structure($resource_or_fields);
        
@@ -124,7 +124,7 @@ class Fields {
 
        find_locale($data_locale, $verbose); 
 
-       $this->missing_tokens = missing_tokens;
+       $this->missing_tokens = $missing_tokens;
        
        $this->fields_columns=array();
        foreach ($this->fields_by_column_number as $value) {
