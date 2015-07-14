@@ -1650,7 +1650,7 @@ class BigML {
       return preg_match("/^anomaly\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
-   public function get_fields($resource) {
+   public static function get_fields($resource) {
       /*
          Retrieve fields used by a resource.
          Returns a dictionary with the fields that uses
@@ -1669,7 +1669,7 @@ class BigML {
 
    }
 
-   private function _get_fields_key($resource, $resource_id) {
+   private static function _get_fields_key($resource, $resource_id) {
       /*
          Returns the fields key from a resource dict
       */
