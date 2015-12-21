@@ -25,6 +25,28 @@ function endsWith( $str, $sub ) {
     return ( substr( $str, strlen( $str ) - strlen( $sub ) ) == $sub );
 }
 
+function lessExpr($ls, $rs) {
+  return $ls < $rs;
+}
+function lessOrEqualExpr($ls, $rs) {
+  return $ls <= $rs;
+}
+function greaterExpr($ls, $rs) {
+  return $ls > $rs;
+}
+function greaterOrEqualeExpr($ls, $rs) {
+  return $ls >= $rs;
+}
+function equalExpr($ls, $rs) {
+  return $ls == $rs;
+}
+function notEqualExpr($ls, $rs) {
+  return $ls != $rs;
+}
+function inExpr($ls, $array) {
+  return in_array($ls, $array);
+}
+
 class Predicate {
    /*
       A predicate to be evaluated in a tree's node.
@@ -36,14 +58,14 @@ class Predicate {
    const FULL_TERM_PATTERN = "/^.+\b.+$/u"; 
 
    
-   private static $OPERATOR = array("<"=> "<",
-                            "<="=> "<=",
-                            "="=> "==",
-                            "!="=> "!=",
-                            "/=" => "!=",
-                            ">="=> ">=",
-                            ">"=>  ">",
-                            "in" => "in");
+   private static $OPERATOR = array("<" => lessExpr,
+                            "<=" => lessOrEqualExpr,
+                            "=" => equalExpr,
+                            "!=" => notEqualExpr,
+                            "/=" => notEqualExpr,
+                            ">=" => greaterOrEqualExpr,
+                            ">" =>  greaterExpr,
+                            "in" => inExpr);
 
    private static $RELATIONS = array('<=' => 'no more than %s %s', 
                   '>=' => '%s %s at most',
@@ -132,7 +154,7 @@ class Predicate {
 
    function apply($input_data, $fields) {
       /*
-         Applies the operators defined in the predicate as strings toi the provided input data
+         Applies the operators defined in the predicate as strings to the provided input data
       */
 
       // for missing operators
@@ -141,7 +163,7 @@ class Predicate {
       } else if ($this->operator == "!=" && is_null($this->value)) {
         return true;
       }
-
+        $op = self::$OPERATOR[$this->operator];
       if ($this->term != null ) {
          $term_forms = property_exists($fields->{$this->field}->summary, 'term_forms') ? 
                      property_exists($fields->{$this->field}->summary->term_forms->{$this->term}) ? $fields->{$this->field}->summary->term_forms->{$this->term} 
@@ -152,13 +174,10 @@ class Predicate {
          $terms = array_merge($terms, $term_forms);
          $options = $fields->{$this->field}->$term_analysis;
 
-         return version_compare($this->term_matches($input_data[$this->field], $terms, $options), $this->value, self::$OPERATOR[$this->operator]);
+         return $op($input_data[$this->field], $this->value);
       }
 
-      if ($this->operator != "in")
-          return version_compare($input_data[$this->field], $this->value, self::$OPERATOR[$this->operator]);
-      else
-          return in_array($this->value, $input_data[$this->field]);
+        return $op($input_data[$this->field], $this->value);
    }
 
    function term_matches($text, $forms_list, $options) {
