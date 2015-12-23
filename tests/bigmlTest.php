@@ -111,10 +111,197 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        self::$evaluations = array();
        self::$models_tag_list = array();
        self::$batch_predictions = array();
-       self::clean_all(self::$api);
+       #self::clean_all(self::$api);
        ini_set('memory_limit', '512M');
     }
+
+    public function test_local_ensembles_scenario1() { 
+        $data = array(array("filename"=>  self::$data_localfile, "number_of_models" => 5, "tlp" => 1, 
+	                    "data_input" => array('petal width'=> 0.5), "prediction" => "Iris-versicolor", 
+			    "confidence" => "0.3687"));
     
+        foreach($data as $item) {
+	    print "I create a data source uploading a ". $item["filename"]. " file\n";
+	    $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+	    $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
+	    $this->assertEquals(1, $source->object->status->code);
+
+            print "check local source is ready\n";
+	    $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
+	    $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+            print "create dataset with local source\n";
+	    $dataset = self::$api->create_dataset($source->resource);
+	    $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
+	    $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
+
+            print "check the dataset is ready\n";
+	    $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
+	    $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+            print "create model\n";
+	    $model = self::$api->create_model($dataset->resource);
+	    $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
+
+            print "check model is ready\n";
+            $resource = self::$api->_check_resource($model->resource, null, 3000, 30);
+            $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+	    print "create a ensemble from " .  $item["number_of_models"] . " models and tlp " .$item["tlp"] . "\n";
+	    $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "tlp"=> $item["tlp"],"seed" => 'BigML'));
+	    $this->assertEquals(BigMLRequest::HTTP_CREATED, $ensemble->code);
+
+            print "check the ensemble is ready\n";
+            $resource = self::$api->_check_resource($ensemble->resource, null, 3000, 50);
+            $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+            print "create a local ensemble:\n";
+
+            $ensemble = self::$api->get_ensemble($ensemble->resource);
+            self::$local_ensemble = new Ensemble($ensemble, self::$api);
+
+            print "create prediction for local ensemble with confidence for \n";
+            $prediction = self::$local_ensemble->predict($item["data_input"], true, MultiVote::PLURALITY_CODE, true);
+
+
+            print "the prediction for local ensemble is equals " . $item["prediction"] . "\n";
+            $this->assertEquals($item["prediction"], $prediction[0]);
+
+            print_r($prediction);
+            print "And the local prediction's confidence is " . $item["confidence"] . "\n";
+	    $this->assertEquals($item["confidence"], $prediction[1]);
+
+        } 
+
+
+    }
+/*
+    public function test_local_ensembles_scenario2() {
+        $data = array(array("filename"=>  self::$data_localfile, "parms1" => array("input_fields" => array("000000", "000001","000003", "000004"), "missing_splits" => false), 
+                            "parms2" => array("input_fields" => array("000000", "000001","000003", "000004"), "missing_splits" => false),
+                            "parms3" => array("input_fields" => array("000000", "000001","000003", "000004"), "missing_splits" => false),
+                            "number_of_models" => 3,
+			    "field_importance" => array('000003' => 0.877140, '000001' =>  0.06727, '000000' => 0.05559)));
+                            #"field_importance" => array(array("000002", 0.5269933333333333), array("000003", 0.38936), 
+                            #                      array("000000", 0.04662333333333333),array("000001", 0.037026666666666666))));
+
+        foreach($data as $item) {
+
+            print "I create a data source uploading a ". $item["filename"]. " file\n";
+            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+            $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
+            $this->assertEquals(1, $source->object->status->code);
+
+            print "check local source is ready\n";
+            $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
+            $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+            print "create dataset with local source\n";
+            $dataset = self::$api->create_dataset($source->resource);
+            $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
+            $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
+
+            print "check the dataset is ready\n";
+            $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
+            $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+            print "create model\n";
+            $model = self::$api->create_model($dataset->resource);
+            $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
+
+            print "check model is ready\n";
+            $resource = self::$api->_check_resource($model->resource, null, 3000, 30);
+            $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+            print "create a ensemble from " .  $item["number_of_models"] . " models and tlp " .$item["tlp"] . "\n";
+            $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "tlp"=> $item["tlp"],"seed" => 'BigML'));
+            $this->assertEquals(BigMLRequest::HTTP_CREATED, $ensemble->code);
+
+            print "check the ensemble is ready\n";
+            $resource = self::$api->_check_resource($ensemble->resource, null, 3000, 50);
+            $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+            print "create a local ensemble:\n";
+
+            $ensemble = self::$api->get_ensemble($ensemble->resource);
+            self::$local_ensemble = new Ensemble($ensemble, self::$api);
+
+            print "create prediction for local ensemble with confidence for \n";
+            $prediction = self::$local_ensemble->predict($item["data_input"], true, MultiVote::PLURALITY_CODE, true);
+            
+            print "the prediction for local ensemble is equals " . $item["prediction"] . "\n";
+            $this->assertEquals($item["prediction"], $prediction[0]);
+
+            print "And the local prediction's confidence is " . $item["confidence"] . "\n";
+            $this->assertEquals($item["prediction"], $prediction[0]);
+        }
+
+    }
+
+    public function test_local_ensembles_scenario3() {
+
+        $data = array(array("filename"=>  self::$data_localfile, "number_of_models" => 5, "tlp" => 1, 
+                            "data_input" => array('petal width'=> 0.5), "prediction" => "Iris-versicolor", 
+                            "confidence" => "0.3687"));
+
+
+        foreach($data as $item) {
+            print "I create a data source uploading a ". $item["filename"]. " file\n";
+            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+            $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
+            $this->assertEquals(1, $source->object->status->code);
+
+            print "check local source is ready\n";
+            $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
+            $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+            print "create dataset with local source\n";
+            $dataset = self::$api->create_dataset($source->resource);
+            $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
+            $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
+
+            print "check the dataset is ready\n";
+            $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
+            $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+            print "create model\n";
+            $model = self::$api->create_model($dataset->resource);
+            $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
+
+            print "check model is ready\n";
+            $resource = self::$api->_check_resource($model->resource, null, 3000, 30);
+            $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+            print "create a ensemble from " .  $item["number_of_models"] . " models and tlp " .$item["tlp"] . "\n";
+            $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "tlp"=> $item["tlp"],"seed" => 'BigML'));
+            $this->assertEquals(BigMLRequest::HTTP_CREATED, $ensemble->code);
+
+            print "check the ensemble is ready\n";
+            $resource = self::$api->_check_resource($ensemble->resource, null, 3000, 50);
+            $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+            print "create a local ensemble:\n";
+
+            $ensemble = self::$api->get_ensemble($ensemble->resource);
+            self::$local_ensemble = new Ensemble($ensemble, self::$api);
+
+            print "create prediction for local ensemble with confidence for \n";
+            $prediction = self::$local_ensemble->predict($item["data_input"], true, MultiVote::PLURALITY_CODE, true);
+
+            print "the prediction for local ensemble is equals " . $item["prediction"] . "\n";
+            $this->assertEquals($item["prediction"], $prediction[0]);
+
+            print_r($prediction);
+            print "And the local prediction's confidence is " . $item["confidence"] . "\n";
+            $this->assertEquals($item["confidence"], $prediction[1]);
+
+#create_local_ensemble_prediction_add_confidence
+        }
+
+    } 
+
+
+/*
     public function test_local_ensemble() {
       print "create_a_source_uploading_local_file\n";
       $source = self::$api->create_source(self::$data_localfile, $options=array('name'=>'local_test_source'));
@@ -166,7 +353,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
       $this->assertEquals("Iris-versicolor", $prediction);
 
     }
-
+/*
     public function test_obtaining_missing_values_counts_and_error_counts() {
        print "create_a_source_uploading_local_file "  . self::$data_missingfile . "\n";
        $source = self::$api->create_source(self::$data_missingfile, $options=array('name'=>'local_test_source'));
@@ -336,7 +523,9 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        $this->assertTrue(compareFiles("./tmp/batch_predictions_score.csv", "./checkfiles/batch_predictions_a.csv"));
 
     }
+    */
     // TODO
+    /*
     public function test_successfully_creating_a_batch_centroid_from_a_cluster() {
        $data = array(array("filename"=> "./data/diabetes.csv",
                            "local_file" => "./tmp/batch_predictions.csv",
@@ -392,7 +581,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
        }
     }
-
+/*
     // TODO
     public function test_successfully_creating_a_centroid_and_the_associated_dataset() {
        $data = array(array("filename"=> "./data/diabetes.csv",
@@ -460,6 +649,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
        }
     }
+ 
   // TODO
     public function test_successfully_comparing_centroids_with_or_without_text_options() {
 
@@ -1069,6 +1259,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
        }
 
     }
+*/
 
 }
 

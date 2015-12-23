@@ -218,3 +218,63 @@ class ChiSquare extends ProbabilityDistribution {
 		return $return;
 	}
 }
+
+
+function AChiSq($p,$n) { 
+$v=0.5;
+$dv=0.5; 
+$x=0;
+    while($dv>1e-15) {
+        $x=1/$v-1;
+        $dv=$dv/2;
+        if (ChiSq($x,$n)>$p) {
+            $v=$v-$dv;
+        }
+        else {
+            $v=$v+$dv;
+        } 
+    }
+    return $x;
+}
+function Norm($z) {
+    $q=$z*$z;
+   if (abs($z)>7)
+        return (1-1/$q+3/($q*$q))*exp(-$q/2)/(abs($z)*sqrt($PiD2));
+    else
+        return ChiSq($q,1);
+}
+function ChiSq($x,$n) {
+    if ($x>1000 || $n>1000) {
+            $q=Norm((pow($x/$n,1/3)+2/(9*$n)-1)/sqrt(2/(9*$n)))/2;
+            if ($x>$n) 
+                return $q;
+            else
+                return 1-$q; 
+        }
+    $p=exp(-0.5*$x);
+        if(($n%2)==1) { $p=$p*sqrt(2*$x/pi());       }
+    $k=$n; 
+        while($k>=2) {
+        $p=$p*$x/$k;
+        $k=$k-2;
+        }
+   $t=$p;
+     $a=$n;
+     while($t>1e-15*$p) {
+        $a=$a+2;
+        $t=$t*$x/$a; 
+        $p=$p+$t;
+        }
+
+    return 1-$p;
+}
+function calppm($conf,$fails,$total)
+{
+    $E5 = $conf/100;
+  $F5 = $fails;
+  $G5 = $total;
+
+    $I5 = AChiSq((1-$E5),(2*($F5+1)))*1000000/(2*$G5);
+
+    return round($I5);
+}

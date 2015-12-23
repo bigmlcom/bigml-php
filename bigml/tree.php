@@ -15,7 +15,7 @@
 # under the License.
 
 if (!class_exists('predicate')) {
-include('predicate.php'); 
+   include('predicate.php'); 
 }
 
 if (!class_exists('multivote')) {
@@ -24,6 +24,10 @@ if (!class_exists('multivote')) {
 
 if (!class_exists('ChiSquare')) {
    include('ChiSquare.php'); 
+}
+
+if (!class_exists('Prediction')) {
+   include('prediction.php');
 }
 
 function get_instances($distribution) {
@@ -48,15 +52,15 @@ function unbiased_sample_variance($distribution, $distribution_mean=null)
    */
    $addition = 0.0;
    $count = 0.0;
-   if ( $distribution_mean = null || !is_numeric($distribution_mean) ) {
+
+   if ( $distribution_mean == null || !is_numeric($distribution_mean) ) {
       $distribution_mean = mean($distribution);
    }
 
    foreach($distribution as $key => $value) {
-      $addition += pow($value[0]-$distribution_mean , 2)   * $instances;
+      $addition += pow($value[0]-$distribution_mean , 2)   * $value[1];
       $count += $value[1];
    }   
-
    if ($count > 1) {
       return $addition/($count -1);
    }
@@ -69,10 +73,14 @@ function regression_error($distribution_variance, $population, $r_z=1.96)
    /*
       Computes the variance error
    */
+
    if ($population > 0) {
-      $chi_distribution = new ChiSquare($population);
-      $stast = new Stats();
-      $ppf=$chi_distribution::ppf(1 - $stats::erf($r_z / sqrt(2) ) ); 
+      #$chi_distribution = new ChiSquare($population);
+      $stats = new Stats();
+      #ppf = chi_distribution.ppf(1 - math.erf(r_z / math.sqrt(2)))
+      #$ppf=$chi_distribution->ppf(1 - erf($r_z / sqrt(2) ) ); 
+
+      $ppf=AChiSq($stats::erf($r_z / sqrt(2) ), $population);
       if ($ppf != 0 ) { 
          $error = ($distribution_variance * ($population-1)) / $ppf;
          $error = $error * pow(sqrt($population)+$r_z ,2);   
@@ -101,58 +109,6 @@ function splitChildren($children) {
    return null;
 }
 
-function merge_distributions($distribution, $new_distribution) 
-{
-   /*
-     Adds up a new distribution structure to a map formatted distribution
-   */
-   foreach($new_distribution as $key => $value) 
-   {   
-      if (!array_key_exists($key, $distribution) )  {
-            $distribution[$key] = 0; 
-      }
-       $distribution[$key] += $value;
-
-   }
-   
-   return $distribution;
-
-}
-
-function merge_bins($distribution, $limit) {
-   /*
-      Merges the bins of a regression distribution to the given limit number
-   */
-   $length = count($distribution);
-   if ($limit < 1 || $count <= $limit || $count < 2) {
-      return $distribution;
-   }
-
-   $index_to_merge = 2;
-   $shortest = INF;
-
-   foreach (range(1, $length-1) as $index) {
-      $distance = floatval($distribution[$index][0])-floatval($distribution[$index-1][0]);
-
-      if (floatval($distance) < floatval($shortest)) {
-         $shortest=$distance;
-         $index_to_merge = $index;
-      }
-   }
-
-   $new_distribution = array_slice($distribution, 0, ($index_to_merge-1));
-   $left = $distribution[$index_to_merge-1];
-   $right = $distribution[$index_to_merge];
-   $new_bin = array((($left[0]*$left[1]) + ($right[0] * $right[1]) )/($left[1]+$right[1]), $left[1]+$right[1]);
-   array_push($new_distribution, $new_bin);
-
-   if ($index_to_merge < ($length - 1)) {
-       $new_distribution = array_merge($new_distribution, array_slice($distribution, ($index_to_merge+1)));
-   }
-
-   return merge_bins($new_distribution, $limit);
-}
-
 function mean($distribution) {
    /*
       Computes the mean of a distribution in the [[point, instances]] syntax
@@ -162,7 +118,7 @@ function mean($distribution) {
 
    foreach($distribution as $value) {
       $addition += $value[0] * $value[1];
-      $count += $value[0];
+      $count += $value[1];
    }   
 
    if ($count > 0) {
@@ -229,8 +185,14 @@ class Tree {
    public $confidence;
    public $distribution;
    public $parent_id;
+   public $max;
+   public $min;
+   public $median;
+   public $impurity;
+   public $distribution_unit;
 
-   public function __construct($tree, $fields, $objective_field=null, $root_distribution=null, $parent_id=null, $ids_map=null, $subtree=true) {
+   public function __construct($tree, $fields, $objective_field=null, $root_distribution=null, $parent_id=null, $ids_map=null, $subtree=true, $tree_info=null) {
+
       $this->fields = $fields;
       $this->objective_field = $objective_field;
       $this->objective_id = $objective_field;
@@ -239,28 +201,38 @@ class Tree {
       if ($tree->predicate instanceof STDClass)  {
          $this->predicate = new Predicate($tree->predicate->operator, $tree->predicate->field, $tree->predicate->value, property_exists($tree->predicate, "term") ? $tree->predicate->term : null);
       } else {
-		 $this->predicate = true;
+	 $this->predicate = true;
       }
 
       if (property_exists($tree, 'id') ) {
          $this->id = $tree->id;
          $this->parent_id = $parent_id;
          if (is_array($ids_map)) {
-             $ids_map[$this->id] = $this;
+             $ids_map[$this->id] = clone $this;
          }
 
       } else {
          $this->id = null;
       }
+
       if (property_exists($tree, 'children') ) {
-         $this->setChilds($tree->children,$ids_map, $subtree);
+         $this->setChilds($tree->children,$ids_map, $subtree, $tree_info);
       } else {
          $this->children = array();
       }
 
       $this->regression = $this->is_regression();
+
+      if ($this->regression && (array_key_exists("regresssion", $tree_info) ? $tree_info["regression"] : true) ) {
+          $tree_info["regression"] = $this->regression;
+      }
+
       $this->count = $tree->count;
       $this->confidence = property_exists($tree, "confidence") ? $tree->confidence : null;
+      $this->distribution = null;
+      $this->max = null;
+      $this->min = null;
+      $summary = null;
 
       if (property_exists($tree, 'distribution') ) {
          $this->distribution = $tree->distribution;
@@ -268,29 +240,98 @@ class Tree {
          $summary = $tree->objective_summary;
          if (property_exists($summary, 'bins')) {
              $this->distribution = $summary->bins;
+	     $this->distribution_unit = 'bins';
          } elseif (property_exists($summary, 'counts') ) {
              $this->distribution = $summary->counts;
+	     $this->distribution_unit = 'counts';
          }  elseif (property_exists($summary, 'categories') ) {
              $this->distribution = $summary->categories;
+	     $this->distribution_unit = 'categories';
          }
       } else {
          $summary = $root_distribution;
          if (property_exists($summary, 'bins')) {
              $this->distribution = $summary->bins;
+	     $this->distribution_unit = 'bins';
          } elseif (property_exists($summary, 'counts') ) {
              $this->distribution = $summary->counts;
+	     $this->distribution_unit = 'counts';
          }  elseif (property_exists($summary, 'categories') ) {
              $this->distribution = $summary->categories;
+	     $this->distribution_unit = 'categories';
          }
       }
+
+      if ($this->regression) {
+
+         if (array_key_exists("max_bins", $tree_info)) {
+	    $tree_info["max_bins"] = max($tree_info["max_bins"], count($this->distribution));
+	 } else {
+	    $tree_info["max_bins"]=count($this->distribution);
+	 }
+
+         $this->median = null;
+
+         if ($summary != null) {
+            $this->median = $summary->median;
+         } 
+
+         if (!$this->median) {
+            $this->median = dist_median($this->distribution, $this->count);
+         }
+
+         if (property_exists($summary, "maximum")) {
+            $this->max = $summary->maximum;
+         } else {
+             foreach($this->distribution as $key => $instances) {
+                if ($this->max == null or $key > $this->max) {
+                   $this->max = $key;
+                }
+             } 
+         }
+
+         if (property_exists($summary, "minimum")) {
+            $this->max = $summary->minimum;
+         } else {
+             foreach($this->distribution as $key => $instances) {
+                if ($this->max == null or $key < $this->max) {
+                   $this->max = $key;
+                }
+             } 
+         } 
+
+      }
+      
+      $this->impurity = null;
+
+      if (!$this->regression && $this->distribution != null) {
+         $this->impurity = $this->gini_impurity();
+      } 
+
    }
 
-   public function setChilds($children, $ids_map, $subtree) {
+   public function gini_impurity() {
+      /*
+        Returns the gini impurity score associated to the distribution in the node
+       */
+      $purity = floatval(0);
+      if ($this->distribution == null) {
+         return null;
+      } 
+      foreach($this->distribution as $distribution) {
+        $purity+=pow(($distribution[1]/floatval($this->count)), 2);
+      }
+
+      return (floatVal(1) - $purity)/2; 
+ 
+   }
+
+   public function setChilds($children, $ids_map, $subtree, $tree_info) {
        
       $this->children = array();
 
       foreach ($children as $var => $child) {
-          $t = new Tree($child, $this->fields, $this->objective_field, null, $this->id, $ids_map, $subtree);
+          $t = new Tree($child, $this->fields, $this->objective_field, null, $this->id, $ids_map, $subtree, $tree_info);
           array_push($this->children, $t);
       }
       #return $this->children;
@@ -309,7 +350,8 @@ class Tree {
             if (is_string($child->output) )
                 return false;
             }
-      }
+         }
+	 return true;
    }
 
    public function predict($input_data, $path=null, $missing_strategy=Tree::LAST_PREDICTION) 
@@ -333,7 +375,9 @@ class Tree {
          $predict_pro = $this->predict_proportional($input_data, $path);
 
          $final_distribution = $predict_pro[0];
-         $last_node = $predict_pro[1];
+         $d_min = $predict_pro[1];
+         $d_max = $predict_pro[2];
+         $last_node = $predict_pro[3];
  
          $distribution = array(); 
 
@@ -342,15 +386,14 @@ class Tree {
             // singular case
             // when the prediction is the one given in a 1-instance node
             if (count($final_distribution) == 1) {
-               $fd = reset($final_distribution);
-
-               $prediction = $fd[0];
-               $instances =  $fd[1];
-               
-               if ($instances == 1) {
-                  return array($last_node->output, $path, $last_node->confidence, $last_node->distribution, $instances);
+               foreach ($final_distribution as $prediction => $instances) {
+                   if ($instances == 1) { 
+                       return new Prediction($last_node->output, $path, $last_node->confidence,
+                                        $last_node->distribution, $instances, $last_node->distribution_unit, $last_node->median,
+                                        $last_node->children, $last_node->min, $last_node->max);
+                   }
+                   break;
                }
-
             }
 
             ksort($final_distribution);
@@ -358,7 +401,11 @@ class Tree {
             foreach ($final_distribution as $key => $val) {
                 array_push($distribution, array(floatval($key), $val));
             }
-
+             
+            $distribution_unit = 'counts';
+            if (count($distribution) > Tree::BINS_LIMIT) {
+               $distribution_unit = 'bins';
+            }
             $distribution = merge_bins($distribution, Tree::BINS_LIMIT);
             $prediction = mean($distribution);
             $total_instances = 0;
@@ -368,22 +415,21 @@ class Tree {
             }
 
             $confidence = regression_error(unbiased_sample_variance($distribution, $prediction), $total_instances);
-
-            return array($prediction, $path, $confidence, $distribution, $total_instances);
+            return new Prediction($prediction, $path, $confidence, $distribution, $total_instances, $distribution_unit, dist_median($distribution, $total_instances), $last_node->children, $d_min, $d_max);
 
          } else {
-            
-            arsort($final_distribution);
+            ksort($final_distribution);
+
+	    $distribution = array();
             foreach ($final_distribution as $key => $val) {
-               array_push($distribution, array(floatval($key), $val));
+               array_push($distribution, array($key, $val));
             }
-
-            return array($distribution[0][0], $path, ws_confidence($distribution[0][0], $final_distribution), $distribution, get_instances($distribution));
-
+            return new Prediction($distribution[0][0], $path, ws_confidence($distribution[0][0], $final_distribution), $distribution, get_instances($distribution), 
+	                          'categorial', null, $last_node->children, null, null);
          }
  
       } else {
-         if ($this->children != null  &&  array_key_exists(splitChildren($this->children), $input_data) ) {
+         if ($this->children != null) {  #&&  array_key_exists(splitChildren($this->children), $input_data) ) {
             foreach ($this->children as $child) {
                if ($child->predicate->apply($input_data, $this->fields)) {
                   $new_rule = $child->predicate->to_rule($this->fields); 
@@ -392,14 +438,14 @@ class Tree {
                }
             }
          }
-
-         return array($this->output, $path, $this->confidence, $this->distribution, get_instances($this->distribution));
-
+         return new Prediction($this->output, $path, $this->confidence, $this->distribution, get_instances($this->distribution), 
+	                       $this->distribution_unit, ($this->regression == null ? null : $this->median), $this->children, 
+			       ($this->regression == null ? null : $this->min),($this->regression == null ? null : $this->max));
       }
 
    }
 
-   function predict_proportional($input_data, $path=null, $missing_found=false) {
+   function predict_proportional($input_data, $path=null, $missing_found=false, $median=false) {
       /*
          Makes a prediction based on a number of field values averaging
          the predictions of the leaves that fall in a subtree.
@@ -422,31 +468,55 @@ class Tree {
             $a[strval($x[0])] = $x[1];
          }
 
-         return merge_distributions(array(), $a);
+         return array(merge_distributions(array(), $a), $this->min, $this->max, $this);
       }
 
       if (one_branch($this->children, $input_data)) {
       #if (array_key_exists(splitChildren($this->children), $input_data)) {
          foreach($this->children as $child) {
-            $predicate = $child::$predicate;
+            $predicate = $child->predicate;
 
-            if ($predicate::apply($input_data, $this->fields)) {
-               $new_rule = $predicate::to_rule($this->fields);
+            if ($predicate->apply($input_data, $this->fields)) {
+               $new_rule = $predicate->to_rule($this->fields);
                if (!in_array($new_rule, $path) && !$missing_found) {
-                  array_push($new_rule, $path);
+                  array_push($path, $new_rule);
                }
-               return $child::predict_proportional($input_data, $path, $missing_found);
+               return $child->predict_proportional($input_data, $path, $missing_found, $median);
             }
  
          }
       } else {
          $missing_found = true;
+         $minimus = array();
+         $maximus = array();
 
          foreach($this->children as $child) {
-	    $predict_pro = $child::predict_proportional($input_data, $path);
-            $final_distribution = merge_distributions($final_distribution, $predict_pro[0]);
+	    $predict_pro = $child->predict_proportional($input_data, $path, $missing_found, $median);
+            $subtree_distribution = $predict_pro[0];
+	    $subtree_min = $predict_pro[1];
+	    $subtree_max = $predict_pro[2];
+
+            if ($subtree_min != null) {
+               array_push($minimus, $subtree_min); 
+            }
+            if ($subtree_max != null) {
+               array_push($maximus, $subtree_max); 
+            }
+
+            $final_distribution = merge_distributions($final_distribution, $subtree_distribution);
          }
-         return array($final_distribution, $this);
+         
+         $min_value = null;
+         $max_value  = null;
+
+         if (!empty($minimus)) {
+            $min_value=min($minimus);
+         }
+
+         if (!empty($maximus)) {
+            $max_value=max($maximus);
+         }
+         return array($final_distribution, $min_value, $max_value, $this);
       }
 
    }
@@ -581,4 +651,60 @@ function filter_nodes($node_list, $ids=null, $subtree=true)
    }
    return $nodes;
 }
+
+function missing_branch($children) {
+  foreach($children  as $child) {
+     if ($child->predicate->missing){
+        return true;
+     }
+  }
+  return false;
+}
+
+function dist_median($distribution, $count) 
+{
+  /*
+    "Returns the median value for a distribution
+   */
+   $counter = 0;
+   $previous_value= null;
+
+   foreach($distribution as $key => $value) {
+
+       $counter += $value[1];
+       if ($counter > ($count/2)) {
+          if (($count % 2) != 0 && ($counter -1) == ($count/2) && $previos_value != null ) {
+             return ($value[0] + $previous_value) / 2;
+          }
+          return $value[0];
+       }
+       $previous_value=$value[0];
+   }
+   return null; 
+}
+
+function erf($x) {
+    # constants
+    $a1 =  0.254829592;
+    $a2 = -0.284496736;
+    $a3 =  1.421413741;
+    $a4 = -1.453152027;
+    $a5 =  1.061405429;
+    $p  =  0.3275911;
+
+    # Save the sign of x
+    $sign = 1;
+    if ($x < 0) {
+        $sign = -1;
+    }
+    $x = abs($x);
+
+    # A&S formula 7.1.26
+    $t = 1.0/(1.0 + $p*$x);
+    $y = 1.0 - ((((($a5*$t + $a4)*$t) + $a3)*$t + $a2)*$t + $a1)*$t*exp(-$x*$x);
+
+    return $sign*$y;
+}
+
+
 ?>

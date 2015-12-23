@@ -25,6 +25,19 @@ function endsWith( $str, $sub ) {
     return ( substr( $str, strlen( $str ) - strlen( $sub ) ) == $sub );
 }
 
+function operatorFunction($operator) {
+   $OPERATOR = array("<" => create_function('$ls, $rs', 'return $ls < $rs;'),
+                            "<=" => create_function('$ls, $rs', 'return $ls <= $rs;'),
+                            "=" => create_function('$ls, $rs', 'return $ls == $rs;'),
+                            "!=" => create_function('$ls, $rs', 'return $ls != $rs;'),
+                            "/=" => create_function('$ls, $rs', 'return $ls != $rs;'),
+                            ">=" => create_function('$ls, $rs', 'return $ls >= $rs;'),
+                            ">" =>  create_function('$ls, $rs', 'return $ls > $rs;'),
+                            "in" => create_function('$ls, $rs', 'return in_array($ls,$array);'));
+
+   return $OPERATOR[$operator];
+}
+
 class Predicate {
    /*
       A predicate to be evaluated in a tree's node.
@@ -34,16 +47,6 @@ class Predicate {
    const TM_FULL_TERM = 'full_terms_only';
    const TM_ALL = 'all';
    const FULL_TERM_PATTERN = "/^.+\b.+$/u"; 
-
-   
-   private static $OPERATOR = array("<"=> "<",
-                            "<="=> "<=",
-                            "="=> "==",
-                            "!="=> "!=",
-                            "/=" => "!=",
-                            ">="=> ">=",
-                            ">"=>  ">",
-                            "in" => "in");
 
    private static $RELATIONS = array('<=' => 'no more than %s %s', 
                   '>=' => '%s %s at most',
@@ -58,10 +61,11 @@ class Predicate {
 
    public function __construct($operator, $field, $value, $term=null) {
          $this->operator = $operator;
+	 $this->missing = false;
+
          $this->field = $field;
          $this->value = $value;
          $this->term = $term;
-         $this->missing = false;
 
          if (endsWith($this->operator, "*") ) {
             $this->operator = substr($this->operator, 0, -1);
@@ -92,7 +96,13 @@ class Predicate {
       /*
        Builds rule string from a predicate
       */
-      $name=$fields->{$this->field}->{$label};
+
+      if ($label != null) {
+        $name=$fields->{$this->field}->{$label};
+      } else {
+        $name = "";
+      }
+
       $full_term = $this->is_full_term($fields);
       $relation_missing = '';
 
@@ -104,7 +114,6 @@ class Predicate {
 
          $relation_suffix = '';
          $relation_literal = '';
-
          if ( ($this->operator == '<' && $this->value <= 1) || ($this->operator == '<=' && $this->value ==0) ) {
             $relation_literal = $full_term ? 'is not equal to' : 'does not contain';
          } else {
@@ -115,7 +124,6 @@ class Predicate {
                }
             }
          }
-
          return $name . " " . $relation_literal . " " . $this->term . " " . $relation_suffix . $relation_missing;
       }
 
@@ -125,7 +133,6 @@ class Predicate {
          else
              return $name . " is not None";
       }
-
       return $name . " " . $this->operator . " ". $this->value . $relation_missing;
  
    }
@@ -142,23 +149,31 @@ class Predicate {
         return true;
       }
 
+      #$op = $OPERATOR[$this->operator];
+      $op = operatorFunction($this->operator);
+
       if ($this->term != null ) {
-         $term_forms = property_exists($fields->{$this->field}->summary, 'term_forms') ? 
-                     property_exists($fields->{$this->field}->summary->term_forms->{$this->term}) ? $fields->{$this->field}->summary->term_forms->{$this->term} 
+         $term_forms = property_exists($fields->{$this->field}->summary, 'term_forms') && !empty($fields->{$this->field}->summary->term_forms) ? 
+                     property_exists($fields->{$this->field}->summary->term_forms, $this->term) ? $fields->{$this->field}->summary->term_forms->{$this->term} 
                      : array() 
                     : array();
 
          $terms = array($this->term);
          $terms = array_merge($terms, $term_forms);
-         $options = $fields->{$this->field}->$term_analysis;
+         $options = $fields->{$this->field}->term_analysis;
 
-         return version_compare($this->term_matches($input_data[$this->field], $terms, $options), $this->value, self::$OPERATOR[$this->operator]);
+         #return version_compare($this->term_matches($input_data[$this->field], $terms, $options), $this->value, self::$OPERATOR[$this->operator]);
+         return $op($this->term_matches($input_data[$this->field], $terms, $options), $this->value);
       }
 
-      if ($this->operator != "in")
-          return version_compare($input_data[$this->field], $this->value, self::$OPERATOR[$this->operator]);
-      else
-          return in_array($this->value, $input_data[$this->field]);
+      if ($this->operator == "in") {
+          #return version_compare($this->value, $input_data[$this->field], self::$OPERATOR[$this->operator]);
+          return $op($this->value, $input_data[$this->field]);
+      } else {
+          #return version_compare($input_data[$this->field], $this->value, self::$OPERATOR[$this->operator]);
+          return $op($input_data[$this->field], $this->value);
+      }  
+          #return in_array($this->value, $input_data[$this->field]);
    }
 
    function term_matches($text, $forms_list, $options) {
@@ -169,7 +184,7 @@ class Predicate {
       */
 
       $token_mode = property_exists($options, 'token_mode') ? $options->token_mode : Predicate::TM_TOKENS;
-      $case_sensitive = property_exists($options, 'case_sensitive') ? $options->token_mode : false;
+      $case_sensitive = property_exists($options, 'case_sensitive') ? $options->case_sensitive : false;
       $first_term = $forms_list[0];
 
       if ($token_mode == Predicate::TM_FULL_TERM) {
@@ -205,11 +220,9 @@ class Predicate {
          Counts the number of occurences of the words in forms_list in the text
       */
       $flags = $this->get_tokens_flags($case_sensitive);
-      $expression = "/(\b|_)" . join("(\\b|_)|(\\b|_)",$forms_list) . "(\b|_)/" . $flags;
-
-      preg_match_all($expression, $text, $matches);
-
-      return count($matches);
+      $expression = "/(\b|_)" . join("(\b|_)|(\b|_)",$forms_list) . "(\b|_)/" . $flags;
+      $total = preg_match_all($expression, $text, $matches);
+      return $total;
 
    }
 

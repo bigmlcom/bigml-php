@@ -690,12 +690,17 @@ class BigML {
       }
 
       $args = $args == null? array() : $args; 
-      $args["input_data"] = $inputData == null? array() : $inputData;
+      $args["input_data"] = array();
+
+      if ($inputData != null or !empty($inputData)) {
+         $args["input_data"] = $inputData;
+      }
+
       $args[$resource['type']] = $resource['id'];
 
       $rest = new BigMLRequest('CREATE', 'prediction');
 
-      $rest->setData(json_encode($args));
+      $rest->setData(json_encode($args,JSON_FORCE_OBJECT));
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($args)));
 
@@ -1694,7 +1699,6 @@ class BigML {
 
          if (file_exists($stored_resource)) {
             $resource = json_decode(file_get_contents($stored_resource));
-
             if (property_exists($resource, "object") && property_exists($resource->object, "status") && $resource->object->status->code != BigMLRequest::FINISHED ) {
                # get resource again
                try {
@@ -2029,6 +2033,7 @@ class BigML {
 	 if (BigML::getDebug() != null && BigML::getDebug() == true) {
 	    curl_setopt($curl, CURLOPT_VERBOSE, true);
 	 }
+
          $response = curl_exec($curl);
          $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
@@ -2059,7 +2064,6 @@ class BigML {
          }
 
          curl_close($curl);
-
       } catch (Exception $e) {
          error_log("Unexpected exception error"); 
       }

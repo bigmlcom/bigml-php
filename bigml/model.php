@@ -28,6 +28,7 @@ class Model extends BaseModel{
    public $terms;
    public $tree;
    public $regression_ready=false;
+   public $_max_bins;
 
    public function __construct($model, $api=null, $storage="storage") {
 
@@ -36,13 +37,17 @@ class Model extends BaseModel{
       }
 
       if (is_string($model)) {
-         if (!($api::_checkModelId($model)) ) {
+
+         if (file_exists($model))
+	 {
+	    $model = json_decode(file_get_contents($model));
+	 } else if (!($api::_checkModelId($model)) ) {
             error_log("Wrong model id");
             return null;
-         }
-         $model = $api::retrieve_resource($model, $api::ONLY_MODEL);
+         } else {
+            $model = $api::retrieve_resource($model, $api::ONLY_MODEL);
+	 }
       } 
-
 
       if ($model == null || !property_exists($model, 'resource') ) {
          error_log("Cannot create the Model instance. Could not find the 'model' key in the resource");
@@ -62,11 +67,14 @@ class Model extends BaseModel{
       if (property_exists($model, "model") && $model->model instanceof STDClass) {
 
          if ($model->status->code == BigMLRequest::FINISHED) {
-
+	    $tree_info = array('max_bins' => 0);
             $this->ids_map = array();
             $this->terms = array();
-            $this->tree = new Tree($model->model->root, $this->fields, $this->objective_id, $model->model->distribution->training, null, $this->ids_map);
+            $this->tree = new Tree($model->model->root, $this->fields, $this->objective_id, $model->model->distribution->training, null, $this->ids_map, true, $tree_info);
             #self::$tree = clone $tree;
+	    if ($this->tree->regression) {
+	       $this->_max_bins = $tree_info["max_bins"];
+	    }
            
          } else {
             throw new Exception("The model isn't finished yet");
@@ -82,7 +90,8 @@ class Model extends BaseModel{
 
 
    public function predict($input_data, $by_name=true,$print_path=false, $out=STDOUT, $with_confidence=false, $missing_strategy=Tree::LAST_PREDICTION,
-                           $add_confidence=false, $add_path=false,$add_distribution=false,$add_count=false)
+                           $add_confidence=false, $add_path=false,$add_distribution=false,$add_count=false, $add_median=false, $add_next=false,
+                           $add_min=false, $add_max=false, $multiple=null)
    {
       /*
          Makes a prediction based on a number of field values.
@@ -95,7 +104,7 @@ class Model extends BaseModel{
       # missing_strategy
       $tree = $this->tree;
 
-      if ($tree->regression && $missing_strategy==Tree::PROPORTIONAL && !$this->regression_ready) {
+      if ($tree != null && $tree->regression && $missing_strategy==Tree::PROPORTIONAL && !$this->regression_ready) {
          throw new Exception("You needed to use proportional missing strategy, 
                          for regressions. Please install them before, using local predictions for the model."); 
       }
@@ -104,46 +113,97 @@ class Model extends BaseModel{
       $input_data = $this->filter_input_data($input_data, $by_name);
       # Strips affixes for numeric values and casts to the final field type
       $input_data = cast($input_data, $this->fields);
-      $prediction_info = $tree->predict($input_data, null, $missing_strategy);
 
-      $prediction = $prediction_info[0];
-      $path = $prediction_info[1];
-      $confidence = $prediction_info[2]; 
-      $distribution = $prediction_info[3];
-      $instances = $prediction_info[4];
+      $prediction = $tree->predict($input_data, null, $missing_strategy);
+
 
       # Prediction path   
       if ($print_path == true) {
-         fwrite($out, join(" AND ", $path) . ' => ' . $prediction . "\n");
+         fwrite($out, join(" AND ", $prediction->path) . ' => ' . $prediction->output . "\n");
          fclose($out);
       }         
 
       $output = $prediction;
 
       if ($with_confidence == true) {
-         $output = array($prediction, $confidence, $distribution, $instances);
+          
+         #$output = array($prediction->output, $prediction->confidence, $prediction->distribution, $prediction->count, $prediction->median);
+         $output = $prediction;
       }
 
-      if ($add_confidence || $add_path || $add_distribution || $add_count) {
-         $output = array('prediction'=> $prediction);
+      if ($multiple != null && !$tree->regression) {
+         $output = array();
+         $total_instances = floatval($prediction->count);
+	 
+	 $index =0;
+	 foreach ($prediction->distribution as $index => $data) {
+	    $category = $data[0];
+	    $instances = $data[1];
 
-         if ($add_confidence) {
-            $output['confidence'] = $confidence;
-         }
+            if ((is_string($multiple) && $multiple == 'all') or 
+	       ( is_int($multiple) && $index < $multiple  ) ) {
 
-         if ($add_path) {
-            $output['path'] = $path;
-         }
+               $prediction_dict = array('prediction' => $category,
+	                                'confidence' => ws_confidence($category, $prediction->distribution),
+		                        'probability' => $instances / $total_instances,
+		                        'count' => $instances);
 
-         if ($add_distribution) {
-            $output['distribution'] = $distribution;
-         }
+	       array_push($output, $prediction_dict);
 
-         if ($add_count) {
-            $output['count'] = $instances;
-         }
+	    } 
+
+	 }
+
+      } else {
+         
+	 if ($add_confidence || $add_path || $add_distribution || $add_count || 
+	     $add_median || $add_next || $add_min || $add_max) {
+
+             $output = (object) array('prediction'=> $prediction->output);
+
+	     if ($add_confidence) {
+	        $output->confidence = $prediction->confidence;
+	     }
+
+	     if ($add_path) {
+	        $output->path = $prediction->path;
+	     }
+             
+	     if ($add_distribution) {
+	        $output->distribution = $prediction->distribution;
+		$output->distribution_unit = $prediction->distribution_unit;
+	     }
+
+	     if ($add_count) {
+	        $output->count = $prediction->count;
+	     }
+
+	     if ($tree->regression && $add_median) {
+	        $output->median = $prediction->median;
+	     }
+
+	     if ($add_next) {
+                $field = (count($prediction->children) == 0 ? null : $prediction->children[0]->predicate->field);
+
+		if ($field != null && array_key_exists($field, $this->fields) ) {
+		   $field = $this->fields->{$field}->name;
+		}
+
+		$output->next = $field;
+		
+	     }
+
+	     if ($tree->regression && $add_min) {
+	        $output->min = $prediction->min;
+	     }
+
+             if ($tree->regression && $add_max) {
+	        $output->max = $prediction->max;
+	     }
+
+	 }
+
       }
-
       return $output;
 
    }

@@ -43,6 +43,7 @@ class Ensemble {
    public $models_splits;
    public $multi_model;
    public $fields;
+   public $objective_id;
 
    public function __construct($ensemble, $api=null, $max_models=null, $storage="storage") {
 
@@ -62,18 +63,37 @@ class Ensemble {
          
          foreach($ensemble as $model_id) {
 
-            if ( !(is_string($model_id) && $api::_checkModelId($model_id)) ) {
+            if (!is_string($model_id) && is_a($model_id, "Model") ) {
+               array_push($models, $model_id);
+            } else if ($model_id instanceof STDClass) {
+               array_push($models, $model_id);
+            } else if ($api != null && $api::_checkModelId($model_id)) {
+               $m = $api::get_model($model_id);
+               if ($m != null) {
+                 array_push($models, $m);
+               } else {
+                  error_log("Failed to verify the list of models. Check your model id values");
+                  return null;
+               }
+                   
+            } else {
                error_log("Failed to verify the list of models. Check your model id values");
                return null;
             }
-            array_push($models, $model_id);
+            #array_push($models, $model_id);
          }
          
          $this->distributions = null;   
 
       } else {
+         if (is_string($ensemble) && $api != null && $api::_checkEnsembleId($ensemble)) {
+            $ensemble = $api::get_ensemble($ensemble);
+         }
+
          if ($ensemble instanceof STDClass && property_exists($ensemble, "resource") && $api::_checkEnsembleId($ensemble->resource) && $ensemble->object->status->code == 5) {
             $models = $ensemble->object->models;
+            $this->ensemble_id =$ensemble->resource;
+            $this->resource_id = $ensemble->resource;
             $this->distributions = (property_exists($ensemble->object, "distributions") ) ? $ensemble->object->distributions : null;
          } else {
             error_log("Cannot find ensemble object");
@@ -95,11 +115,15 @@ class Ensemble {
       }
 
       if (count($this->models_splits) == 1) {
-      
          $models = array();
  
          foreach($this->models_splits[0] as $model_id) {
-            $mo = $api::retrieve_resource($model_id, $api::ONLY_MODEL);
+            if (!is_string($model_id) && is_a($model_id, "Model") ) {
+              $mo = $model_id;
+            } else {
+              $mo = $api::retrieve_resource($model_id, $api::ONLY_MODEL);
+            }
+ 
             $models[] = clone $mo;
             #array_push($models, $api::retrieve_resource($model_id, $api::ONLY_MODEL));
          }
@@ -115,7 +139,10 @@ class Ensemble {
       return $this->model_ids;
    }
 
-   function predict($input_data, $by_name=true, $method=MultiVote::PLURALITY_CODE, $with_confidence=false, $options=null) {
+   function predict($input_data, $by_name=true, $method=MultiVote::PLURALITY_CODE, $with_confidence=false, 
+                    $add_confidence=false, $add_distribution=false, $add_count=false, $add_median=false,
+		    $add_min=false, $add_max=false, $options=null, $missing_strategy=Tree::LAST_PREDICTION, $median=false) {
+
       /*
          Makes a prediction based on the prediction made by every model.
          The method parameter is a numeric key to the following combination
@@ -142,24 +169,44 @@ class Ensemble {
             }
 
             $multi_model = new MultiModel($models, $this->api);
-            $votes_split = $multi_model->generate_votes($input_data, $by_name);
+            $votes_split = $multi_model->generate_votes($input_data, $by_name, $missing_strategy, ($add_median || $median), $add_min, $add_max);
+          
+	    if ($median) {
+               foreach($votes_split->predictions as $prediction) {
+                  $prediction['prediction'] = $prediction['median'];
+	       }
+	    }
 
-            foreach($votes_split->predictions as $prediction_info) {
+            $votes->extend($votes_split->predictions);
+
+            /*foreach($votes_split->predictions as $prediction_info) {
                $prediction_info["order"] = $order;
                array_push($votes->predictions, $prediction_info); 
                $order+=1;
-            }
+            }*/
          }
 
-         return $votes->combine($method, $with_confidence, $options);
+         #return $votes->combine($method, $with_confidence, $options);
 
       } else {
          # When only one group of models is found you use the
          # corresponding multimodel to predict
-         $votes_split = $this->multi_model->generate_votes($input_data, $by_name);
+         $votes_split = $this->multi_model->generate_votes($input_data, $by_name, $missing_strategy, ($add_median || $median),$add_min, $add_max);
+
          $votes = new MultiVote($votes_split->predictions);
-         return $votes->combine($method, $with_confidence, $options);
-      }  
+         if ($median) {
+            $new_predictions=array();
+	    foreach($votes->predictions as $prediction) {
+	      $prediction->prediction = $prediction->median;
+              array_push($new_predictions, $prediction);
+	    }
+            $votes->predictions = $new_predictions;
+	 }
+      }
+
+      return $votes->combine($method, $with_confidence, $add_confidence, 
+	                        $add_distribution,$add_count, $add_median, 
+				$add_min, $add_max, $options);
    }
 
    function all_model_fields() {
@@ -168,8 +215,14 @@ class Ensemble {
       */
 
       $fields = array();
+      $models= array();
+
       foreach($this->model_ids as $model_id) {
-         $local_model=new Model($model_id, $this->api);
+         if (!is_string($model_id) && is_a($model_id, "Model") ) {
+           $local_model = $model_id;
+         } else {
+           $local_model=new Model($model_id, $this->api);
+         }
          $new_array = array();
          foreach($local_model->fields as $property => $value)  {
             $new_array[$property] = $value; 
@@ -196,11 +249,11 @@ class Ensemble {
          $check_importance = true;
          $importances = array();
          foreach($this->distributions as $distribution) {
-			if (array_key_exists('importance', $distribution)) {
+	    if (array_key_exists('importance', $distribution)) {
                array_push($importances, $distribution->importance); 
             } else {
-				$check_importance = false;
-			}
+	       $check_importance = false;
+	    }
          }
 
         if ($check_importance == true) {
@@ -226,7 +279,11 @@ class Ensemble {
         {
            # Old ensembles, extracts importance from model information
            foreach($this->model_ids as $model_id) {
-              $local_model = new BaseModel($model_id, $this->api);
+              if (!is_string($model_id) && is_a($model_id, "Model") ) {
+                 $local_model = $model_id; 
+              } else {
+                 $local_model = new BaseModel($model_id, $this->api);
+              }
               foreach($local_model->field_importance as $field_info) {
                  $field_id = $field_info[0];
                  if (!array_key_exists($field_id, $field_importance)) { 
