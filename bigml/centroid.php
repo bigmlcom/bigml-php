@@ -22,20 +22,11 @@ function cosine_distance2($terms, $centroid_terms, $scale) {
     # Then the distance for an empty input is 1
     # (before applying the scale factor).
 
-   print "COSINE_TERMS\n";
-   print_r($terms);
-   print "\nCOSINE_CENTROI_TER\n";
-   print_r($centroid_terms);
-   print "\nSCALE\n";
-   print_r($scale);
-
    if ($terms == null && $centroid_terms == null) {
-      print "SALIO 1\n";
       return 0;
    }
 
    if ($terms == null || $centroid_terms == null) {
-      print "SALIO 2\n";
       return pow($scale, 2);
    }
 
@@ -46,12 +37,8 @@ function cosine_distance2($terms, $centroid_terms, $scale) {
       }         
    }    
 
-   print "INPUT_COUNT" . $input_count ;
-
    $cosine_similarity = $input_count / sqrt(count($terms) * count($centroid_terms));
    $similarity_distance = $scale * (1-$cosine_similarity);
-   print "SALIO 3\n";
-   print "RESULTADO\n" .  pow($similarity_distance, 2);
    return pow($similarity_distance, 2);
 
 }   
@@ -82,23 +69,11 @@ class Centroid {
 
       $distance2 = 0.0;
 
-      print_r($term_sets);
       foreach($this->center as $field_id => $value) {
-         print "FIELD_ID\n" . $field_id;
-	 print "VALUE \n";
-	 print_r($value);
 
          if (is_array($value)) {
             $terms = (!array_key_exists($field_id, $term_sets) ) ? array() : $term_sets[$field_id]; 
-            print "TERMSTERMS\n";
-	    print_r($terms);
-            print "\n";
-	    print "VALUE\n";
-	    print_r($value);
-            print "SCALE FIELID\n";
-	    print_r($scales->{$field_id});
             $distance2 += cosine_distance2($terms, $value, $scales->{$field_id});
-            print "\nDISTANCE 2\n" . $distance2;
          } elseif (is_string($value)) {
             if (!array_key_exists($field_id, $input_data) || $input_data[$field_id] != $value) {
                $distance2 += 1 * pow($scales->{$field_id}, 2);
@@ -111,7 +86,6 @@ class Centroid {
             return null;
          }
       }
-      print "\nENNNND\n";
       return $distance2;   
    }
 }

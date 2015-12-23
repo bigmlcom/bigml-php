@@ -186,21 +186,12 @@ class Cluster extends ModelFields {
       $get_unique = $this->get_unique_terms($input_data);
       $unique_terms = $get_unique[0];
       $input_data =  $get_unique[1];
-      print "unique_terms\n";
-      print_r($unique_terms);
 
       $nearest = array('centroid_id'=> null, 'centroid_name'=> null, 'distance' => INF);
       
       foreach($this->centroids as $centroid) {
-         print "INPUT_DATA\n";
-         print_r($input_data);
-         print "SCALES\n";
-         print_r($this->scales); 
-         print "DISTANCE\n";
-         print_r($nearest["distance"]);
 
          $distance2 = $centroid->distance2($input_data, $unique_terms, $this->scales, $nearest["distance"]);
-         print "\ndistance: " . $distance2;
 
          if ($distance2 != null) {
             $nearest = array('centroid_id' => $centroid->centroid_id,

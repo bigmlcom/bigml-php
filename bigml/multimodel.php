@@ -200,21 +200,6 @@ class MultiModel{
                                             $missing_strategy, true, false, true, true, $add_median,
                                             false, $add_min, $add_max, null);
          $votes->append($prediction_info);
-         #print_r($prediction_info);
-         #array_push($votes->predictions, $prediction_info);
-
-         //$prediction_info["order"] = $order;
-        
-
-         //array_push($votes->predictions,  $prediction_info);
-
-         /*array_push($votes->predictions, array("prediction" => $prediction_info[0], 
-                      "confidence" => $prediction_info[1], 
-                      "order" => $order, 
-                      "distribution" => $prediction_info[2], 
-                      "count" => $prediction_info[3]));
-         */
-         //$order+=1;
       }
 
       return $votes;
