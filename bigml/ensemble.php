@@ -72,6 +72,15 @@ class Ensemble {
          $this->distributions = null;   
 
       } else {
+
+         if (is_string($ensemble)) {
+            if (!($api::_checkEnsembleId($ensemble)) ) {
+               error_log("Wrong ensemble id");
+               return null;
+            }
+            $ensemble = $api::retrieve_resource($ensemble);
+         }
+
          if ($ensemble instanceof STDClass && property_exists($ensemble, "resource") && $api::_checkEnsembleId($ensemble->resource) && $ensemble->object->status->code == 5) {
             $models = $ensemble->object->models;
             $this->distributions = (property_exists($ensemble->object, "distributions") ) ? $ensemble->object->distributions : null;
