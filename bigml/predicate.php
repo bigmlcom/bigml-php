@@ -47,6 +47,20 @@ function inExpr($ls, $array) {
   return in_array($ls, $array);
 }
 
+function operatorFunction($operator) {
+
+  $OPERATOR = array("<" => create_function('$ls, $rs', 'return $ls < $rs;'),
+                    "<=" => create_function('$ls, $rs', 'return $ls <= $rs;'),
+                    "=" => create_function('$ls, $rs', 'return $ls == $rs;'),
+                    "!=" => create_function('$ls, $rs', 'return $ls != $rs;'),
+                    "/=" => create_function('$ls, $rs', 'return $ls != $rs;'),
+                    ">=" => create_function('$ls, $rs', 'return $ls >= $rs;'),
+                    ">" =>  create_function('$ls, $rs', 'return $ls > $rs;'),
+                    "in" => create_function('$ls, $rs', 'return in_array($ls,$array);'));
+
+  return $OPERATOR[$operator];
+}
+
 class Predicate {
    /*
       A predicate to be evaluated in a tree's node.
@@ -163,7 +177,7 @@ class Predicate {
       } else if ($this->operator == "!=" && is_null($this->value)) {
         return true;
       }
-        $op = self::$OPERATOR[$this->operator];
+        $op = operatorFunction($this->operator);
       if ($this->term != null ) {
          $term_forms = property_exists($fields->{$this->field}->summary, 'term_forms') ? 
                      property_exists($fields->{$this->field}->summary->term_forms->{$this->term}) ? $fields->{$this->field}->summary->term_forms->{$this->term} 
