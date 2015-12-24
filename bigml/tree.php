@@ -469,7 +469,6 @@ class Tree {
       }
 
       if (one_branch($this->children, $input_data)) {
-      #if (array_key_exists(splitChildren($this->children), $input_data)) {
          foreach($this->children as $child) {
             $predicate = $child->predicate;
 

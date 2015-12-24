@@ -125,7 +125,6 @@ class Model extends BaseModel{
       $output = $prediction;
 
       if ($with_confidence == true) {
-          
          $output = $prediction;
       }
 
