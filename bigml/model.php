@@ -71,7 +71,6 @@ class Model extends BaseModel{
             $this->ids_map = array();
             $this->terms = array();
             $this->tree = new Tree($model->model->root, $this->fields, $this->objective_id, $model->model->distribution->training, null, $this->ids_map, true, $tree_info);
-            #self::$tree = clone $tree;
 	    if ($this->tree->regression) {
 	       $this->_max_bins = $tree_info["max_bins"];
 	    }
@@ -127,7 +126,6 @@ class Model extends BaseModel{
 
       if ($with_confidence == true) {
           
-         #$output = array($prediction->output, $prediction->confidence, $prediction->distribution, $prediction->count, $prediction->median);
          $output = $prediction;
       }
 

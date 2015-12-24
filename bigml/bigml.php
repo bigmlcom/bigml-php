@@ -1895,12 +1895,8 @@ class BigML {
       $this->method = $method;
       $this->version = BigML::getVersion();
       $this->uri = $uri;
- 
-      #$this->uri = $uri !== '' ? '/'.str_replace('%2F', '/', rawurlencode($uri)) : '/';
 
       $this->headers['Date'] = gmdate('D, d M Y H:i:s T');
-      #$this->headers['Content-Type'] = 'application/json';
-      #$this->resource = $this->uri;
 
       if ($shared_username != null && $shared_api_key != null) {
          $this->setParameter("username", $shared_username);
@@ -2010,7 +2006,6 @@ class BigML {
             curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_POSTFIELDS, $this->data);
          } elseif ($this->method == "UPDATE") {
-	    #curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
             curl_setopt($curl, CURLOPT_POSTFIELDS, $this->data);
          } elseif ($this->method == "DELETE") {
@@ -2049,8 +2044,7 @@ class BigML {
             $header_size = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
             $header = substr($response, 0, $header_size);
             $body = substr($response, $header_size);
-            #$this->response->error = json_decode($response, true);
-			$this->response["code"] = $code; 
+            $this->response["code"] = $code; 
             $error_message = $this->error_message(json_decode($body), $this->method);
             $this->response["error"]["status"]["message"] = $error_message["message"];
             $this->response["error"]["status"]["code"] = $code;
@@ -2246,7 +2240,6 @@ function maybe_save($resource, $path, $code, $location)
       The resource is saved in a local repo json file in the given path
    */
    if ($path != null &&  $resource["resource"] != null) {
-      #json_encode($resource);
       $resource_file_name = $path . DIRECTORY_SEPARATOR . str_replace('/','_',$resource["resource"]);
 
       $fp = fopen($resource_file_name, 'w');

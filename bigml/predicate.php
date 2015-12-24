@@ -162,18 +162,14 @@ class Predicate {
          $terms = array_merge($terms, $term_forms);
          $options = $fields->{$this->field}->term_analysis;
 
-         #return version_compare($this->term_matches($input_data[$this->field], $terms, $options), $this->value, self::$OPERATOR[$this->operator]);
          return $op($this->term_matches($input_data[$this->field], $terms, $options), $this->value);
       }
 
       if ($this->operator == "in") {
-          #return version_compare($this->value, $input_data[$this->field], self::$OPERATOR[$this->operator]);
           return $op($this->value, $input_data[$this->field]);
       } else {
-          #return version_compare($input_data[$this->field], $this->value, self::$OPERATOR[$this->operator]);
           return $op($input_data[$this->field], $this->value);
       }  
-          #return in_array($this->value, $input_data[$this->field]);
    }
 
    function term_matches($text, $forms_list, $options) {

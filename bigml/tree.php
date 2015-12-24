@@ -75,10 +75,7 @@ function regression_error($distribution_variance, $population, $r_z=1.96)
    */
 
    if ($population > 0) {
-      #$chi_distribution = new ChiSquare($population);
       $stats = new Stats();
-      #ppf = chi_distribution.ppf(1 - math.erf(r_z / math.sqrt(2)))
-      #$ppf=$chi_distribution->ppf(1 - erf($r_z / sqrt(2) ) ); 
 
       $ppf=AChiSq($stats::erf($r_z / sqrt(2) ), $population);
       if ($ppf != 0 ) { 

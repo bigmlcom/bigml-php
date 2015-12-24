@@ -147,7 +147,6 @@ class Fields {
        $this->objective_field = null;
        $this->objective_field_present = null;
        $this->filtered_indexes = null;
-       #$this->update_objective_field($objective_field, $objective_field_present);
 
    }
 

@@ -80,7 +80,6 @@ class Ensemble {
                error_log("Failed to verify the list of models. Check your model id values");
                return null;
             }
-            #array_push($models, $model_id);
          }
          
          $this->distributions = null;   
@@ -125,7 +124,6 @@ class Ensemble {
             }
  
             $models[] = clone $mo;
-            #array_push($models, $api::retrieve_resource($model_id, $api::ONLY_MODEL));
          }
          $this->multi_model = new MultiModel($models, $this->api); 
       }
@@ -178,12 +176,6 @@ class Ensemble {
 	    }
 
             $votes->extend($votes_split->predictions);
-
-            /*foreach($votes_split->predictions as $prediction_info) {
-               $prediction_info["order"] = $order;
-               array_push($votes->predictions, $prediction_info); 
-               $order+=1;
-            }*/
          }
 
          #return $votes->combine($method, $with_confidence, $options);

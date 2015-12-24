@@ -154,9 +154,6 @@ class MultiVote {
       $this->predictions = array();
 
       if (is_array($predictions) ) {
-         /*foreach($predictions as $prediction) {
-             array_push($this->predictions, new Model($prediction)); 
-         }*/
          $this->predictions = $predictions;
       } else {
          array_push($this->predictions, $predictions);
@@ -665,10 +662,6 @@ class MultiVote {
             $prediction->order = $order;
 
             array_push($predictions, $prediction);
-            #array_push($predictions, array("prediction" => $value[0],
-            #                        "probability" => floatval($value[1]) / $total,
-            #                        "count" => $value[1],
-            #                        "order" => $order));
          }
 
       }
@@ -729,13 +722,6 @@ class MultiVote {
          
       }
 
-      /*function sort_mode_items($a, $b) {
-         $retval = $b["count"] - $a["count"];
-         
-         if (!$retval) $retval= $a["order"] - $b["order"];
-
-         return $retval;
-      }*/
       uasort($mode, array($this, "sort_mode_items"));
       
       reset($mode);
@@ -770,9 +756,6 @@ class MultiVote {
             $output["distribution_unit"] = $grouped_dis["distribution_unit"];
 	 }
 
-	 /*if ($add_count) {
-           $output["count"] = $instances;
-	 }*/
       }
 
 
@@ -828,21 +811,7 @@ class MultiVote {
          
       return array($distribution, $total);
    }
-/*
-distribution = {}
-        total = 0
-        for prediction in self.predictions:
-            if not prediction['prediction'] in distribution:
-                distribution[prediction['prediction']] = 0.0
-            distribution[prediction['prediction']] += prediction[weight_label]
-            total += prediction['count']
-        if total > 0:
-            distribution = [[key, value] for key, value in
-                            distribution.items()]
-        else:
-            distribution = []
-        return distribution, total
-*/
+
    function weighted_confidence($combined_prediction, $weight_label) {
       /*
          Compute the combined weighted confidence from a list of predictions
