@@ -128,7 +128,6 @@ class BaseModel extends ModelFields{
              }
 
           } else {
-             #error_log("The model isn't finished yet");
              throw new Exception("The model isn't finished yet");
           }
        } else {

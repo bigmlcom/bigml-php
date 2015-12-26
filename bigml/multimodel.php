@@ -99,11 +99,15 @@ class MultiModel{
 
       if ($api == null) {
          $api = new BigML(null, null, null, $storage);
-	  }
+      }
 
       if (is_array($models)) {
          foreach($models as $mo) {
-            $m = new Model($mo, $api);
+            if (!is_string($mo) && is_a($mo, "Model") ) {
+               $m = $mo;
+            } else {
+               $m = new Model($mo, $api);
+            }
             $this->models[] = clone $m;
          }
 
@@ -181,7 +185,7 @@ class MultiModel{
       }
    }
 
-   function generate_votes($input_data, $by_name=true, $missing_strategy=Tree::LAST_PREDICTION) {
+   function generate_votes($input_data, $by_name=true, $missing_strategy=Tree::LAST_PREDICTION, $add_median=false, $add_min=false, $add_max=false) {
       /*
          Generates a MultiVote object that contains the predictions
          made by each of the models.
@@ -189,17 +193,13 @@ class MultiModel{
       
       $votes = new MultiVote(array());
       $order = 0;
-      foreach ($this->models as $model) 
-      {
-         $prediction_info = $model->predict($input_data, $by_name, false, STDOUT, true, $missing_strategy);
 
-         array_push($votes->predictions, array("prediction" => $prediction_info[0], 
-                      "confidence" => $prediction_info[1], 
-                      "order" => $order, 
-                      "distribution" => $prediction_info[2], 
-                      "count" => $prediction_info[3]));
-
-          $order+=1;
+      
+      foreach ($this->models as $model) {
+         $prediction_info = $model->predict($input_data, $by_name, false, STDOUT, false, 
+                                            $missing_strategy, true, false, true, true, $add_median,
+                                            false, $add_min, $add_max, null);
+         $votes->append($prediction_info);
       }
 
       return $votes;

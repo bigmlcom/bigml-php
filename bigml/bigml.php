@@ -690,12 +690,17 @@ class BigML {
       }
 
       $args = $args == null? array() : $args; 
-      $args["input_data"] = $inputData == null? array() : $inputData;
+      $args["input_data"] = array();
+
+      if ($inputData != null or !empty($inputData)) {
+         $args["input_data"] = $inputData;
+      }
+
       $args[$resource['type']] = $resource['id'];
 
       $rest = new BigMLRequest('CREATE', 'prediction');
 
-      $rest->setData(json_encode($args));
+      $rest->setData(json_encode($args,JSON_FORCE_OBJECT));
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($args)));
 
@@ -1650,7 +1655,7 @@ class BigML {
       return preg_match("/^anomaly\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
-   public function get_fields($resource) {
+   public static function get_fields($resource) {
       /*
          Retrieve fields used by a resource.
          Returns a dictionary with the fields that uses
@@ -1669,7 +1674,7 @@ class BigML {
 
    }
 
-   private function _get_fields_key($resource, $resource_id) {
+   private static function _get_fields_key($resource, $resource_id) {
       /*
          Returns the fields key from a resource dict
       */
@@ -1694,7 +1699,6 @@ class BigML {
 
          if (file_exists($stored_resource)) {
             $resource = json_decode(file_get_contents($stored_resource));
-
             if (property_exists($resource, "object") && property_exists($resource->object, "status") && $resource->object->status->code != BigMLRequest::FINISHED ) {
                # get resource again
                try {
@@ -1891,12 +1895,8 @@ class BigML {
       $this->method = $method;
       $this->version = BigML::getVersion();
       $this->uri = $uri;
- 
-      #$this->uri = $uri !== '' ? '/'.str_replace('%2F', '/', rawurlencode($uri)) : '/';
 
       $this->headers['Date'] = gmdate('D, d M Y H:i:s T');
-      #$this->headers['Content-Type'] = 'application/json';
-      #$this->resource = $this->uri;
 
       if ($shared_username != null && $shared_api_key != null) {
          $this->setParameter("username", $shared_username);
@@ -2006,7 +2006,6 @@ class BigML {
             curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_POSTFIELDS, $this->data);
          } elseif ($this->method == "UPDATE") {
-	    #curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
             curl_setopt($curl, CURLOPT_POSTFIELDS, $this->data);
          } elseif ($this->method == "DELETE") {
@@ -2029,6 +2028,7 @@ class BigML {
 	 if (BigML::getDebug() != null && BigML::getDebug() == true) {
 	    curl_setopt($curl, CURLOPT_VERBOSE, true);
 	 }
+
          $response = curl_exec($curl);
          $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
@@ -2044,8 +2044,7 @@ class BigML {
             $header_size = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
             $header = substr($response, 0, $header_size);
             $body = substr($response, $header_size);
-            #$this->response->error = json_decode($response, true);
-			$this->response["code"] = $code; 
+            $this->response["code"] = $code; 
             $error_message = $this->error_message(json_decode($body), $this->method);
             $this->response["error"]["status"]["message"] = $error_message["message"];
             $this->response["error"]["status"]["code"] = $code;
@@ -2059,7 +2058,6 @@ class BigML {
          }
 
          curl_close($curl);
-
       } catch (Exception $e) {
          error_log("Unexpected exception error"); 
       }
@@ -2242,7 +2240,6 @@ function maybe_save($resource, $path, $code, $location)
       The resource is saved in a local repo json file in the given path
    */
    if ($path != null &&  $resource["resource"] != null) {
-      #json_encode($resource);
       $resource_file_name = $path . DIRECTORY_SEPARATOR . str_replace('/','_',$resource["resource"]);
 
       $fp = fopen($resource_file_name, 'w');

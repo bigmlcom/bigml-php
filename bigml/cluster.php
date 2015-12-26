@@ -30,15 +30,52 @@ function parse_terms($text, $case_sensitive=true) {
    }
 
 
-   reg_match_all("/(\b|_)([^\b_\s]+?)(\b|_)'/u", $text, $matches);
+   preg_match_all("/(\b|_)([^\b_\s]+?)(\b|_)/u", $text, $matches);
 
    $results = array();
 
-   foreach ($matches as $valor) { 
-      array_push($results, ($case_sensitive) ? $valor[1] : strtolower($valor[1])); 
-   }
+   if (!empty($matches[0])) {
 
-   return $results();
+      foreach ($matches[0] as $valor) { 
+        array_push($results, ($case_sensitive) ? $valor : strtolower($valor)); 
+      }
+
+   }
+   return $results;
+}
+
+function get_unique_terms($terms, $term_forms, $tag_cloud) {
+  /* 
+     Extracts the unique terms that occur in one of the alternative forms in
+     term_forms or in the tag cloud.
+   */
+
+  $extend_forms = array();
+
+  $tag_keys=array();  
+  foreach ($tag_cloud as $key => $value) {
+       array_push($tag_keys, $value[0]);
+  }
+ 
+  foreach ($term_forms as $term => $forms) {
+
+     foreach ($forms as $form) {
+         $extend_forms[$form] = $term;
+     }
+  }
+
+  $terms_set=array();
+
+  foreach ($terms as $term) {
+      if (in_array($term, $tag_keys)) {
+        array_push($terms_set, $term); 
+      } else if (array_key_exists($term, $extend_forms)) {
+        array_push($terms_set, $extend_forms[$term]); 
+      }
+  }
+   
+  return array_unique($terms_set); 
+ 
 }
 
 class Cluster extends ModelFields {
@@ -96,6 +133,11 @@ class Cluster extends ModelFields {
             $this->term_analysis = array();
 
             $fields = $cluster->clusters->fields;
+            $summary_fields = $cluster->summary_fields;
+
+            foreach($summary_fields as $field_id) {
+               unset($fields->{$field_id});
+            }
 
             foreach($fields as $field_id => $field) {
 
@@ -141,36 +183,14 @@ class Cluster extends ModelFields {
       #Strips affixes for numeric values and casts to the final field type
       $input_data = cast($input_data, $this->fields);
       $unique_terms = array();
-      foreach($this->term_forms as $field_id => $field) {
-
-         if ( array_key_exists($field_id, $input_data) ) {
-
-            $case_sensitive = (array_key_exists('case_sensitive', $this->term_analysis[$field_id])) ? $this->term_analysis[$field_id]->case_sensitive : true; 
-            $token_mode = (array_key_exists('token_mode', $this->term_analysis[$field_id])) ? $this->term_analysis[$field_id]->token_mode : 'all'; 
-            $input_data_field = (array_key_exists($field_id, $input_data)) ?  $input_data[$field_id] : '';
-
-            if ($token_mode != Predicate::TM_FULL_TERM) {
-               $terms = parse_terms($input_data_field, $case_sensitive);
-            } else {
-               $terms = array();
-            }
-
-            if ($token_mode != Predicate::TM_TOKENS) {
-               array_push($terms, (case_sensitive) ? $input_data_field : strtolower($input_data_field) );
-            }
-
-            $unique_terms[$field_id] = get_unique_terms($terms, 
-                                                        $this->term_forms[$field_id], 
-                                                        array_key_exists($field_id, $this->tag_clouds) ? $this->tag_clouds[$field_id] : array());
-
-            unset($input_data[$field_id]);
-         }
-
-      }
+      $get_unique = $this->get_unique_terms($input_data);
+      $unique_terms = $get_unique[0];
+      $input_data =  $get_unique[1];
 
       $nearest = array('centroid_id'=> null, 'centroid_name'=> null, 'distance' => INF);
       
       foreach($this->centroids as $centroid) {
+
          $distance2 = $centroid->distance2($input_data, $unique_terms, $this->scales, $nearest["distance"]);
 
          if ($distance2 != null) {
@@ -182,6 +202,41 @@ class Cluster extends ModelFields {
 
       $nearest["distance"] = sqrt($nearest["distance"]);
       return $nearest;
+   }
+
+   function get_unique_terms($input_data) {
+      $unique_terms = array();
+      foreach($this->term_forms as $field_id => $field) {
+         if ( array_key_exists($field_id, $input_data) ) {
+            $input_data_field = (array_key_exists($field_id, $input_data)) ?  $input_data[$field_id] : '';
+
+            if (is_string($input_data_field)) {
+               $case_sensitive = (array_key_exists('case_sensitive', $this->term_analysis[$field_id])) ? $this->term_analysis[$field_id]->case_sensitive : true;
+               $token_mode = (array_key_exists('token_mode', $this->term_analysis[$field_id])) ? $this->term_analysis[$field_id]->token_mode : 'all';
+               
+               if ($token_mode != Predicate::TM_FULL_TERM) {
+                  $terms = parse_terms($input_data_field, $case_sensitive);
+               } else {
+                  $terms = array();
+               }
+            
+               if ($token_mode != Predicate::TM_TOKENS) {
+                  array_push($terms, ($case_sensitive) ? $input_data_field : strtolower($input_data_field) );
+               }
+
+               $unique_terms[$field_id] = get_unique_terms($terms,
+                                                        $this->term_forms[$field_id],
+                                                        array_key_exists($field_id, $this->tag_clouds) ? $this->tag_clouds[$field_id] : array());
+
+            } else {
+              $unique_terms[$field_id] = $input_data_field;
+            }  
+            unset($input_data[$field_id]); 
+  
+         }
+      } 
+
+      return array($unique_terms,$input_data);
    }
 
 } 

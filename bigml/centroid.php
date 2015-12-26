@@ -32,7 +32,7 @@ function cosine_distance2($terms, $centroid_terms, $scale) {
 
    $input_count = 0;
    foreach($centroid_terms as $term) {
-      if (array_key_exists($term, $terms) ) {
+      if (in_array($term, $terms) ) {
          $input_count +=1;
       }         
    }    
@@ -51,6 +51,7 @@ class Centroid {
    public $count;
    public $centroid_id;
    public $name;
+   public $distance;
 
    public function __construct($centroid_info) 
    {
@@ -58,6 +59,7 @@ class Centroid {
       $this->count = (property_exists($centroid_info, "count")) ? $centroid_info->count : 0;
       $this->centroid_id = (property_exists($centroid_info, "id")) ? $centroid_info->id : null;
       $this->name = (property_exists($centroid_info, "name"))  ? $centroid_info->name : null;
+      $this->distance = (property_exists($centroid_info, "distance"))  ? $centroid_info->distance : array();
    }
 
    public function distance2($input_data, $term_sets, $scales, $stop_distances2=null) {
@@ -68,12 +70,10 @@ class Centroid {
       $distance2 = 0.0;
 
       foreach($this->center as $field_id => $value) {
-         
+
          if (is_array($value)) {
             $terms = (!array_key_exists($field_id, $term_sets) ) ? array() : $term_sets[$field_id]; 
-
             $distance2 += cosine_distance2($terms, $value, $scales->{$field_id});
-
          } elseif (is_string($value)) {
             if (!array_key_exists($field_id, $input_data) || $input_data[$field_id] != $value) {
                $distance2 += 1 * pow($scales->{$field_id}, 2);

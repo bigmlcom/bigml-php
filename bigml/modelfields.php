@@ -182,7 +182,7 @@ class ModelFields {
             # the dataset fields. We only remove the keys that are not
             # used as predictors in the model
             foreach($input_data as $key => $value) { 
-
+        
                if (array_key_exists($key, $this->inverted_fields))
                {
                   $new_input_data[$this->inverted_fields[$key]] = $value;

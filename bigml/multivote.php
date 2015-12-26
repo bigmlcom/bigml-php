@@ -13,6 +13,9 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+function is_assoc($array){
+    return !ctype_digit( implode('', array_keys($array)) );
+}
 
 function ws_confidence($prediction, $distribution, $ws_z=1.96, $ws_n=null) {
    /*
@@ -26,16 +29,15 @@ function ws_confidence($prediction, $distribution, $ws_z=1.96, $ws_n=null) {
          ws_n: total number of instances in the distribution. If absent, the number is computed as the sum of weights in the
               provided distribution
    */
-
-   if (!array_keys($distribution) !== range(0, count($distribution) -1)) {
+   if (!is_assoc($distribution)) {
       $new_distribution = array();
-      foreach($distribution as $item) {
-         $new_distribution[$item[0]] = $item[1];
+      foreach($distribution as $item) { 
+         $new_distribution[$item[0]]=$item[1];
       }
       $distribution = $new_distribution;
-   } 
+   }
 
-   $ws_p = floatval($distribution[strval($prediction)]);
+   $ws_p = $distribution[$prediction];
    if ($ws_p < 0)
    {
       throw new Exception("The distribution weight must be a positive value");
@@ -66,6 +68,58 @@ function ws_confidence($prediction, $distribution, $ws_z=1.96, $ws_n=null) {
 
 }
 
+function merge_distributions($distribution, $new_distribution)
+{
+   /*
+     Adds up a new distribution structure to a map formatted distribution
+   */
+   foreach($new_distribution as $key => $value)
+   {
+      if (!array_key_exists($key, $distribution) )  {
+            $distribution[$key] = 0;
+      }
+       $distribution[$key] += $value;
+
+   }
+
+   return $distribution;
+
+}
+
+function merge_bins($distribution, $limit) {
+   /*
+      Merges the bins of a regression distribution to the given limit number
+   */
+   $length = count($distribution);
+   if ($limit < 1 || $length <= $limit || $length < 2) {
+      return $distribution;
+   }
+
+   $index_to_merge = 2;
+   $shortest = INF;
+
+   foreach (range(1, $length-1) as $index) {
+      $distance = floatval($distribution[$index][0])-floatval($distribution[$index-1][0]);
+
+      if (floatval($distance) < floatval($shortest)) {
+         $shortest=$distance;
+         $index_to_merge = $index;
+      }
+   }
+
+   $new_distribution = array_slice($distribution, 0, ($index_to_merge-1));
+   $left = $distribution[$index_to_merge-1];
+   $right = $distribution[$index_to_merge];
+   $new_bin = array((($left[0]*$left[1]) + ($right[0] * $right[1]) )/($left[1]+$right[1]), $left[1]+$right[1]);
+   array_push($new_distribution, $new_bin);
+
+   if ($index_to_merge < ($length - 1)) {
+       $new_distribution = array_merge($new_distribution, array_slice($distribution, ($index_to_merge+1)));
+   }
+
+   return merge_bins($new_distribution, $limit);
+}
+
 class MultiVote {
    /*
       A multiple vote prediction
@@ -81,6 +135,7 @@ class MultiVote {
    const PROBABILITY_CODE = 2;
    const THRESHOLD_CODE = 3;
    const DEFAULT_METHOD = 0;
+   const BINS_LIMIT = 32;
 
    public $COMBINATION_WEIGHTS = array(MultiVote::PLURALITY => null, MultiVote::CONFIDENCE => 'confidence', MultiVote::PROBABILITY => 'probability', MultiVote::THRESHOLD => null);
    public $COMBINER_MAP = array(MultiVote::PLURALITY_CODE=>MultiVote::PLURALITY, MultiVote::CONFIDENCE_CODE => MultiVote::CONFIDENCE, MultiVote::PROBABILITY_CODE => MultiVote::PROBABILITY, MultiVote::THRESHOLD_CODE=>MultiVote::THRESHOLD);
@@ -99,9 +154,6 @@ class MultiVote {
       $this->predictions = array();
 
       if (is_array($predictions) ) {
-         /*foreach($predictions as $prediction) {
-             array_push($this->predictions, new Model($prediction)); 
-         }*/
          $this->predictions = $predictions;
       } else {
          array_push($this->predictions, $predictions);
@@ -134,14 +186,62 @@ class MultiVote {
          Returns True if all the predictions are numbers
       */
       foreach($this->predictions as $prediction) {
-         if (!is_numeric($prediction["prediction"]) ) {
+         if (!is_numeric($prediction->prediction) ) {
             return false;
          }   
       }
       return true;
    }
+   
+   private function sort_joined_distribution_items($a, $b) {
+      if ($a[0] < $b[0]) {
+         return 1;
+      } else if ($a[0] > $b[0]) {
+         return -1;
+      } else { 
+         return 0;
+      }   
+   }
 
-   public function avg($instance, $with_confidence=false) {
+   public function grouped_distribution() {
+     /*
+        Returns a distribution formed by grouping the distributions of
+	each predicted node.
+     */
+     $joined_distribution = array();
+     $distribution_unit = 'counts';
+
+     foreach($this->predictions as $prediction) {
+
+        
+        $joined_distribution = merge_distributions($joined_distribution, 
+	                                           array(prediction['distribution'][0], 
+						         prediction['distribution'][1]));
+
+        uasort($joined_distribution, array($this, "sort_joined_distribution_items"));
+        $distribution = array();
+        foreach($joined_distribution as $dis) {
+           array_push($distribution, array($dis)); 
+        }
+
+        if ($distribution_unit == 'counts') {
+           if (count($distribution) > MultiVote::BINS_LIMIT) {
+             $distribution_unit = 'bins';
+           } else {
+             $distribution_unit = 'counts';
+           } 
+        }
+
+        $distribution = merge_bins($distribution, MultiVote::BINS_LIMIT);
+
+     }
+
+     return array("distribution" => $distribution, "distribution_unit" => $distribution_unit); 
+
+   }
+
+   public function avg($instance, $with_confidence=false, $add_confidence=false, $add_distribution=false,
+                          $add_count=false, $add_median=false, $add_min=false, $add_max=false) {
       /*
          Returns the average of a list of numeric values.
          If with_confidence is True, the combined confidence (as the
@@ -161,23 +261,80 @@ class MultiVote {
       $total = count($instance->predictions);
       $result = 0.0;
       $confidence = 0.0;
-
+      $median_result=0.0;
+      $instances = 0;
+      $d_min = INF;
+      $d_max = INF;
+   
+      #foreach($this->predictions as $prediction) {
       foreach($instance->predictions as $prediction) { 
-         $result += $prediction["prediction"];
-         if ($with_confidence) {
-            $confidence += $prediction["confidence"];
-         }   
+         $result += $prediction->prediction;
+
+         if ($add_median) {
+            $median_result += $prediction->median;
+         }
+
+         if ($with_confidence or $add_confidence) {
+            $confidence += $prediction->confidence;
+         }  
+
+         if ($add_count) {
+           $instances += $prediction->count;
+         }
+
+         if ($add_min && $d_min > $prediction->min) {
+            $d_min = $prediction->min;
+         }
+
+         if ($add_max && $d_max < $prediction->max) {
+           $d_max = $prediction->max;
+         }
       }
 
       if ($with_confidence) {
           return ($total > 0) ? array($result / $total, $confidence / $total) : array(NAN,0);
       }
 
+      if ($add_confidence or $add_distribution or $add_count or
+                $add_median or $add_min or $add_max) {
+
+          $output =  array('prediction' => ($total > 0) ? $result/$total : NAN);
+
+          if ($add_confidence) {
+             $ouput["confidence"] = ($total > 0) ? $confidence/$total : 0;
+          }
+        
+          if ($add_distribution) {
+             $grouped_dis = $this->grouped_distribution();
+             $output["distribution"] = $grouped_dis["distribution"];
+             $output["distribution_unit"] = $grouped_dis["distribution_unit"]; 
+          }
+ 
+          if ($add_count) {
+             $output["count"] = $instances;
+          }
+          
+          if ($add_median) {
+             $output["median"] = ($total > 0) ? $median_result/$total : NAN;
+          }
+
+          if ($add_min) {
+             $output["min"] = $d_min;
+          }
+
+          if ($add_max) {
+             $output["max"] = $d_max;
+          }
+
+          return $output;
+      }
+
       return ($total > 0) ? $result / $total : NAN;
 
    }
 
-   public function error_weighted($with_confidence=false) {
+   public function error_weighted($with_confidence=false, $add_confidence=false, $add_distribution=false,
+                          $add_count=false, $add_median=false, $add_min=false, $add_max=false) {
       /*
          Returns the prediction combining votes using error to compute weight
          If with_confidences is true, the combined confidence (as the
@@ -195,9 +352,14 @@ class MultiVote {
       }
 
       $result = 0.0;
+      $median_result=0.0;
       $top_range = 10;
       $combined_error = 0.0;
+      $instances = 0;
+      $d_min = INF;
+      $d_max = INF;
       $normalization_factor = $this->normalize_error($top_range);
+ 
 
       if ($normalization_factor  == 0) {
          if ($with_confidence) {
@@ -207,27 +369,74 @@ class MultiVote {
          }
       }
 
-      if ($with_confidence) {
+      if ($with_confidence or $add_confidence) {
          $combined_error = 0.0;
       }
 
       foreach($this->predictions as $prediction) {
 
-         $result += $prediction["prediction"] * $prediction["_error_weight"];
-  
-         if ($with_confidence) {
-            $combined_error += ($prediction["confidence"] * $prediction["_error_weight"]);
+         $result += $prediction->prediction * $prediction->_error_weight;
+ 
+         if ($add_median) {
+	   $median_result += ($prediction->median * $prediction->_error_weight); 
+	 }
+
+         if ($add_count) {
+           $instances += $prediction->count; 
          }
 
-         unset($prediction['_error_weight']);
+         if ($add_min && $d_min > $prediction->min) {
+           $d_min = $prediction->min;
+         }        
+         
+         if ($add_max && $d_max < $prediction->max) {
+           $d_max = $prediction->max;
+         }
+
+         if ($with_confidence or $add_confidence) {
+            $combined_error += ($prediction->confidence * $prediction->_error_weight);
+         }
+
+         unset($prediction->_error_weight);
       }
 
       if ($with_confidence) {
           return array($result / $normalization_factor, $combined_error / $normalization_factor);
-      } else {
-         return $result / $normalization_factor;
-      }  
+      } 
+ 
+      if ($add_confidence or $add_distribution or $add_count or
+          $add_median or $add_min or $add_max) {
+          $output = array('prediction' => $result / $normalization_factor);
+          if ($add_confidence) {
+              $output["confidence"] = $combined_error / $normalization_factor;
+          }
 
+          if ($add_distribution) {
+             $grouped_dis = $this->grouped_distribution();
+             $output["distribution"] = $grouped_dis["distribution"];
+             $output["distribution_unit"] = $grouped_dis["distribution_unit"];
+          }
+          
+          if ($add_count) {
+            $output["count"] = $instances;
+          }
+
+          if ($add_median) {
+            $output["median"] =  $median_result / $normalization_factor ;
+          }
+
+          if ($add_min){
+             $output["min"] = $d_min;
+          } 
+         
+          if ($add_max){
+             $output["max"] = $d_max;
+          }
+
+          return $output;
+      }
+
+      return $result / $normalization_factor; 
    }
 
    public function normalize_error($top_range) {
@@ -241,7 +450,7 @@ class MultiVote {
             if (!array_key_exists('confidence', $prediction)) {
                throw new Exception('Not enough data to use the selected prediction method. Try creating your model anew.');
             }
-            array_push($error_values, $prediction["confidence"]);
+            array_push($error_values, $prediction->confidence);
          }
       }
 
@@ -256,16 +465,16 @@ class MultiVote {
          # factor to fit them between [0, 1]
 		 $new_predictions = array();
          foreach($this->predictions as $prediction) {
-            $delta = ($min_error - $prediction["confidence"]);
-            $prediction["_error_weight"] = exp(($delta/$error_range)*$top_range);
-            $normalize_factor+=$prediction["_error_weight"];
+            $delta = ($min_error - $prediction->confidence);
+            $prediction->_error_weight = exp(($delta/$error_range)*$top_range);
+            $normalize_factor+=$prediction->_error_weight;
 			array_push($new_predictions, $prediction);
          }
 		 $this->predictions = $new_predictions;
       } else {
          $new_predictions = array();
          foreach($this->predictions as $prediction) {
-            $prediction["_error_weight"] = 1;
+            $prediction->_error_weight = 1;
             array_push($new_predictions, $prediction);
          }
          $this->predictions = $new_predictions;
@@ -283,11 +492,13 @@ class MultiVote {
          This order is used to break even cases in combination
          methods for classifications.
       */
-      return ($this->predictions != null) ? $this->predictions[-1]["order"] + 1 : 0; 
+      return ($this->predictions != null) ? end($this->predictions)->order + 1 : 0; 
       
    }
 
-   public function combine($method=MultiVote::DEFAULT_METHOD, $with_confidence=false, $options=null) {
+   public function combine($method=MultiVote::DEFAULT_METHOD, $with_confidence=false, 
+                           $add_confidence=false, $add_distribution=false,
+			   $add_count=false, $add_median=false, $add_min=false, $add_max=false, $options=null) {
       /*
          Reduces a number of predictions voting for classification and
          averaging predictions for regression.
@@ -303,8 +514,6 @@ class MultiVote {
       if ($this->predictions ==  null) {
          throw new Exception('No predictions to be combined.');
       }
-
-
       $method = (array_key_exists(strval($method),  $this->COMBINER_MAP)) ? $this->COMBINER_MAP[strval($method)] : $this->COMBINER_MAP[MultiVote::DEFAULT_METHOD];
 
       $keys = array_key_exists($method, $this->WEIGHT_KEYS) ? $this->WEIGHT_KEYS[$method] : null;
@@ -321,41 +530,63 @@ class MultiVote {
       if ($this->is_regression()) {
          $new_predictions = array();
          foreach($this->predictions as $prediction) {
-            if ($prediction["confidence"] == null) {
-               $prediction["confidence"] = 0;
+            if ($prediction->confidence == null) {
+               $prediction->confidence = 0;
             }
-			$new_predictions[] = $prediction;
+            $new_predictions[] = $prediction;
          }
 
          $this->predictions=$new_predictions;
-
          if ($method == MultiVote::CONFIDENCE) {
-            return $this->error_weighted($with_confidence);
+            return $this->error_weighted($with_confidence, $add_confidence, 
+                                         $add_distribution, $add_count, $add_median, $add_min, $add_max);
          } else {
-            return $this->avg($this, $with_confidence); 
+            return $this->avg($this, $with_confidence, $add_confidence,
+                              $add_distribution, $add_count, $add_median, $add_min, $add_max); 
          }
-      } else {
 
+      } else {
          $predictions = $this;
          if ($method == MultiVote::THRESHOLD) {
-
             if ($options == null) {
                $options = array();
             }
 
-            $predictions = $this->single_out_category($options);   
+            $predictions = $this->single_out_category($options); 
          } elseif ($method == MultiVote::PROBABILITY) {
 
             $predictions = new MultiVote(array());
             $predictions->predictions = $this->probability_weight();
-
          }
+
          return $predictions->combine_categorical( (array_key_exists($method,  $this->COMBINATION_WEIGHTS)) ? 
                                          $this->COMBINATION_WEIGHTS[$method] : null, 
-                                        $with_confidence);
+                                        $with_confidence, $add_confidence, $add_distribution, $add_count);
       }
    }
 
+   public function append($prediction_info) {
+       /*Adds a new prediction into a list of predictions
+
+           prediction_info should contain at least:
+           - prediction: whose value is the predicted category or value
+
+           for instance:
+               {'prediction': 'Iris-virginica'}
+
+           it may also contain the keys:
+           - confidence: whose value is the confidence/error of the prediction
+           - distribution: a list of [category/value, instances] pairs
+                           describing the distribution at the prediction node
+           - count: the total number of instances of the training set in the
+                    node
+       */
+       if ($prediction_info != null) {
+          $order = $this->next_order();
+          $prediction_info->order = $order;
+          array_push($this->predictions, $prediction_info);
+       }  
+   }
 
    function single_out_category($options) {
       /*
@@ -415,19 +646,22 @@ class MultiVote {
             throw new Exception("Probability weighting is not available because distribution information is missing.");
          } 
 
-         $total = $prediction["count"];
+         $total = $prediction->count;
 
          if ($total < 1 || !is_numeric($total)) {
             throw new Exception("Probability weighting is not available because distribution seems to have ". $total . " as number of instances in a node");
          }
 
-         $order = $prediction["order"];
+         $order = $prediction->order;
 
-         foreach($prediction["distribution"] as $key => $value) {
-            array_push($predictions, array("prediction" => $value[0],
-                                    "probability" => floatval($value[1]) / $total,
-                                    "count" => $value[1],
-                                    "order" => $order));
+         foreach($prediction->distribution as $key => $value) {
+            $prediction = new stdClass();
+            $prediction->prediction= $value[0];
+            $prediction->probability= floatval($value[1]) / $total;
+            $prediction->count =$value[1];
+            $prediction->order = $order;
+
+            array_push($predictions, $prediction);
          }
 
       }
@@ -435,7 +669,8 @@ class MultiVote {
 
    }
 
-   function combine_categorical($weight_label=null, $with_confidence=false) {
+   function combine_categorical($weight_label=null, $with_confidence=false, $add_confidence=false, 
+                                $add_distribution=false, $add_count=False) {
       /*
          Returns the prediction combining votes by using the given weight:
          weight_label can be set as:
@@ -453,9 +688,9 @@ class MultiVote {
       if ($weight_label == null) {
          $weight = 1;
       }
+      $instances = 0;
 
       foreach($this->predictions as $prediction) {
-
          if ($weight_label != null) {
          
             if (!in_array($weight_label, array_values($this->COMBINATION_WEIGHTS))) {
@@ -465,36 +700,35 @@ class MultiVote {
             if (!array_key_exists($weight_label, $prediction)) {
                throw new Exception("Not enough data to use the selected prediction method. Try creating your model anew"); 
             } else {
-               $weight = $prediction[$weight_label];
+               $weight = $prediction->{$weight_label};
             }
          }
  
-         $category = $prediction["prediction"];
+         $category = $prediction->prediction;
+         
+	 if ($add_count) {
+	    $instances += $prediction->count;
+	 }
+	 
+
          if (array_key_exists(strval($category),  $mode) ) {
             $mode[strval($category)] = array("count" => $mode[strval($category)]["count"] + $weight,
                                "order" => $mode[strval($category)]["order"]
                               );
 
          } else {
-            $mode[strval($category)] = array("count" => $weight, "order" => $prediction["order"]);
+            $mode[strval($category)] = array("count" => $weight, "order" => $prediction->order);
          }
          
       }
 
-      /*function sort_mode_items($a, $b) {
-         $retval = $b["count"] - $a["count"];
-         
-         if (!$retval) $retval= $a["order"] - $b["order"];
-
-         return $retval;
-      }*/
       uasort($mode, array($this, "sort_mode_items"));
       
       reset($mode);
 
       $prediction = key($mode);
 
-      if ($with_confidence) {
+      if ($with_confidence or $add_confidence) {
          if (array_key_exists('confidence', $this->predictions[0])) {
             return $this->weighted_confidence($prediction, $weight_label);
          } else {
@@ -502,10 +736,28 @@ class MultiVote {
             $distribution = $combined_distribution[0];
             $count = $combined_distribution[1];
             $combined_confidence = ws_confidence($prediction, $distribution, 1.96, $count); 
-            return array($prediction, $combined_confidence); 
          }
 
       }
+ 
+      if ($with_confidence) {
+         return array($prediction, $combined_confidence); 
+      }
+
+      if ($add_confidence or $add_distribution or $add_count) {
+         $output = array("prediction" => $prediction);
+	 if ($add_confidence) {
+	   $output["confidence"] = $combined_confidence;
+	 }
+
+	 if ($add_distribution) {
+            $grouped_dis = $this->grouped_distribution();
+            $output["distribution"] = $grouped_dis["distribution"];
+            $output["distribution_unit"] = $grouped_dis["distribution_unit"];
+	 }
+
+      }
+
 
       return $prediction;
    }
@@ -539,12 +791,12 @@ class MultiVote {
              throw new Exception("Not enough data to use the selected prediction method. Try creating your model anew.");
          }
 
-         if (!array_key_exists($prediction["prediction"], $distribution) ) {   
-            $distribution[$prediction["prediction"]] = 0.0; 
+         if (!array_key_exists($prediction->prediction, $distribution) ) {   
+            $distribution[$prediction->prediction] = 0.0; 
          }
 
-         $distribution[$prediction["prediction"]] += $prediction[$weight_label];   
-         $total += $prediction["count"];
+         $distribution[$prediction->prediction] += $prediction->$weight_label; 
+         $total += $prediction->count;
       }      
 
       if ($total > 0) {
@@ -559,21 +811,7 @@ class MultiVote {
          
       return array($distribution, $total);
    }
-/*
-distribution = {}
-        total = 0
-        for prediction in self.predictions:
-            if not prediction['prediction'] in distribution:
-                distribution[prediction['prediction']] = 0.0
-            distribution[prediction['prediction']] += prediction[weight_label]
-            total += prediction['count']
-        if total > 0:
-            distribution = [[key, value] for key, value in
-                            distribution.items()]
-        else:
-            distribution = []
-        return distribution, total
-*/
+
    function weighted_confidence($combined_prediction, $weight_label) {
       /*
          Compute the combined weighted confidence from a list of predictions
@@ -582,7 +820,7 @@ distribution = {}
       $check_confidence_and_weight_label = true;
 
       foreach($this->predictions as $prediction) {
-         if ($prediction["prediction"] == $combined_prediction) {
+         if ($prediction->prediction == $combined_prediction) {
             array_push($predictions, $prediction);
             if ($check_confidence_and_weight_label==true && (!array_key_exists($weight_label, $prediction) || !array_key_exists('confidence', $prediction)) ) {
                $check_confidence_and_weight_label=false;
@@ -600,16 +838,43 @@ distribution = {}
       
       foreach($predictions as $prediction) {
          if ($weight_label != null) {
-            $weight = $prediction[$weight_label];
+            $weight = $prediction->$weight_label;
          }
 
-         $final_confidence += $weight*$prediction["confidence"];
+         $final_confidence += $weight*$prediction->confidence;
          $total_weight += $weight;
       }
 
       $final_confidence = ($total_weight > 0) ? $final_confidence/$total_weight : NAN;
 
       return array($combined_prediction, $final_confidence);
+   }
+   
+   function extend($predictions_info) {
+      /*Given a list of predictions, extends the list with another list of
+           predictions and adds the order information. For instance,
+           predictions_info could be:
+
+                [{'prediction': 'Iris-virginica', 'confidence': 0.3},
+                 {'prediction': 'Iris-versicolor', 'confidence': 0.8}]
+           where the expected prediction keys are: prediction (compulsory),
+           confidence, distribution and count.
+       */
+       if (is_array($predictions_info) ) {
+         $order = next_order();
+         $i=0;
+         foreach($predictions_info as $prediction) {
+	    if (is_array($prediction)) {
+	      $prediction['order'] = $order+$i;
+	      array_push($this->predictions, $prediction);
+	    } else {
+	       error_log("WARNING: failed to add the prediction.\n Only dict like predictions are expected\n");
+	    }
+            $i+=1;
+         } 
+       } else {
+         error_log("WARNING: failed to add the predictions.\nOnly a list of dict-like predictions are expected."); 
+       }
    }
 
 }
