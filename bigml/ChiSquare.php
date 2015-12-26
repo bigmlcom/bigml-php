@@ -239,7 +239,7 @@ $x=0;
 function Norm($z) {
     $q=$z*$z;
    if (abs($z)>7)
-        return (1-1/$q+3/($q*$q))*exp(-$q/2)/(abs($z)*sqrt($PiD2));
+        return (1-1/$q+3/($q*$q))*exp(-$q/2)/(abs($z)*sqrt(pi()/2));
     else
         return ChiSq($q,1);
 }
