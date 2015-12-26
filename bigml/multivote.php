@@ -213,10 +213,9 @@ class MultiVote {
 
      foreach($this->predictions as $prediction) {
 
-        
         $joined_distribution = merge_distributions($joined_distribution, 
-	                                           array(prediction['distribution'][0], 
-						         prediction['distribution'][1]));
+	                                           array($prediction['distribution'][0], 
+						         $prediction['distribution'][1]));
 
         uasort($joined_distribution, array($this, "sort_joined_distribution_items"));
         $distribution = array();
