@@ -148,10 +148,7 @@ class Predicate {
       } else if ($this->operator == "!=" && is_null($this->value)) {
         return true;
       }
-
-      #$op = $OPERATOR[$this->operator];
-      $op = operatorFunction($this->operator);
-
+        $op = operatorFunction($this->operator);
       if ($this->term != null ) {
          $term_forms = property_exists($fields->{$this->field}->summary, 'term_forms') && !empty($fields->{$this->field}->summary->term_forms) ? 
                      property_exists($fields->{$this->field}->summary->term_forms, $this->term) ? $fields->{$this->field}->summary->term_forms->{$this->term} 
