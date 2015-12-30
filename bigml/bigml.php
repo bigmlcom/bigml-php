@@ -207,7 +207,7 @@ class BigML {
       $rest = self::get_resource_request($sourceId, "source", "UPDATE", null, true, $waitTime, $retries);
       if ($rest == null) return null;
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
 
@@ -349,7 +349,7 @@ class BigML {
          $args[$resource['type']] = $resource['id'];
       }
       $rest = new BigMLRequest('CREATE', 'dataset');
-      $rest->setData(json_encode($args));
+      $rest->setData($args);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($args)));
       return $rest->getResponse();
@@ -393,7 +393,7 @@ class BigML {
       $rest = self::get_resource_request($datasetId, "dataset", "UPDATE", null, true, $waitTime, $retries);
       if ($rest == null) return null;
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
@@ -505,7 +505,7 @@ class BigML {
          $data["dataset"] = $datasets[0];
       }
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
@@ -551,7 +551,7 @@ class BigML {
       $rest = self::get_resource_request($modelId, "model", "UPDATE", null, true, $waitTime, $retries);
       if ($rest == null) return null;
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
@@ -605,7 +605,7 @@ class BigML {
          $data["dataset"] = $datasets[0];
       }
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
@@ -650,7 +650,7 @@ class BigML {
       $rest = self::get_resource_request($ensembleId, "ensemble", "UPDATE", null, true, 3000, 10);
       if ($rest == null) return null;
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
@@ -671,7 +671,7 @@ class BigML {
    # https://bigml.com/developers/predictions
    #
    ##########################################################################
-   public static function create_prediction($modelOrEnsembleId, $inputData=array(), $args=array(), $waitTime=3000, $retries=10) {
+   public static function create_prediction($modelOrEnsembleId, $inputData, $args=array(), $waitTime=3000, $retries=10) {
       /*
          Creates a new prediction.
          The model parameter can be:
@@ -690,9 +690,9 @@ class BigML {
       }
 
       $args = $args == null? array() : $args; 
-      $args["input_data"] = array();
+      $args["input_data"] = new StdClass();
 
-      if ($inputData != null or !empty($inputData)) {
+      if ($inputData != null) {
          $args["input_data"] = $inputData;
       }
 
@@ -700,7 +700,7 @@ class BigML {
 
       $rest = new BigMLRequest('CREATE', 'prediction');
 
-      $rest->setData(json_encode($args,JSON_FORCE_OBJECT));
+      $rest->setData($args);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($args)));
 
@@ -739,7 +739,7 @@ class BigML {
       $rest = self::get_resource_request($predictionId, "prediction", "UPDATE", null, true, $waitTime, $retries);
       if ($rest == null) return null;
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
@@ -796,7 +796,7 @@ class BigML {
 
       $rest = new BigMLRequest('CREATE', 'batchprediction');
 
-      $rest->setData(json_encode($args));
+      $rest->setData($args);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($args)));
       return $rest->getResponse();
@@ -845,6 +845,14 @@ class BigML {
       return $data;
    }
 
+   public static function source_from_batch_prediction($batchPredictionId, $args=array()) {
+
+     $rest = self::get_resource_request($batchPredictionId, "batchprediction", "DOWNLOAD");
+     if ($rest == null) return null; 
+     $url = $rest->download_url();
+     return self::_create_remote_source($url, $args);
+   }
+
    public static function list_batch_predictions($queryString=null)
    {
       /*
@@ -866,7 +874,7 @@ class BigML {
       $rest = self::get_resource_request($batchPredictionId, "batchprediction", "UPDATE", null, true, $waitTime, $retries); 
       if ($rest == null) return null;
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
@@ -920,7 +928,7 @@ class BigML {
 
       $rest = new BigMLRequest('CREATE', 'evaluation');
 
-      $rest->setData(json_encode($args));
+      $rest->setData($args);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($args)));
       return $rest->getResponse();
@@ -963,7 +971,7 @@ class BigML {
       $rest = self::get_resource_request($evaluationId, "evaluation", "UPDATE", null, true, $waitTime, $retries);
       if ($rest == null) return null;
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
@@ -1014,7 +1022,7 @@ class BigML {
          $data["dataset"] = $datasets[0];
       }
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
@@ -1061,7 +1069,7 @@ class BigML {
       $rest = self::get_resource_request($clusterId, "cluster", "UPDATE", null, true,  $waitTime, $retries);
       if ($rest == null) return null;
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
@@ -1099,11 +1107,11 @@ class BigML {
       }
 
       $args["cluster"] = $resource["id"];
-      $args["input_data"] = $inputData == null? array() : $inputData;
+      $args["input_data"] = $inputData == null?  new StdClass() : $inputData;
 
       $rest = new BigMLRequest('CREATE', 'centroid');
 
-      $rest->setData(json_encode($args));
+      $rest->setData($args);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($args)));
       return $rest->getResponse();
@@ -1140,7 +1148,7 @@ class BigML {
       $rest = self::get_resource_request($centroId, "centroid", "UPDATE",null, true, $waitTime, $retries);
       if ($rest == null) return null;
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
@@ -1192,7 +1200,7 @@ class BigML {
 
       $rest = new BigMLRequest('CREATE', 'batchcentroid');
 
-      $rest->setData(json_encode($args));
+      $rest->setData($args);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($args)));
 
@@ -1262,7 +1270,7 @@ class BigML {
       $rest = self::get_resource_request($batchcentroId, "batchcentroid", "UPDATE",null, true, $waitTime, $retries);
       if ($rest == null) return null;
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
@@ -1334,7 +1342,7 @@ class BigML {
          $data["dataset"] = $datasets[0];
       }
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
@@ -1361,7 +1369,7 @@ class BigML {
       $rest = self::get_resource_request($anomalyId, "anomaly", "UPDATE", null, true,  $waitTime, $retries);
       if ($rest == null) return null;
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
@@ -1409,11 +1417,11 @@ class BigML {
       }
 
       $args["anomaly"] = $resource["id"];
-      $args["input_data"] = $inputData == null? array() : $inputData;
+      $args["input_data"] = $inputData == null?  new StdClass() : $inputData;
 
       $rest = new BigMLRequest('CREATE', 'anomalyscore');
 
-      $rest->setData(json_encode($args));
+      $rest->setData($args);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($args)));
       return $rest->getResponse();
@@ -1440,7 +1448,7 @@ class BigML {
       $rest = self::get_resource_request($anomalyscoreId, "anomalyscore", "UPDATE", null, true,  $waitTime, $retries);
       if ($rest == null) return null;
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
@@ -1450,7 +1458,7 @@ class BigML {
           /*
         Deletes a anomaly score
       */
-      $rest = self::get_resource_request($anomalyId, "anomalyscore", "DELETE", null);
+      $rest = self::get_resource_request($anomalyscoreId, "anomalyscore", "DELETE", null);
       if ($rest == null) return null;
       return $rest->getResponse();
    }
@@ -1492,7 +1500,7 @@ class BigML {
 
       $rest = new BigMLRequest('CREATE', 'batchanomalyscore');
 
-      $rest->setData(json_encode($args));
+      $rest->setData($args);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($args)));
 
@@ -1564,7 +1572,7 @@ class BigML {
       $rest = self::get_resource_request($batch_anomaly_score_Id, "batchanomalyscore", "UPDATE", null, true, $waitTime, $retries);
       if ($rest == null) return null;
 
-      $rest->setData(json_encode($data));
+      $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
@@ -1588,7 +1596,7 @@ class BigML {
       } else {
          $options['file'] = new CurlFile(realpath($file_name));
       }	 
-      $rest->setData($options);
+      $rest->setData($options, false);
       $rest->setHeader('Content-Type', 'multipart/form-data');
       return $rest->getResponse();
    }
@@ -1596,7 +1604,7 @@ class BigML {
    private static function _create_remote_source($file_url, $options=array()) {
       $rest = new BigMLRequest('CREATE', 'source');
       $options['remote'] = $file_url;
-      $rest->setData(json_encode($options));
+      $rest->setData($options);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($options)));
       return $rest->getResponse();
@@ -1605,7 +1613,7 @@ class BigML {
    public static function create_inline_source($data_string, $options=array()) {
       $rest = new BigMLRequest('CREATE', 'source');
       $options['data'] = $data_string;
-      $rest->setData(json_encode($options));
+      $rest->setData($options);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($options)));
       return $rest->getResponse();
@@ -1635,7 +1643,7 @@ class BigML {
       return preg_match("/^ensemble\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
-   private static function _checkBatchPredictionId($stringID) {
+   public static function _checkBatchPredictionId($stringID) {
       return preg_match("/^batchprediction\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
@@ -1643,15 +1651,15 @@ class BigML {
       return preg_match("/^(public\/)?cluster\/[a-f,0-9]{24}$|^shared\/cluster\/[a-f,0-9]{27}$/i", $stringID) ? true : false;
    }
 
-   private static function _checkCentroId($stringID) {
+   public static function _checkCentroId($stringID) {
       return preg_match("/^centroid\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
-   private static function _checkBatchCentroId($stringID) {
+   public static function _checkBatchCentroId($stringID) {
       return preg_match("/^batchcentroid\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
-   private static function _checkAnomalyId($stringID) {
+   public static function _checkAnomalyId($stringID) {
       return preg_match("/^anomaly\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
@@ -1782,7 +1790,6 @@ class BigML {
    }
 
    private static function check_resource_type($resourceId, $resourceType) {
-     
       $resource = null;
       if ($resourceId instanceof STDClass && property_exists($resourceId, "resource")) {
          $resource = $resourceId->resource;
@@ -1792,8 +1799,7 @@ class BigML {
          error_log("Wrong ". $resourceType . " id");
          return null;
       }
- 
-      if (preg_match('/('.$resourceType. ')(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
+      if (preg_match('/((shared|public)\/)?('.$resourceType. ')(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
          return $resource; 
       } else {
          error_log("Wrong ". $resourceType . " id");
@@ -1931,23 +1937,27 @@ class BigML {
       $this->headers[$key] = $value;
    }
 
-   public function setData($data) 
-   {   
-      $this->data = $data;
+   public function setData($data, $json=true) 
+   {  
+      if ($json) {
+         $this->data = json_encode($data);
+      } else { 
+         $this->data = $data;
+      }	 
    }
 
-   public function download() {
+   public function download_url() {
       // Set Parameters
       if (sizeof($this->parameters) > 0)
       {
          $query = substr($this->uri, -1) !== '?' ? '?' : '&';
 
          foreach ($this->parameters as $var => $value) {
-             if ($value == null || $value == '') { 
-		$query .= $var.'&';
-      		} else {
-		$query .= $var.'='.rawurlencode($value).'&';
-	}	
+             if ($value == null || $value == '') {
+                $query .= $var.'&';
+                } else {
+                $query .= $var.'='.rawurlencode($value).'&';
+        }
 }
          $query = substr($query, 0, -1);
          $this->uri .= $query;
@@ -1956,12 +1966,15 @@ class BigML {
       if ($this->queryString != null) {
          $this->uri .= (substr($this->queryString, 0, 1) !== "&" ) ? '&': '';
          $this->uri .= $this->queryString;
-      }   
+      }
 
       // Set Url
       $url = $this->endpoint.'/'.$this->version.'/'.$this->uri;
 
-      $data = file_get_contents($url);
+      return $url;
+   }
+   public function download() {
+      $data = file_get_contents($this->download_url());
       return $data;
    }
 
@@ -2054,6 +2067,7 @@ class BigML {
 
          } else {
             error_log("Unexpected error ". $code);
+	    print_r($response);
             $this->response["code"] = BigMLRequest::HTTP_INTERNAL_SERVER_ERROR;
          }
 

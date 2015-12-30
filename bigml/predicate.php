@@ -33,7 +33,7 @@ function operatorFunction($operator) {
                             "/=" => create_function('$ls, $rs', 'return $ls != $rs;'),
                             ">=" => create_function('$ls, $rs', 'return $ls >= $rs;'),
                             ">" =>  create_function('$ls, $rs', 'return $ls > $rs;'),
-                            "in" => create_function('$ls, $rs', 'return in_array($ls,$array);'));
+                            "in" => create_function('$ls, $rs', 'return in_array($rs,$ls);'));
 
    return $OPERATOR[$operator];
 }
@@ -110,6 +110,11 @@ class Predicate {
           $relation_missing =' or missing';
       }
 
+      $value = $this->value;
+      if (is_array($this->value)) {
+          $value = implode(',', $this->value);
+      }
+
       if ($this->term != null ) {
 
          $relation_suffix = '';
@@ -120,7 +125,7 @@ class Predicate {
             $relation_literal = $full_term ? 'is equal to' : 'contains';
             if (!$full_term) {
                if ($this->operator != '>' || $this->value != 0) {
-                  $relation_suffix = $this->RELATIONS[$this->operator] . $this->value . plural('time', $this->value);
+                  $relation_suffix = $this->RELATIONS[$this->operator] . $value . plural('time', $this->value);
                }
             }
          }
@@ -133,7 +138,8 @@ class Predicate {
          else
              return $name . " is not None";
       }
-      return $name . " " . $this->operator . " ". $this->value . $relation_missing;
+
+      return $name . " " . $this->operator . " ". $value . $relation_missing;
  
    }
 

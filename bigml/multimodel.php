@@ -36,7 +36,6 @@ function read_votes($votes_files, $model, $data_locale=null)
 
        ini_set('auto_detect_line_endings',TRUE);
        $handle = fopen($votes_file,'r');
-
        while ( ($row = fgetcsv($handle) ) !== FALSE ) {
            $prediction = $model->to_prediction($row[0], $data_locale);
            if ($index > (count($votes) -1) ) {
@@ -58,13 +57,7 @@ function read_votes($votes_files, $model, $data_locale=null)
 
            }
 
-           array_push($votes[$index]->predictions, 
-             array("prediction" => $prediction,
-                            "confidence" => $confidence,
-                            "order" => $order,
-                            "distribution" => $distribution,
-                            "count" => $instances));
-
+           $votes[$index]->append_row( array($prediction, $confidence, $order, $distribution, $instances));
            $index+=1;
        }
        ini_set('auto_detect_line_endings',FALSE);
@@ -116,7 +109,11 @@ class MultiModel{
       }
    }
 
-   public function predict($input_data, $by_name=true, $method=MultiVote::PLURALITY_CODE, $with_confidence=false, $options=null, $missing_strategy=Tree::LAST_PREDICTION) {
+   public function predict($input_data, $by_name=true, $method=MultiVote::PLURALITY_CODE, 
+                           $with_confidence=false, $options=null, $missing_strategy=Tree::LAST_PREDICTION,
+			   $add_confidence=false, $add_distribution=false, $add_count=false, 
+			   $add_median=false, $add_min=false, $add_max=false) {
+
       /*
          Makes a prediction based on the prediction made by every model. The method parameter is a numeric key to the following combination methods in classifications/regressions:
          0 - majority vote (plurality)/ average: PLURALITY_CODE
@@ -125,12 +122,14 @@ class MultiModel{
          3 - threshold filtered vote / doesn't apply: THRESHOLD_COD
       */
 
-      $votes = self::generate_votes($input_data, $by_name, $missing_strategy);   
+      $votes = self::generate_votes($input_data, $by_name, $missing_strategy, $add_median, $add_min, $add_max); 
 
-      return $votes->combine($method, $with_confidence, $options);
+      return $votes->combine($method, $with_confidence, $add_confidence, $add_distribution, 
+                             $add_count, $add_median, $add_min, $add_max, $options);
    }
 
-   public function batch_predict($input_data_list, $output_file_path, $by_name=true, $reuse=false, $missing_strategy=Tree::LAST_PREDICTION) {
+   public function batch_predict($input_data_list, $output_file_path=null, $by_name=true, $reuse=false, 
+                                 $missing_strategy=Tree::LAST_PREDICTION, $headers=null, $to_file=true, $use_median=false) {
       /*
          Makes predictions for a list of input data.
 
@@ -142,46 +141,94 @@ class MultiModel{
          model_50c0de043b563519830001c2__predictions.csv
 
       */
+      $add_headers = (is_array($input_data_list[0]) && $headers != null and count($headers)== $count($input_data_list[0]) );
+    
+      if (!$add_headers && !(array_keys($input_data_list[0]) !== range(0, count($input_data_list[0]) - 1)) ) {
+          error_log("Input data list is not a dictionary or the headers and input data information are not consistent");
+          throw new Exception("Input data list is not a dictionary or the headers and input data information are not consistent");
+      }
+
+      $order = 0;
+      if (!$to_file) {
+         $votes = array();
+      }
 
       foreach($this->models as $model) {
-         $output_file = get_predictions_file_name($model->resource_id, $output_file_path);
-         if ($reuse) {
-                try {
-                    $predictions_file = fopen($output_file, "r");
-                    fclose($predictions_file);
-                    continue;
-                } catch  (Exception $e) {
-                }       
-            }
+         $order+=1;
+         $out = null;
+         if ($to_file) {
+            $output_file = get_predictions_file_name($model->resource_id, $output_file_path);
+	     if ($reuse) {
+	        try {
+	          $predictions_file = fopen($output_file, "r");
+		  fclose($predictions_file);
+		  continue;
+		} catch  (Exception $e) {
+		}
+	     } 
+  
+             if (!file_exists($output_file_path)) {
+	        error_log("Cannot find " . $output_file_path . " directory.");
+		throw new Exception("Cannot find " . $output_file_path . " directory.");
+             }
 
-         if (!file_exists($output_file_path)) {
-            error_log("Cannot find " . $output_file_path . " directory.");
-            return null;
-         }
+	     $fp = fopen($output_file, 'w');
+	 }
 
-         try {
-            $fp = fopen($output_file, 'w');
+         if ($out != null) {
+	   // TODO
+	   $fp = $out;
+	 }
+         $index = 0; 
+         foreach($input_data_list as $input_data) {
+	    if ($add_headers) {
+	       // TODO
+	    }
 
-            foreach($input_data_list as $input_data) {
-               $prediction = $model->predict($input_data, $by_name, false, STDOUT, true, $missing_strategy);
-               if (is_string($prediction[0])) {
-                  $prediction[0] = utf8_encode($prediction[0]);
-               }
-               $res = array();
+	    $prediction = $model->predict($input_data, $by_name, false, STDOUT, true, $missing_strategy);
+           
+	    if ($use_median && $model->tree->regression) {
+	      $prediction[0] = array_slice($prediction, -1);
+	    }
+
+            $prediction = array_slice($prediction, 0, -1);
+            if ($to_file) {
+              $res = array();
                foreach ($prediction as $value) {
                   if (is_array($value)) {
                      $value = json_encode($value);
                   }
 
                   array_push($res, $value);
-               }
-               fputcsv($fp, $res);
-            }   
-            fclose($fp);
-         } catch  (Exception $e) {
-            throw new Exception("Cannot find " . $output_file_path . " directory.");
-         }
- 
+              }
+	      fputcsv($fp, $res); 
+	    } else {
+	      $prediction_row = array_slice($prediction, 0, 2);
+	      array_push($prediction_row, $order);
+	      $prediction_row = array_merge($prediction_row, array_slice($prediction, 2));
+
+	      if (count($votes) <= $index) {
+	         array_push($votes, new MultiVote(array()));
+	      }
+
+	      $votes[$index]->append_row($prediction_row);
+
+	    }
+            $index+=1; 
+	 }
+
+         if ($to_file) {
+	   fclose($fp);
+	 }
+
+         if ($out != null) {
+	   fclose($out);
+	 }
+
+      }
+
+      if (!$to_file) {
+         return $votes;
       }
    }
 
@@ -215,7 +262,6 @@ class MultiModel{
       foreach($this->models as $model) {
          array_push($votes_files, get_predictions_file_name($model->resource_id, $predictions_file_path));
       }
-
       return read_votes($votes_files, $this->models[0], $data_locale); 
    }
 }

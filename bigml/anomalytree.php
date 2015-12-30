@@ -41,28 +41,19 @@ class AnomalyTree {
    public function __construct($tree, $fields) {
 
        $this->fields = $fields;
-
-       if ($tree->predicates  == true) {
+       if ( is_bool ($tree->predicates) &&  $tree->predicates == true) {
           $this->predicates = new Predicates(array(true));
        } else {
           $this->predicates = new Predicates($tree->predicates);
+          $this->id = null;
        } 
-
-       if (property_exists($tree, "id")) {
-          $this->id = $tree->id;
-       } else {
-         $this->id = null;
-       }
       
-       $children = array();
+       $this->children = array();
        if (property_exists($tree, "children")) {
           foreach ($tree->children as $child) {
-            array_push($children, new AnomalyTree($child, $this->fields));
+            array_push($this->children, new AnomalyTree($child, $this->fields));
 	  }
        }
-
-       $this->children=$children;
-
    }
 
    function list_fields($out) {
@@ -97,7 +88,7 @@ class AnomalyTree {
        children with all valid predicates, then it outputs the depth of the
        node.
       */
-      if (isNull($path)) {
+      if ($path == null) {
          $path = array();
       }
 
@@ -112,12 +103,11 @@ class AnomalyTree {
       if ($this->children != null) {
          foreach ($this->children as $child) {
             if ($child->predicates->apply($input_data, $this->fields)) {
-               $array_push($path, $child->predicates->to_rule($this->fields));
+               array_push($path, $child->predicates->to_rule($this->fields));
                return $child->depth($input_data, $path, $depth+1); 
             }
          }
       }
-
       return array($depth, $path);
 
    }

@@ -110,6 +110,7 @@ class Model extends BaseModel{
     
       # Checks and cleans input_data leaving the fields used in the model
       $input_data = $this->filter_input_data($input_data, $by_name);
+
       # Strips affixes for numeric values and casts to the final field type
       $input_data = cast($input_data, $this->fields);
 
@@ -125,7 +126,7 @@ class Model extends BaseModel{
       $output = $prediction;
 
       if ($with_confidence == true) {
-         $output = $prediction;
+         $output = array($prediction->output, $prediction->confidence, $prediction->distribution, $prediction->count, $prediction->median);
       }
 
       if ($multiple != null && !$tree->regression) {

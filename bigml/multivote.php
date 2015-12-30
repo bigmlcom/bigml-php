@@ -186,9 +186,11 @@ class MultiVote {
          Returns True if all the predictions are numbers
       */
       foreach($this->predictions as $prediction) {
-         if (!is_numeric($prediction->prediction) ) {
-            return false;
-         }   
+         if (is_object($prediction)) {
+           if (!is_numeric($prediction->prediction)) return false;
+         } else {
+           if (!is_numeric($prediction["prediction"])) return false;
+         }
       }
       return true;
    }
@@ -491,7 +493,7 @@ class MultiVote {
          This order is used to break even cases in combination
          methods for classifications.
       */
-      return ($this->predictions != null) ? end($this->predictions)->order + 1 : 0; 
+      return ($this->predictions != null) ? is_object(end($this->predictions)) ? end($this->predictions)->order +1 : end($this->predictions)["order"] + 1 : 0; 
       
    }
 
@@ -699,12 +701,15 @@ class MultiVote {
             if (!array_key_exists($weight_label, $prediction)) {
                throw new Exception("Not enough data to use the selected prediction method. Try creating your model anew"); 
             } else {
-               $weight = $prediction->{$weight_label};
+               $weight = is_object($prediction) ? $prediction->{$weight_label} : $prediction[$weight_label];
             }
          }
+         if (is_object($prediction)) { 
+           $category = $prediction->prediction;
+         } else {
+           $category = $prediction["prediction"];
+         }
  
-         $category = $prediction->prediction;
-         
 	 if ($add_count) {
 	    $instances += $prediction->count;
 	 }
@@ -716,7 +721,7 @@ class MultiVote {
                               );
 
          } else {
-            $mode[strval($category)] = array("count" => $weight, "order" => $prediction->order);
+            $mode[strval($category)] = array("count" => $weight, "order" => is_object($prediction) ? $prediction->order : $prediction["order"]);
          }
          
       }
@@ -874,6 +879,55 @@ class MultiVote {
        } else {
          error_log("WARNING: failed to add the predictions.\nOnly a list of dict-like predictions are expected."); 
        }
+   }
+
+   function append_row($prediction_row, $prediction_headers=array('prediction', 'confidence', 'order', 'distribution',
+                         'count')) {
+    			 
+      /*Adds a new prediction into a list of predictions
+
+           prediction_headers should contain the labels for the prediction_row
+           values in the same order.
+
+           prediction_headers should contain at least the following string
+           - 'prediction': whose associated value in prediction_row
+                           is the predicted category or value
+
+           for instance:
+               prediction_row = ['Iris-virginica']
+               prediction_headers = ['prediction']
+
+           it may also contain the following headers and values:
+           - 'confidence': whose associated value in prediction_row
+                           is the confidence/error of the prediction
+           - 'distribution': a list of [category/value, instances] pairs
+                             describing the distribution at the prediction node
+           - 'count': the total number of instances of the training set in the
+                      node
+      */			
+
+      if (is_array($prediction_row) && is_array($prediction_headers) && count($prediction_row) == count($prediction_headers) && in_array("prediction", $prediction_headers)) { 
+         $order =  $this->next_order();
+         try {
+           $index = array_search("order", $prediction_headers);
+           $prediction_row[$index] = $order;
+         } catch  (Exception $e) {
+           array_push($prediction_headers, "order");
+           array_push($prediction_row, "order");
+         }
+         $prediction_info = array();
+         $i=0;
+         foreach($prediction_row as $prediction) {
+            $prediction_info[$prediction_headers[$i]] = $prediction_row[$i];
+            $i+=1;
+         }
+
+         array_push($this->predictions, $prediction_info);
+
+      } else {
+        error_log("WARNING: failed to add the prediction.\n The row must have label 'prediction' at least.");
+      }
+ 
    }
 
 }

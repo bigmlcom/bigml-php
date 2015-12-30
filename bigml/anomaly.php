@@ -73,6 +73,8 @@ class Anomaly extends ModelFields {
        if (property_exists($anomaly, "object") && $anomaly->object instanceof STDClass)  {
           $anomaly = $anomaly->object;
           $this->sample_size = $anomaly->sample_size;
+          $this->input_fields = $anomaly->input_fields;
+          $this->id_fields = $anomaly->id_fields;
        }
 
        if (property_exists($anomaly, "model") && $anomaly->model instanceof STDClass) {
@@ -80,23 +82,30 @@ class Anomaly extends ModelFields {
           
           if ( property_exists($anomaly->model, "top_anomalies") && is_array($anomaly->model->top_anomalies) ) {
              $this->mean_depth = $anomaly->model->mean_depth;
-             $this->expected_mean_depth->null;
 
-             if ($this->mean_depth == null || $this->sample_size == null) {
-                error_log("The anomaly data is not complete. Score will not be available");
-                throw new Exception('The anomaly data is not complete. Score will not be available');
-             } else {
-               $default_depth = 2*(0.5772156649 + log($this->sample_size - 1) - (floatval($this->sample_size-1)/$this->sample_size));
-               $this->expected_mean_depth = min(array($this->mean_depth, $default_depth));
-             }
+             if ($anomaly->status != null && $anomaly->status->code=5) {
+	       $this->expected_mean_depth = null;
+               if ($this->mean_depth == null || $this->sample_size == null) {
+                  error_log("The anomaly data is not complete. Score will not be available");
+                  throw new Exception('The anomaly data is not complete. Score will not be available');
+               } else {
+                  $default_depth = 2*(0.5772156649 + log($this->sample_size - 1) - (floatval($this->sample_size-1)/$this->sample_size));
+                  $this->expected_mean_depth = min(array($this->mean_depth, $default_depth));
+               }
+                             
+               $iflorest = property_exists($anomaly->model, "trees") ? $anomaly->model->trees: array();
+               if ($iflorest != null && !empty($iflorest)) {
+                  $this->iforest = array();
+                  foreach ($iflorest as $anomaly_tree) {
+                    array_push($this->iforest, new AnomalyTree($anomaly_tree->root, $this->fields));
+                  }
+               } 
+               $this->top_anomalies = $anomaly->model->top_anomalies; 
 
-             $this->iforest = array();
-
-             foreach ($anomaly->model->trees as $anomaly_tree) {
-                array_push($this->iforest, new AnomalyTree($anomaly_tree->root, $this->fields));
-             }
-             
-             $this->top_anomalies = $anomaly->model->top_anomalies;
+	     } else {
+	        error_log("The anomaly isn't finished yet");
+		throw new Exception("The anomaly isn't finished yet");
+	     }
              
           } else {
              error_log("Cannot create the Anomaly instance. Could not find the 'top_anomalies' key in the resource");
@@ -105,7 +114,6 @@ class Anomaly extends ModelFields {
  
 
        }
-
 
     }
  
@@ -125,21 +133,24 @@ class Anomaly extends ModelFields {
       */
 
       //Checks and cleans input_data leaving the fields used in the model
-
       $input_data = $this->filter_input_data($input_data, $by_name);
-
       // Strips affixes for numeric values and casts to the final field type
       $input_data = cast($input_data, $this->fields);
+
       $depth_sum = 0;
 
-      foreach ($this->iforest as $tree) {
-         $depth = $tree->depth($input_data);
-         $depth_sum += $depth[0];
+      if ($this->iforest != null) {
+        foreach ($this->iforest as $tree) {
+           $depth = $tree->depth($input_data);
+           $depth_sum += $depth[0];
+        }
+        $observed_mean_depth = floatval($depth_sum)/count($this->iforest);
+        return pow(2, -$observed_mean_depth/$this->expected_mean_depth);
+
+      } else {
+         error_log("We could not find the iforest information to compute the anomaly score. Please, rebuild your Anomaly object from a complete anomaly detector resource");
+         throw new Exception("We could not find the iforest information to compute the anomaly score. Please, rebuild your Anomaly object from a complete anomaly detector resource");
       }
-
-      $observed_mean_depth = floatval($depth_sum)/len($this->iforest);
-
-      return pow(2, -$observed_mean_depth/$this->expected_mean_depth);
 
     }
 

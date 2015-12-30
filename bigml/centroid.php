@@ -70,14 +70,13 @@ class Centroid {
       $distance2 = 0.0;
 
       foreach($this->center as $field_id => $value) {
-
          if (is_array($value)) {
             $terms = (!array_key_exists($field_id, $term_sets) ) ? array() : $term_sets[$field_id]; 
             $distance2 += cosine_distance2($terms, $value, $scales->{$field_id});
          } elseif (is_string($value)) {
-            if (!array_key_exists($field_id, $input_data) || $input_data[$field_id] != $value) {
+            if (!array_key_exists($field_id, $input_data) || strval($input_data[$field_id]) != strval($value)) {
                $distance2 += 1 * pow($scales->{$field_id}, 2);
-            }      
+            }     
          } else {
             $distance2 += pow( ($input_data[$field_id] - $value) * ($scales->{$field_id}), 2);
          }

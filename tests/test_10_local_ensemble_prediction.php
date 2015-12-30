@@ -72,7 +72,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
         }
     }
-
+    /*Successfully obtaining field importance from an Ensemble */
     public function test_scenario2() {
 
         $data = array(array("filename" => 'data/iris.csv',
@@ -135,7 +135,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
         }
  
     }
-
+    /* Successfully creating a local prediction from an Ensemble adding confidence */
     public function test_scenario3() {
 
         $data = array(array("filename" => 'data/iris.csv',
@@ -189,7 +189,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
         }
 
    }
-
+   /* Successfully obtaining field importance from an Ensemble created from local models */
    public function test_scenario4() {
 
         $data = array(array("filename" => 'data/iris.csv',
@@ -258,7 +258,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
         }
    }
-
+   /*  Successfully creating a local prediction from an Ensemble */
    public function test_scenario5() {
         $data = array(array("filename" => 'data/grades.csv',
                             "number_of_models" => 2,
@@ -303,7 +303,6 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
             print "the prediction for local ensemble is equals " . $item["prediction"] . "\n";
             $this->assertEquals($item["prediction"], round($prediction[0], 4));
-
 
         }
    }

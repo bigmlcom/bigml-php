@@ -34,8 +34,8 @@ function strip_affixes($value, $field)
       $value=substr($value, 6);
    }
 
-   if (array_key_exists('suffix', $field) && substr( $field->suffix, 0, 6 ) === "suffix") {
-      $value=substr($value, 6);
+   if (array_key_exists('suffix', $field) && endsWith($field->suffix, "suffix")) {
+      $value=substr($value, 0, -6);
    }
 
    return $value;
@@ -57,9 +57,7 @@ function cast($input_data, $fields) {
             } else {
                $input_data[$key] = utf8_encode($value);
             }
-         } else {
-            $input_data[$key] = utf8_encode($value);
-         }
+         } 
       }
    }
    return $input_data;
@@ -109,14 +107,28 @@ class ModelFields {
    public $objective_id;
    public $fields;
    public $inverted_fields;
+   public $missing_tokens;
+   public $data_locale;
 
-   public function __construct($fields, $objective_id=null) {
+   const DEFAULT_LOCALE = 'en-US';
+
+   public function __construct($fields, $objective_id=null, $data_locale=null, $missing_tokens=null) {
       
       if ($fields instanceof STDClass) {
          $this->objective_id = $objective_id;
          $fields = $this->uniquify_varnames($fields);
          $this->inverted_fields = invert_dictionary($fields);
          $this->fields = $fields;
+         $this->data_locale = $data_locale;
+         $this->missing_tokens = $missing_tokens;
+         if ($this->data_locale == null) {
+           $this->data_locale = ModelFields::DEFAULT_LOCALE; 
+         } 
+         if ($this->missing_tokens == null) {
+           $this->missing_tokens = $DEFAULT_MISSING_TOKENS = array("", "N/A", "n/a", "NULL", "null", "-", "#DIV/0",
+	                                                           "#REF!", "#NAME?", "NIL", "nil", "NA", "na",
+						                   "#VALUE!", "#NULL!", "NaN", "#N/A", "#NUM!", "?");
+         }
       }
    }
 
@@ -169,13 +181,35 @@ class ModelFields {
       return $fields;
    }
 
+   function normalize($value) {
+     /* 
+      Transforms to unicode and cleans missing tokens
+      */
+
+      if (!mb_detect_encoding($value, 'UTF-8', true)) {
+         $value = utf8_encode($value);
+      }
+      if (in_array(strval($value), $this->missing_tokens)) {
+         return null;
+      } else {
+         return $value;
+      }
+   }
+
    public function filter_input_data($input_data, $by_name=true) 
    {
       /*
          Filters the keys given in input_data checking against model fields
       */
       if (is_array($input_data)) {
-         $input_data = array_filter($input_data, array(__CLASS__, 'clean_empty_fields'));
+         foreach($input_data as $key => $value) {
+             $value = $this->normalize($value);
+             if (is_null($value)) {
+               unset($input_data[$key]); 
+             }
+ 
+         }
+
          $new_input_data = array();
          if ($by_name) {
             # We no longer check that the input data keys match some of
@@ -183,7 +217,7 @@ class ModelFields {
             # used as predictors in the model
             foreach($input_data as $key => $value) { 
         
-               if (array_key_exists($key, $this->inverted_fields))
+               if (array_key_exists($key, $this->inverted_fields) && ($this->objective_id == null || $this->inverted_fields[$key] != $this->objective_id))
                {
                   $new_input_data[$this->inverted_fields[$key]] = $value;
                }
@@ -191,9 +225,10 @@ class ModelFields {
 
          } else {
             foreach($input_data as $key => $value) {
-               if (array_key_exists($key, $this->fields)) {
+               if (array_key_exists($key, $this->fields) && ($this->objective_id == null || $key != $this->objective_id) ) {
                   $new_input_data[$key] = $value;
-               }   
+               }  else {
+               } 
             }   
          }
 

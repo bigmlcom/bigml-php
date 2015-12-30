@@ -188,11 +188,9 @@ class Cluster extends ModelFields {
       $input_data =  $get_unique[1];
 
       $nearest = array('centroid_id'=> null, 'centroid_name'=> null, 'distance' => INF);
-      
+    
       foreach($this->centroids as $centroid) {
-
          $distance2 = $centroid->distance2($input_data, $unique_terms, $this->scales, $nearest["distance"]);
-
          if ($distance2 != null) {
             $nearest = array('centroid_id' => $centroid->centroid_id,
                              'centroid_name' => $centroid->name,
@@ -223,6 +221,8 @@ class Cluster extends ModelFields {
                if ($token_mode != Predicate::TM_TOKENS) {
                   array_push($terms, ($case_sensitive) ? $input_data_field : strtolower($input_data_field) );
                }
+
+
 
                $unique_terms[$field_id] = get_unique_terms($terms,
                                                         $this->term_forms[$field_id],

@@ -38,10 +38,10 @@ class Predicates {
         $this->predicates = array();
 
         foreach ($predicates_list as $predicate) {
-            if ($predicate == true) {
+	    if ( is_bool($predicate) &&  $predicate == true) {
                array_push($this->predicates, true);
             } else {
-               array_push($this->predicates, new Predicate($predicate->op, $predicate->field, $predicate->value, $predicate->term));
+               array_push($this->predicates, new Predicate($predicate->op, $predicate->field, $predicate->value, property_exists($predicate, "term") ? $predicate->term : null));
             }
         }  
    }
@@ -67,8 +67,8 @@ class Predicates {
        Applies the operators defined in each of the predicates to
        the provided input data
       */
-      foreach ($this->predicates as $predicate) {
-          if ($predicate instanceof Predicate)  {
+      foreach ($this->predicates as $predicate)  {
+          if ( is_object($predicate)) {
              if ($predicate->apply($input_data, $fields) == false) 
                 return false;
           } 
