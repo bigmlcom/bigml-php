@@ -14,17 +14,22 @@ class BigMLTest extends PHPUnit_Framework_TestCase
     public static function setUpBeforeClass() {
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
-       if (!file_exists('tmp')) {
-          mkdir('tmp');
-       }
     }
     /*
-      Successfully exporting a dataset
+     Successfully changing duplicated field names
     */
 
     public function test_scenario1() {
-      $data = array(array('filename' => 'data/iris.csv', 'local_file' => 'tmp/exported_iris.csv' ));
+      $data = array(array('filename' => 'data/iris.csv',
+                          'options' => array("fields" => array("000001" => array("name" => "species"))),
+			  'new_name' => 'species1',
+                          'field_id' => '000001'),
+                    array('filename' => 'data/iris.csv',
+                          'options' => array("fields" => array("000001" => array("name" => "petal width"))),
+                          'new_name' => 'petal width3',
+                          'field_id' => '000003'));
 
+      print "Successfully changing duplicated field names\n";
 
       foreach($data as $item) {
           print "I create a data source uploading a ". $item["filename"]. " file\n";
@@ -37,7 +42,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
           print "create dataset with local source\n";
-          $dataset = self::$api->create_dataset($source->resource);
+          $dataset = self::$api->create_dataset($source->resource, $item["options"]);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
           $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
@@ -45,14 +50,21 @@ class BigMLTest extends PHPUnit_Framework_TestCase
           $resource = self::$api->_check_resource($dataset->resource, null, 20000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-          sleep(300);
-          print "I download the dataset \n";
-          $filename = self::$api->download_dataset($dataset->resource, $item["local_file"]);
-          $this->assertNotNull($filename);
+          print "I create model\n";
+          $model = self::$api->create_model($dataset->resource);
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
 
-	  print "Then the download dataset file is like <local_dataset_file>";
-	  $this->assertTrue(compareFiles($item["filename"], $item["local_file"]));
- 
+          print "I check model is ready\n";
+          $resource = self::$api->_check_resource($model->resource, null, 3000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "And I create a local model\n";
+          $local_model =  new Model($model->resource, self::$api);
+          print "Then <". $item["field_id"] . "> field's name is changed to <". $item["new_name"].">\n";
+          $this->assertEquals($local_model->tree->fields->{$item["field_id"]}->name, $item["new_name"]);
+
+
       } 
     }
+
 }    

@@ -154,6 +154,55 @@ class Anomaly extends ModelFields {
 
     }
 
+    function anomalies_filter($include=true) {
+     /*
+      "Returns the LISP expression needed to filter the subset of
+      top anomalies. When include is set to True, only the top
+      anomalies are selected by the filter. If set to False, only the
+      rest of the dataset is selected.
+     */  
+        $anomaly_filters = array();
+        foreach ($this->top_anomalies as $anomaly) {
+           $filter_rules = array();
+	   $row =  property_exists($anomaly, "row") ? $anomaly->row : array(); 
+	   if (count($row) > 1) {
+              foreach (range(0, count($row)-1) as $index) {
+	         $field_id = $this->input_fields[$index];
+	         if (in_array($field_id, $this->id_fields)) {
+	            continue; 
+	         }
+                 $value = $row[$index];
+
+	         if ($value == null) {
+	           array_push($filter_rules, '(missing? "'. $field_id  . '")'); 
+	         } else {
+	           if (in_array($this->fields->{$field_id}->optype, array("categorical","text"))) {
+                      $value = json_encode($value); 
+		   } 
+
+		   array_push($filter_rules, '(= (f "' . $field_id .'") '. $value  . ')');
+	         }
+              }
+
+	      if (!empty($filter_rules)) {
+	         array_push($anomaly_filters, "(and ". implode(" ", $filter_rules) .")");
+	      }
+	   }
+        }
+
+        $anomalies_filter = implode(" ", $anomaly_filters);
+        if ($include) {
+	   if (count($anomaly_filters) == 1) {
+	      return $anomalies_filter;
+	   }
+	   return "(or ". $anomalies_filter .")";
+
+	} else {
+           return "(not (or ". $anomalies_filter ."))";
+	}
+     
+    }
+
 }
 
 ?>

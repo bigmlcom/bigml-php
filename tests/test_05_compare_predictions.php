@@ -13,7 +13,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
     protected static $api;
 
     public static function setUpBeforeClass() {
-       self::$api =  new BigML(self::$username, self::$api_key, true);
+       self::$api =  new BigML(self::$username, self::$api_key, false);
        ini_set('memory_limit', '512M');
     }
 

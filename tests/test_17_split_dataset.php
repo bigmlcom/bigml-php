@@ -14,16 +14,13 @@ class BigMLTest extends PHPUnit_Framework_TestCase
     public static function setUpBeforeClass() {
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
-       if (!file_exists('tmp')) {
-          mkdir('tmp');
-       }
     }
     /*
-      Successfully exporting a dataset
+     Successfully creating a split dataset
     */
 
     public function test_scenario1() {
-      $data = array(array('filename' => 'data/iris.csv', 'local_file' => 'tmp/exported_iris.csv' ));
+      $data = array(array('filename' => 'data/iris.csv', 'rate' => 0.8 ));
 
 
       foreach($data as $item) {
@@ -45,14 +42,23 @@ class BigMLTest extends PHPUnit_Framework_TestCase
           $resource = self::$api->_check_resource($dataset->resource, null, 20000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-          sleep(300);
-          print "I download the dataset \n";
-          $filename = self::$api->download_dataset($dataset->resource, $item["local_file"]);
-          $this->assertNotNull($filename);
+          print "I create a dataset extracting a <rate> sample\n";
+          $dataset_sample = self::$api->create_dataset($dataset->resource, array('sample_rate' => $item["rate"]));
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset_sample->code);
+          $this->assertEquals(BigMLRequest::QUEUED, $dataset_sample->object->status->code);
 
-	  print "Then the download dataset file is like <local_dataset_file>";
-	  $this->assertTrue(compareFiles($item["filename"], $item["local_file"]));
- 
+          print "check the dataset is ready " . $dataset_sample->resource . " \n";
+          $resource = self::$api->_check_resource($dataset_sample->resource, null, 20000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "When I compare the datasets' instances \n";
+          $dataset = self::$api->get_dataset($dataset->resource);
+          $dataset_sample = self::$api->get_dataset($dataset_sample->resource);
+
+          print "Then the proportion of instances between datasets is " . $item["rate"] . "\n";
+          $this->assertEquals(intval($dataset->object->rows * floatval($item['rate'])), $dataset_sample->object->rows);
+
+
       } 
     }
 }    

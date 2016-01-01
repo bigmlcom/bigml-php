@@ -108,6 +108,10 @@ class BigML {
       self::$debug = $debug;
    }
 
+   public static function setDevMode($devMode=false) {
+      self::$devMode = $defMode;
+   }
+
    /**
     * Check if BigML keys have been set
     *
@@ -267,7 +271,7 @@ class BigML {
          $resource = $r->resource;
       }
 
-      if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid|anomaly|anomalyscore)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
+      if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid|anomaly|anomalyscore|sample)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
          $count = 0;
          $status = self::_check_resource_status($resource, $queryString); 
          while ($count<$retries && !$status["ready"]) {
@@ -348,6 +352,7 @@ class BigML {
           
          $args[$resource['type']] = $resource['id'];
       }
+
       $rest = new BigMLRequest('CREATE', 'dataset');
       $rest->setData($args);
       $rest->setHeader('Content-Type', 'application/json');
@@ -434,14 +439,14 @@ class BigML {
 
       if (!is_string($dataset)) {
         if ($dataset instanceof STDClass && property_exists($dataset, "resource")) {
-	   $resource = $dataset->resource;
+	   $dataset = $dataset->resource;
         } else {
 	   error_log("Wrong dataset id");
 	   return null;
 	} 
       }
 
-      $resource = self::_check_resource($resource, null, $waitTime, $retries);
+      $resource = self::_check_resource($dataset, null, $waitTime, $retries);
 
       if ($resource == null || $resource['type'] != "dataset") {
          error_log("Wrong dataset id");
@@ -455,10 +460,9 @@ class BigML {
       $errors = array();
 
       try {
-         $errors = $dataset->object->status->field_errors;
+         $errors = $resource["resource"]->object->status->field_errors;
       } catch  (Exception $e) {
       }
-
 
       foreach ($errors as $field_id => $value) {
          $errors_dict[$field_id] = $value->total;
@@ -1587,6 +1591,82 @@ class BigML {
       return $rest->getResponse();
    }
 
+   ##########################################################################
+   #
+   # Samples
+   #
+   ##########################################################################   
+   public static function create_sample($datasetId, $args=array(), $waitTime=3000, $retries=10) {
+      /*
+         Creates a new sample.
+      */
+
+      $args = $args == null? array() : $args;
+
+      $resource = self::_check_resource($datasetId, null, $waitTime, $retries);
+      if ($resource == null || $resource['type'] != "dataset" ) {
+         error_log("Wrong dataset id");
+         return null;
+      } elseif ($resource["status"] != BigMLRequest::FINISHED) {
+         error_log($resource['message']);
+         return null;
+      }
+
+      $args[$resource['type']] = $resource['id'];
+
+      $rest = new BigMLRequest('CREATE', 'sample');
+
+      $rest->setData($args);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($args)));
+      return $rest->getResponse();
+   }
+
+   public static function get_sample($sampleId, $queryString=null)
+   {
+      /*
+        Retrieves an sample.
+      */
+      $rest = self::get_resource_request($sampleId, "sample", "GET", $queryString);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
+
+   public static function list_samples($queryString=null)
+   {
+      /*
+       Lists all your samples.
+      */
+      $rest = new BigMLRequest('LIST', 'sample');
+
+      if ($queryString!=null) {
+         $rest->setQueryString($queryString);
+      }
+
+      return $rest->getResponse();
+   }
+   
+   public static function update_sample($sampleId, $data, $waitTime=3000, $retries=10) {
+      /*
+         Updates a sample 
+      */
+      $rest = self::get_resource_request($sampleId, "sample", "UPDATE", null, true,  $waitTime, $retries);
+      if ($rest == null) return null;
+
+      $rest->setData($data);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+   public static function delete_sample($sampleId) {
+      /*
+        Deletes a sample
+      */
+      $rest = self::get_resource_request($sampleId, "sample", "DELETE", null);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
 
    private static function _create_local_source($file_name, $options=array()) {
       $rest = new BigMLRequest('CREATE', 'source');

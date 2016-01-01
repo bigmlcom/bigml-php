@@ -14,6 +14,11 @@ class BigMLTest extends PHPUnit_Framework_TestCase
     public static function setUpBeforeClass() {
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
+
+       if (!file_exists('tmp')) {
+          mkdir('tmp');
+       }
+ 
     }
 
     /*  Successfully creating a batch prediction
