@@ -45,7 +45,6 @@ class BigMLTest extends PHPUnit_Framework_TestCase
           $resource = self::$api->_check_resource($dataset->resource, null, 20000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-          sleep(300);
           print "I download the dataset \n";
           $filename = self::$api->download_dataset($dataset->resource, $item["local_file"]);
           $this->assertNotNull($filename);

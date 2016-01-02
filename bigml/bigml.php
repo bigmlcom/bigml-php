@@ -2053,9 +2053,39 @@ class BigML {
 
       return $url;
    }
-   public function download() {
-      $data = file_get_contents($this->download_url());
-      return $data;
+   public function download($counter=0, $retries=3, $wait_time=30) {
+      try {
+        $data = file_get_contents($this->download_url());       
+        $headers = $this->parseHeaders($http_response_header);
+
+        if ($headers["reponse_code"] == BigMLRequest::HTTP_OK) {
+           if ($counter < $retries) {
+             $download_status = json_decode($data);
+             if ($download_status != null && (is_object($download_status) or is_array($download_status)) ) {
+                if ($download_status->status->code != 5) {
+                  sleep($wait_time);
+                  $counter+=1;
+                  return $this->download($counter, $retries, $wait_time); 
+                } else {
+                  return $this->download($retries+1, $retries, $wait_time);
+                }
+             } 
+           } else if ($counter == $retries) {
+              error_log("The maximum number of retries for the download has been exceeded " . 
+                        "You can retry your  command again in a while.");
+           }  
+
+        } else if (in_array(intval($headers["reponse_code"]), array(BigMLRequest::HTTP_BAD_REQUEST, BigMLRequest::HTTP_UNAUTHORIZED, BigMLRequest::HTTP_NOT_FOUND, BigMLRequest::HTTP_TOO_MANY_REQUESTS))) {
+            error_log("request error");
+        } else {
+           error_log("Unexpected exception error");
+        }
+
+        return $data;
+
+      } catch (Exception $e) {
+         error_log("Unexpected exception error");
+      }
    }
 
    public function getResponse() 
@@ -2295,6 +2325,24 @@ class BigML {
       $error_response["message"] = "Invalid" . $resource_type . "structure:\n\n" . $resource;
       return $error_response;
 
+   }
+
+   private function parseHeaders( $headers )
+   {
+      $head = array();
+      foreach( $headers as $k=>$v )
+      {
+        $t = explode( ':', $v, 2 );
+        if( isset( $t[1] ) )
+            $head[ trim($t[0]) ] = trim( $t[1] );
+        else
+        {
+            $head[] = $v;
+            if( preg_match( "#HTTP/[0-9\.]+\s+([0-9]+)#",$v, $out ) )
+                $head['reponse_code'] = intval($out[1]);
+        }
+      }
+      return $head;
    }
 
 }
