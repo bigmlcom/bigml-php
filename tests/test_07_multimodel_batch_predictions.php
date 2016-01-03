@@ -50,9 +50,11 @@ class BigMLTest extends PHPUnit_Framework_TestCase
           $model_1 = self::$api->create_model($dataset->resource, $item["params"]);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $model_1->code);
  
+          $list_of_models = array();
           print "check model_1 is ready\n";
           $resource = self::$api->_check_resource($model_1->resource, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+          array_push($list_of_models, self::$api->get_model($model_1->resource));
 
           print "create model_2\n";
           $model_2 = self::$api->create_model($dataset->resource, $item["params"]);
@@ -61,6 +63,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
           print "check model_2 is ready\n";
           $resource = self::$api->_check_resource($model_2->resource, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+          array_push($list_of_models, self::$api->get_model($model_2->resource));
 
           print "create model_3\n";
           $model_3 = self::$api->create_model($dataset->resource, $item["params"]);
@@ -69,13 +72,8 @@ class BigMLTest extends PHPUnit_Framework_TestCase
           print "check model_3 is ready\n";
           $resource = self::$api->_check_resource($model_3->resource, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
-
-          $list_of_models = array();
-          $models = self::$api->list_models("tags__in="+$item["tag"]);
-          foreach ($models->resources as $m) {
-             array_push($list_of_models, self::$api->get_model($m->resource));
-          }
-
+          array_push($list_of_models, self::$api->get_model($model_3->resource));
+ 
           print "I create a local multi model\n";
           $local_multimodel = new MultiModel($list_of_models);
 

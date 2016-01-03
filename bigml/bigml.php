@@ -251,10 +251,10 @@ class BigML {
       if ($obj == null)
          return false;
 
-      $status = $obj->status;
+      $status = substr( $resource, 0, 7 ) != 'project' ? $obj->status : '';
       $code = $item->code;
-      $statusCode = $status->code;
-      $message = $status->message;
+      $statusCode = substr( $resource, 0, 7 ) != 'project' ? $status->code : '';
+      $message = substr( $resource, 0, 7 ) != 'project' ? $status->message : '';
 
       return array('ready'=>$code!=null && $code==BigMLRequest::HTTP_OK && $statusCode!=null && $statusCode==BigMLRequest::FINISHED, 'code'=>$statusCode, 'message'=> $message, 'resource'=>$item);
 
@@ -271,7 +271,7 @@ class BigML {
          $resource = $r->resource;
       }
 
-      if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid|anomaly|anomalyscore|sample)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
+      if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid|anomaly|anomalyscore|sample|project)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
          $count = 0;
          $status = self::_check_resource_status($resource, $queryString); 
          while ($count<$retries && !$status["ready"]) {
@@ -1668,6 +1668,74 @@ class BigML {
       return $rest->getResponse();
    }
 
+   ##########################################################################
+   #
+   # Projects
+   #
+   ########################################################################## 
+
+   public static function create_project($args=array(), $waitTime=3000, $retries=10) {
+      /*
+         Creates a project
+      */
+
+      $args = $args == null? array() : $args;
+
+      $rest = new BigMLRequest('CREATE', 'project');
+
+      $rest->setData($args);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($args)));
+      return $rest->getResponse();
+   }
+   
+   public static function get_project($projectId)
+   {
+      /*
+        Retrieves an project.
+      */
+      $rest = self::get_resource_request($projectId, "project", "GET");
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
+
+   public static function list_projects($queryString=null)
+   {
+      /*
+       Lists all your samples.
+      */
+      $rest = new BigMLRequest('LIST', 'project');
+
+      if ($queryString!=null) {
+         $rest->setQueryString($queryString);
+      }
+
+      return $rest->getResponse();
+   }
+
+   public static function update_project($projectId, $data, $waitTime=3000, $retries=10) {
+      /*
+         Updates a project 
+      */
+      $rest = self::get_resource_request($projectId, "project", "UPDATE", null, true,  $waitTime, $retries);
+      if ($rest == null) return null;
+      
+      print "PASO POR AKI\n";
+      $rest->setData($data);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+   public static function delete_project($projectId) {
+      /*
+        Deletes a project 
+      */
+      $rest = self::get_resource_request($projectId, "project", "DELETE", null);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
+
    private static function _create_local_source($file_name, $options=array()) {
       $rest = new BigMLRequest('CREATE', 'source');
 
@@ -1676,6 +1744,15 @@ class BigML {
       } else {
          $options['file'] = new CurlFile(realpath($file_name));
       }	 
+
+      if ($options != null ){
+         foreach ($options as $key => $value) {
+	   if (is_array($value) ){
+	     $options[$key] = json_encode($value); 
+	   }
+	 }
+      }
+
       $rest->setData($options, false);
       $rest->setHeader('Content-Type', 'multipart/form-data');
       return $rest->getResponse();
