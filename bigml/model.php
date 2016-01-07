@@ -17,6 +17,25 @@ include('basemodel.php');
  #include('./predicate.php');
 include('tree.php');
 
+include('path.php');
+
+function _ditribution_sum($x, $y) {
+    return $x+$y;
+}
+
+function print_distribution($distribution, $out=STDOUT) {
+  /*Prints distribution data*/
+  $a = array();
+  foreach ($distribution as $group) {
+     array_push($a, $group[1]);
+  }
+  $total = array_reduce($a, "_ditribution_sum");
+  foreach ($distribution as $group) {
+    fwrite($out, "    " . $group[0] . ": " . number_format(round(($group[1]*1.0)/$total, 4)*100, 2) . "% (". strval($group[1]) ." instance" . ($group[1] == 1 ? ")\n" : "s)\n"));  
+  } 
+
+}
+
 class Model extends BaseModel{
    /*
       A lightweight wrapper around a Tree model.
@@ -35,6 +54,9 @@ class Model extends BaseModel{
       if ($api == null) {
          $api = new BigML(null, null, null, $storage);
       }
+
+      $this->ids_map = array();
+      $this->terms = array();
 
       if (is_string($model)) {
 
@@ -68,8 +90,6 @@ class Model extends BaseModel{
 
          if ($model->status->code == BigMLRequest::FINISHED) {
 	    $tree_info = array('max_bins' => 0);
-            $this->ids_map = array();
-            $this->terms = array();
             $this->tree = new Tree($model->model->root, $this->fields, $this->objective_id, $model->model->distribution->training, null, $this->ids_map, true, $tree_info);
 	    if ($this->tree->regression) {
 	       $this->_max_bins = $tree_info["max_bins"];
@@ -261,15 +281,15 @@ class Model extends BaseModel{
        Builds the list of ids that go from a given id to the tree root
       */
       $ids_path = null;
-      if ($filter_id != null && $this->tree->id != null) {
+      if (!is_null($filter_id) && !is_null($this->tree->id)) {
          if (array_key_exists($filter_id, $this->ids_map)) {
             throw new Exception("The given id does not exist."); 
          } else {
             $ids_path = array($filter_id);
             $last_id = $filter_id;
 
-            while ($this->ids_map[$last_id]->parent_id != null) {
-               array_push($this->ids_map[$last_id]->parent_id, $ids_path);
+            while (!is_null($this->ids_map[$last_id]->parent_id)) {
+               array_push($ids_path, $this->ids_map[$last_id]->parent_id);
                $last_id = $this->ids_map[$last_id]->parent_id;
             }
          } 
@@ -277,6 +297,252 @@ class Model extends BaseModel{
       return $ids_path;
    }
 
+   function add_to_groups($groups, $output, $path, $count, $confidence,
+                             $impurity=null) {
+         /*  Adds instances to groups array */
+         $group = $output;
+         if (!array_key_exists(strval($output), $groups)) {
+            $groups[strval($group)] = array('total'=> array(array(), 0, 0),
+                                    'details' => array());
+         }
+         array_push($groups[strval($group)]['details'], array($path, $count, $confidence, $impurity));
+
+         $groups[strval($group)]['total'][2] += $count;
+         return $groups;
+   }
+
+   function depth_first_search($tree, $path, $groups) {
+         /* Search for leafs values and instances */
+         if (is_a($tree->predicate, 'Predicate')) {
+            array_push($path, $tree->predicate);
+            if ($tree->predicate->term) {
+               $term = $tree->predicate->term;
+               if (!array_key_exists($tree->predicate->field, $this->terms)) {
+                  $this->terms->{$tree->predicate->field} = array();
+               }
+
+               if (!array_key_exists($term, $this->terms->{$tree->predicate->field})) {
+                  array_push($term, $this->terms->{$tree->predicate->field});
+               }
+            }
+         }
+
+         if (count($tree->children) == 0) {
+            $groups = $this->add_to_groups($groups, $tree->output, $path, $tree->count, $tree->confidence, $tree->impurity);
+            return array($tree->count, $groups);
+         } else {
+            $children = $tree->children;
+            $children = array_reverse($children);
+
+            $children_sum = 0;
+            foreach ($children as $child) {
+               $data = $this->depth_first_search($child, $path, $groups);
+               $children_sum += $data[0];
+               $groups = $data[1];
+            }
+            if ($children_sum < $tree->count) {
+               $groups = $this->add_to_groups($groups, $tree->output, $path, $tree->count - $children_sum,
+                             $tree->confidence, $tree->impurity);
+            }
+            return array($tree->count, $groups);
+         }
+   }
+
+   function group_prediction() {
+      /*
+        Groups in categories or bins the predicted data
+        dict - contains a dict grouping counts in 'total' and 'details' lists.
+               'total' key contains a 3-element list.
+                       - common segment of the tree for all instances
+                       - data count
+                       - predictions count
+               'details' key contains a list of elements. Each element is a
+                         3-element list:
+                        - complete path of the tree from the root to the leaf
+                        - leaf predictions count
+                        - confidence
+      */
+      $groups = array();
+      $tree = $this->tree;
+      $distribution = $tree->distribution;
+
+      foreach ($distribution as $group) {
+         $groups[strval($group[0])] = array('total' => array(array(), $group[1], 0), 
+                                    'details' => array());
+      }
+
+      $path = array();
+
+      $result = $this->depth_first_search($tree, $path, $groups);
+      return $result[1]; 
+
+   }
+
+   function get_data_distribution() {
+     /*
+     Returns training data distribution
+     */
+     $tree = $this->tree;
+     $distribution = $tree->distribution;
+
+     $order_array = array();
+     foreach ($distribution as $k => $row)
+     {
+      $order_array[$k] = $row[0];
+     }
+     array_multisort($order_array, SORT_ASC, $distribution);
+
+     return $distribution;
+
+   }
+
+   function get_prediction_distribution($groups=null) {
+     /*Returns model predicted distribution*/
+     if ($groups == null) { 
+        $groups = $this->group_prediction();
+     }
+     $predictions=array();
+     foreach ($groups as $key => $group) {
+       if ($group["total"][2] > 0) {
+          $predictions[strval($key)] =  $group["total"][2];
+       }
+     }
+     # remove groups that are not predicted
+     ksort($predictions);
+     return $predictions;
+
+   }
+
+   function extract_common_path($groups) {
+      /* Extracts the common segment of the prediction path for a group */
+      foreach ($groups as $key => $group) {
+        $details = $group['details'];
+        $common_path = array();
+
+        if (count($details) > 0 ) {
+           $mcd_len = null;
+           foreach ($details as $x) {
+              if (is_null($mcd_len) or count($x[0]) < $mcd_len) {
+                 $mcd_len = count($x[0]);
+              }
+           }
+           foreach (range(0, $mcd_len-1) as $i) {
+              $test_common_path = $details[0][0][$i];
+              foreach ($details as $subgroup) {
+                 if ($subgroup[0][$i] != $test_common_path ) {
+                     $i = $mcd_len;
+                     break;
+                 }  
+              }
+              if ($i < $mcd_len) { 
+                 array_push($common_path, $test_common_path);
+              } 
+           }     
+        }
+        $groups[$key]["total"][0] = $common_path;
+        if (count($details) > 0 ) { 
+           $order_array = array();
+           foreach ($details as $k => $row)
+           {
+              $order_array[$k] = $row[1];
+           }
+           array_multisort($order_array, SORT_DESC, $details);
+           $groups[$key]["details"] = $details;
+           
+        }
+
+      } 
+
+      return $groups;
+   }
+
+   function confidence_error($value, $impurity=null, $tree) {
+     /*Returns confidence for categoric objective fields
+       and error for numeric objective fields*/
+     
+     if (is_null($value)) {
+        return "";
+     }
+    
+     $impurity_literal = "";
+     if (!is_null($impurity) && $impurity > 0) {
+        $impurity_literal = "; impurity: " . strval(round($impurity, 4));
+     }
+     $objective_type = $this->fields->{$tree->objective_id}->optype;
+
+     if ($objective_type == 'numeric') {
+        return " [Error: " . $value . "]";
+     } else {
+        return " [Confidence: " . number_format(round($value*100, 2, PHP_ROUND_HALF_DOWN), 2) . $impurity_literal . "%]";
+     }
+ 
+ 
+   }
+
+   function summarize($out=STDOUT, $format=1) {
+      /* Prints summary grouping distribution as class header and details */
+
+      $distribution = $this->get_data_distribution();
+      fwrite($out, "Data distribution:\n");
+      print_distribution($distribution, $out); 
+      fwrite($out, "\n\n");
+
+      $groups = $this->group_prediction();
+      $predictions = $this->get_prediction_distribution($groups);
+      fwrite($out, "Predicted distribution:\n");
+
+      $a_to_print = array();
+      foreach ($predictions as $key => $value) {
+          array_push($a_to_print, array($key, $value));
+      }
+
+      $tree = $this->tree;
+      print_distribution($a_to_print, $out);
+      fwrite($out, "\n\n");
+
+      if ($this->field_importance) {
+         fwrite($out, "Field importance:\n");
+         print_importance($this, $out);
+      }
+
+      $groups = $this->extract_common_path($groups);
+
+      fwrite($out, "\n\nRules summary:");
+      foreach ($a_to_print as $x) {
+            $group = $x[0];
+            $details = $groups[$group]["details"];
+            
+            $path = new Path($groups[$group]["total"][0]);
+            $data_per_group = ($groups[$group]["total"][1] * 1.0) / $tree->count;
+            $pred_per_group = ($groups[$group]["total"][2] * 1.0) / $tree->count; 
+ 
+            fwrite($out, "\n\n" . $group .  " : (data " . number_format(round($data_per_group, 4)*100, 2) . 
+                          "% / prediction " . number_format(round($pred_per_group, 4)*100, 2) . "%) " . 
+                          $path->to_rules($this->fields, "name", $format));
+
+            if (count($details) == 0) {
+               fwrite($out, "\n     The model will never predict this class\n");
+            } else if (count($details) == 1) {
+               $subgroup = $details[0];
+               fwrite($out, $this->confidence_error($subgroup[2], $subgroup[3], $tree) . "\n");
+            } else {
+               fwrite($out, "\n");
+               foreach (range(0, count($details)-1) as $j) {
+                  $subgroup = $details[$j];
+                    
+                  $pred_per_sgroup = $subgroup[1] * 1.0 / $groups[$group]["total"][2];
+                  $path = new Path($subgroup[0]);
+                  $path_chain = (!is_null($path->predicates)) ? $path->to_rules($this->fields, 'name', $format) : "(root node)";
+                  fwrite($out, "    · " . number_format(round($pred_per_sgroup, 4) * 100,2) . "%: " . $path_chain . $this->confidence_error($subgroup[2], $subgroup[3], $tree) . "\n");
+               }
+ 
+            }
+
+
+      }
+ 
+      fclose($out);      
+   } 
 }
 
 ?>

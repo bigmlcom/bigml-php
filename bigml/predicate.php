@@ -92,13 +92,19 @@ class Predicate {
    }
 
 
-   function to_rule($fields, $label='name') {
+   function to_rule($fields, $label='name', $missing=null) {
       /*
        Builds rule string from a predicate
       */
 
-      if ($label != null) {
+      if (is_null($missing)){
+        $missing = $this->missing; 
+      }
+      if (!is_null($label)) {
         $name=$fields->{$this->field}->{$label};
+	if (!mb_detect_encoding($fields->{$this->field}->{$label}, 'UTF-8', true)) {
+	    $name = utf8_encode($fields->{$this->field}->{$label});
+        }
       } else {
         $name = "";
       }
@@ -106,14 +112,14 @@ class Predicate {
       $full_term = $this->is_full_term($fields);
       $relation_missing = '';
 
-      if ($this->missing) {
+      if ($missing) {
           $relation_missing =' or missing';
       }
 
-      $value = $this->value;
-      if (is_array($this->value)) {
-          $value = implode(',', $this->value);
-      }
+      #$value = $this->value;
+      #if (is_array($this->value)) {
+      #    $value = implode(',', $this->value);
+      #}
 
       if ($this->term != null ) {
 
@@ -125,7 +131,7 @@ class Predicate {
             $relation_literal = $full_term ? 'is equal to' : 'contains';
             if (!$full_term) {
                if ($this->operator != '>' || $this->value != 0) {
-                  $relation_suffix = $this->RELATIONS[$this->operator] . $value . plural('time', $this->value);
+                  $relation_suffix = $this->RELATIONS[$this->operator] . $this->value . plural('time', $this->value);
                }
             }
          }
@@ -134,12 +140,12 @@ class Predicate {
 
       if (is_null($this->value)) {
          if ($this->operator == "=")
-             return $name . " is None";
+             return $name . " is missing";
          else
-             return $name . " is not None";
+             return $name . " is not missing";
       }
 
-      return $name . " " . $this->operator . " ". $value . $relation_missing;
+      return $name . " " . $this->operator . " ". $this->value . $relation_missing;
  
    }
 

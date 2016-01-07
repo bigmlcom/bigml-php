@@ -26,9 +26,12 @@ function print_importance($instance, $out=STDOUT) {
    $data = $instance->field_importance_data();
    $field_importance = $data[0];
    $fields = $data[1];
-   
-   foreach($field_importance as $field => $importance) {
-     fwrite($out, utf8_encode("    " . $count . "." .  $fields->${field}->name . ": " . round($importance)*100  . "\n" ));
+
+   foreach($field_importance as $item) {
+     $field = $item[0];
+     $importance = $item[1];
+
+     fwrite($out,"    " . $count . ". " .  $fields->{$field}->name . ": " . number_format(strval(round($importance, 4, PHP_ROUND_HALF_DOWN)*100), 2)  . "%\n");
      flush($out);
      $count+=1; 
    }   

@@ -525,7 +525,7 @@ class Tree {
          $slug = $this->slugify($this->fields->{$field[0]}->name);
          $this->fields->{$field[0]}->slug = $slug;
       }
-
+      
       fwrite($out, $this->generate_rules(0, $ids_path, $subtree));
       fflush($out);
    }
@@ -538,30 +538,38 @@ class Tree {
       $INDENT = utf8_encode('    ');
       $rules = utf8_encode("");
       $children = filter_nodes($this->children, $ids_path, $subtree);
-
       if ($children != null) {
          foreach($children as $child) {
              $a = str_repeat($INDENT,$depth);
              $b = $child->predicate->to_rule($this->fields, 'slug');
-             $c = ($child->children != null ) ? "AND" : "THEN";
+             $c = (!is_null($child->children) && !empty($child->children)) ? "AND" : "THEN";
              $d = $child->generate_rules($depth+1, $ids_path, $subtree); 
-
              $rules = $rules . $a . " IF " . $b . " " . $c . "\n" . $d;
          }
       } else {
          $a = str_repeat($INDENT,$depth);
-         $b = ($this->objective_id != null) ? $this->fields->{$this->objective_id}->slug : "Prediction"; 
+         $b = (!is_null($this->objective_id)) ? $this->fields->{$this->objective_id}->slug : "Prediction"; 
          $rules = $rules . $a . " " . $b . " = " . $this->output . "\n"; 
       }
 
       return $rules;
    }
 
+   private function removeAccents($str) {
+         $a = array('À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Æ', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ð', 'Ñ', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'Ø', 'Ù', 'Ú', 'Û', 'Ü', 'Ý', 'ß', 'à', 'á', 'â', 'ã', 'ä', 'å', 'æ', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ù', 'ú', 'û', 'ü', 'ý', 'ÿ', 'Ā', 'ā', 'Ă', 'ă', 'Ą', 'ą', 'Ć', 'ć', 'Ĉ', 'ĉ', 'Ċ', 'ċ', 'Č', 'č', 'Ď', 'ď', 'Đ', 'đ', 'Ē', 'ē', 'Ĕ', 'ĕ', 'Ė', 'ė', 'Ę', 'ę', 'Ě', 'ě', 'Ĝ', 'ĝ', 'Ğ', 'ğ', 'Ġ', 'ġ', 'Ģ', 'ģ', 'Ĥ', 'ĥ', 'Ħ', 'ħ', 'Ĩ', 'ĩ', 'Ī', 'ī', 'Ĭ', 'ĭ', 'Į', 'į', 'İ', 'ı', 'Ĳ', 'ĳ', 'Ĵ', 'ĵ', 'Ķ', 'ķ', 'Ĺ', 'ĺ', 'Ļ', 'ļ', 'Ľ', 'ľ', 'Ŀ', 'ŀ', 'Ł', 'ł', 'Ń', 'ń', 'Ņ', 'ņ', 'Ň', 'ň', 'ŉ', 'Ō', 'ō', 'Ŏ', 'ŏ', 'Ő', 'ő', 'Œ', 'œ', 'Ŕ', 'ŕ', 'Ŗ', 'ŗ', 'Ř', 'ř', 'Ś', 'ś', 'Ŝ', 'ŝ', 'Ş', 'ş', 'Š', 'š', 'Ţ', 'ţ', 'Ť', 'ť', 'Ŧ', 'ŧ', 'Ũ', 'ũ', 'Ū', 'ū', 'Ŭ', 'ŭ', 'Ů', 'ů', 'Ű', 'ű', 'Ų', 'ų', 'Ŵ', 'ŵ', 'Ŷ', 'ŷ', 'Ÿ', 'Ź', 'ź', 'Ż', 'ż', 'Ž', 'ž', 'ſ', 'ƒ', 'Ơ', 'ơ', 'Ư', 'ư', 'Ǎ', 'ǎ', 'Ǐ', 'ǐ', 'Ǒ', 'ǒ', 'Ǔ', 'ǔ', 'Ǖ', 'ǖ', 'Ǘ', 'ǘ', 'Ǚ', 'ǚ', 'Ǜ', 'ǜ', 'Ǻ', 'ǻ', 'Ǽ', 'ǽ', 'Ǿ', 'ǿ', 'Ά', 'ά', 'Έ', 'έ', 'Ό', 'ό', 'Ώ', 'ώ', 'Ί', 'ί', 'ϊ', 'ΐ', 'Ύ', 'ύ', 'ϋ', 'ΰ', 'Ή', 'ή');
+         $b = array('A', 'A', 'A', 'A', 'A', 'A', 'AE', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'D', 'N', 'O', 'O', 'O', 'O', 'O', 'O', 'U', 'U', 'U', 'U', 'Y', 's', 'a', 'a', 'a', 'a', 'a', 'a', 'ae', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'u', 'y', 'y', 'A', 'a', 'A', 'a', 'A', 'a', 'C', 'c', 'C', 'c', 'C', 'c', 'C', 'c', 'D', 'd', 'D', 'd', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'E', 'e', 'G', 'g', 'G', 'g', 'G', 'g', 'G', 'g', 'H', 'h', 'H', 'h', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'I', 'i', 'IJ', 'ij', 'J', 'j', 'K', 'k', 'L', 'l', 'L', 'l', 'L', 'l', 'L', 'l', 'l', 'l', 'N', 'n', 'N', 'n', 'N', 'n', 'n', 'O', 'o', 'O', 'o', 'O', 'o', 'OE', 'oe', 'R', 'r', 'R', 'r', 'R', 'r', 'S', 's', 'S', 's', 'S', 's', 'S', 's', 'T', 't', 'T', 't', 'T', 't', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'W', 'w', 'Y', 'y', 'Y', 'Z', 'z', 'Z', 'z', 'Z', 'z', 's', 'f', 'O', 'o', 'U', 'u', 'A', 'a', 'I', 'i', 'O', 'o', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'A', 'a', 'AE', 'ae', 'O', 'o', 'Α', 'α', 'Ε', 'ε', 'Ο', 'ο', 'Ω', 'ω', 'Ι', 'ι', 'ι', 'ι', 'Υ', 'υ', 'υ', 'υ', 'Η', 'η');
+        return str_replace($a, $b, $str);
+}
+ 
    private function slugify($name, $reserved_keywords=null, $prefix='') {
       /*
          Translates a field name into a variable name.
       */
-      $name = strtolower(utf8_encode($name));
+      if (!mb_detect_encoding($name, 'UTF-8', true)) {
+         $name = utf8_encode($name);
+      }
+
+      $name = strtolower($this->removeAccents($name));
       $name = preg_replace('/[^\da-z]+/i', '_', $name); 
 
       if (is_integer($name[0])) {
@@ -630,13 +638,13 @@ function filter_nodes($node_list, $ids=null, $subtree=true)
       ids list, the rest of nodes are removed. If none is in the ids list
       we include or exclude the nodes depending on the subtree flag.
    */
-   if ($node_list == null) {
+   if (is_null($node_list) or empty($node_list)) {
       return null;
    }
    $nodes = $node_list;
-   if ($ids == null) {
+   if (!is_null($ids)) {
       foreach($nodes as $node) {
-         if ($ids != null && in_array($ids, $node->id)) {
+         if (in_array($node->id, $ids)) {
            return array($node);
          } 
       }
