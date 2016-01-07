@@ -271,7 +271,7 @@ class BigML {
          $resource = $r->resource;
       }
 
-      if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid|anomaly|anomalyscore|sample|project)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
+      if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid|anomaly|anomalyscore|sample|project|correlation)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
          $count = 0;
          $status = self::_check_resource_status($resource, $queryString); 
          while ($count<$retries && !$status["ready"]) {
@@ -1720,7 +1720,6 @@ class BigML {
       $rest = self::get_resource_request($projectId, "project", "UPDATE", null, true,  $waitTime, $retries);
       if ($rest == null) return null;
       
-      print "PASO POR AKI\n";
       $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
@@ -1732,6 +1731,84 @@ class BigML {
         Deletes a project 
       */
       $rest = self::get_resource_request($projectId, "project", "DELETE", null);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
+
+   ##########################################################################
+   #
+   # Correlations 
+   # https://bigml.com/developers/correlations
+   #
+   ##########################################################################
+
+   public static function create_correlation($datasetId, $data=array(), $waitTime=3000, $retries=10) {
+      /*
+       Creates a correlation from a `dataset`.
+      */
+
+      $resource = self::_check_resource($datasetId, null, $waitTime, $retries);
+      if ($resource == null || $resource['type'] != "dataset") {
+         error_log("Wrong dataset id");
+         return null;
+      } elseif ($resource["status"] != BigMLRequest::FINISHED) {
+         error_log($resource['message']);
+         return null;
+      }
+
+      $rest = new BigMLRequest('CREATE', 'correlation');
+
+      $data["dataset"] = $resource["id"];
+
+      $rest->setData($data);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+   public static function get_correlation($correlation, $queryString=null)
+   {
+      /*
+        Retrieves an correlation.
+      */
+      $rest = self::get_resource_request($correlation, "correlation", "GET", $queryString);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+
+   }
+
+   public static function list_correlations($queryString=null)
+   {
+      /*
+       Lists all your correlations.
+      */
+      $rest = new BigMLRequest('LIST', 'correlation');
+
+      if ($queryString!=null) {
+         $rest->setQueryString($queryString);
+      }
+
+      return $rest->getResponse();
+   }
+
+   public static function update_correlation($correlationId, $data, $waitTime=3000, $retries=10) {
+      /*
+         Updates a correlation 
+      */
+      $rest = self::get_resource_request($correlationId, "correlation", "UPDATE", null, true,  $waitTime, $retries);
+      if ($rest == null) return null;
+
+      $rest->setData($data);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+   public static function delete_correlation($correlationId) {
+      /*
+        Deletes a correlation 
+      */
+      $rest = self::get_resource_request($correlationId, "correlation", "DELETE", null);
       if ($rest == null) return null;
       return $rest->getResponse();
    }
