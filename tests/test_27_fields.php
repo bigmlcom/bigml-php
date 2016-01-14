@@ -26,7 +26,16 @@ class BigMLTestFields extends PHPUnit_Framework_TestCase
 
       foreach($data as $item) {
           print "\nSuccessfully creating a Fields object\n";
-          $source = self::$api->get_source("source/568ee7be8a318f5bfc00e874");#$source->resource);
+          print "Given I create a data source uploading a ". $item["filename"]. " file\n";
+          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
+          $this->assertEquals(1, $source->object->status->code);
+
+          print "And I wait until the source is ready\n";
+          $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          $source = self::$api->get_source($source->resource); 
           print "And I create a Fields object from the source with objective column " . $item["objective_column"] . "\n";
           $fields = new Fields($source, null, null, null, intval($item["objective_column"]), true);
 
