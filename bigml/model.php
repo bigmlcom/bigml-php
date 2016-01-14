@@ -13,11 +13,15 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-include('basemodel.php'); 
- #include('./predicate.php');
-include('tree.php');
-
-include('path.php');
+if (!class_exists('basemodel')) {
+  include('basemodel.php'); 
+}
+if (!class_exists('tree')) {
+   include('tree.php');
+}
+if (!class_exists('path')) {
+   include('path.php');
+}   
 
 function _ditribution_sum($x, $y) {
     return $x+$y;

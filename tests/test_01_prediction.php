@@ -1,11 +1,9 @@
 <?php
-include '../bigml/bigml.php';
-include '../bigml/ensemble.php';
-include '../bigml/cluster.php';
-include '../bigml/fields.php';
-#include '../bigml/multimodel.php';
+if (!class_exists('bigml')) {
+   include '../bigml/bigml.php';
+}  
 
-class BigMLTest extends PHPUnit_Framework_TestCase
+class BigMLTestPredictions extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
@@ -35,33 +33,34 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 	             );
 
         foreach($data as $item) {
-	    print "I create a data source uploading a ". $item["filename"]. " file\n";
+	    print "\nSuccessfully creating a prediction:\n";
+	    print "Given I create a data source uploading a ". $item["filename"]. " file\n";
 	    $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
 	    $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
 	    $this->assertEquals(1, $source->object->status->code);
 
-            print "check local source is ready\n";
+            print "And I wait until the source is ready\n";
 	    $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
 	    $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "create dataset with local source\n";
+            print "And I create dataset with local source\n";
 	    $dataset = self::$api->create_dataset($source->resource);
 	    $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
 	    $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
-            print "check the dataset is ready\n";
+            print "And I wait until the dataset is ready\n";
 	    $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
 	    $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "create model\n";
+            print "And I create model\n";
 	    $model = self::$api->create_model($dataset->resource);
 	    $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
 
-            print "check model is ready\n";
+            print "And I wait until the model is ready\n";
             $resource = self::$api->_check_resource($model->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-	    print "When I create a prediction for ";
+	    print "When I create a prediction for " . json_encode($item["data_input"]) . "\n";
 	    $prediction = self::$api->create_prediction($model, $item["data_input"]);
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $prediction->code);
 
@@ -145,38 +144,39 @@ class BigMLTest extends PHPUnit_Framework_TestCase
                             "centroid" => "Cluster 6"));
 
         foreach($data as $item) {
-            print "I create a data source uploading a ". $item["filename"]. " file\n";
+	    print "\nSuccessfully creating a centroid and the associated dataset\n";
+            print "Given I create a data source uploading a ". $item["filename"]. " file\n";
             $source = self::$api->create_source($item["filename"], $options=array('name'=>'diabetes_test_source'));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
-            print "check local source is ready\n";
+            print "And I wait until the source is ready\n";
             $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "create dataset with local source\n";
+            print "And I create dataset with local source\n";
             $dataset = self::$api->create_dataset($source->resource);
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
             $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
-            print "check the dataset is ready\n";
+            print "And I wait until the dataset is ready\n";
             $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "create a cluster\n";
+            print "And I create a cluster\n";
             $cluster = self::$api->create_cluster($dataset->resource, array('seed'=>'BigML tests', 'k' =>  8));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $cluster->code);
             $this->assertEquals(BigMLRequest::QUEUED, $cluster->object->status->code);
 
-            print "I wait until the cluster is ready\n";
+            print "And I wait until the cluster is ready\n";
             $resource = self::$api->_check_resource($cluster->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
     
-            print "create a centroid\n";
+            print "When create a centroid for " . json_encode($item["data_input"]). "\n";
             $centroid = self::$api->create_centroid($cluster->resource, $item["data_input"]);
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $centroid->code);
 
-            print "the centroid is " . $item["centroid"] . "\n";
+            print "Then the centroid is " . $item["centroid"] . "\n";
             $this->assertEquals($item["centroid"], $centroid->object->centroid_name);
 
         }   
@@ -187,33 +187,34 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 	               array("filename"=> 'data/iris_sp_chars.csv', "data_input" => array("pétal&width" => 300), "score" =>  0.91933));
 	     
         foreach($data as $item) {
-
-            print "I create a data source uploading a ". $item["filename"]. " file\n";
+            print "\nSuccessfully creating an anomaly score\n";
+            print "Given I create a data source uploading a ". $item["filename"]. " file\n";
             $source = self::$api->create_source($item["filename"], $options=array('name'=>'tiny'));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
-            print "check local source is ready\n";
+            print "And I wait until the source is ready\n";
             $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "create dataset with local source\n";
+            print "And I create dataset with local source\n";
             $dataset = self::$api->create_dataset($source->resource);
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
             $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
-            print "check the dataset is ready\n";
+            print "And I wait until the dataset is ready\n";
             $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
             print "Then I create an anomaly detector from a dataset\n";
             $anomaly = self::$api->create_anomaly($dataset->resource);
             
-            print "I wait until the anomaly detector is ready\n";
+            print "And I wait until the anomaly detector is ready\n";
             $resource = self::$api->_check_resource($anomaly->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
-
+            print "When I create an anomaly score for " . json_encode($item["data_input"]).  "\n";
             $resource = self::$api->create_anomaly_score($anomaly->resource, $item["data_input"]);
+	    print "Then the anomaly score is " . $item["score"] . "\n";
             $this->assertEquals($resource->object->score, $item["score"]);
 
         } 

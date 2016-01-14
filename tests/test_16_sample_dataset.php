@@ -1,10 +1,10 @@
 <?php
-include '../bigml/bigml.php';
-include '../bigml/ensemble.php';
-include '../bigml/cluster.php';
-include '../bigml/fields.php';
 
-class BigMLTest extends PHPUnit_Framework_TestCase
+if (!class_exists('bigml')) {
+   include '../bigml/bigml.php';
+}   
+
+class BigMLTestSampleDataset extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
@@ -24,30 +24,31 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
 
       foreach($data as $item) {
-          print "I create a data source uploading a ". $item["filename"]. " file\n";
+          print "\nSuccessfully creating a sample from a dataset\n";
+          print "Given I create a data source uploading a ". $item["filename"]. " file\n";
           $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 
-          print "check local source is ready\n";
+          print "And I wait the source is ready\n";
           $resource = self::$api->_check_resource($source->resource, null, 20000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-          print "create dataset with local source\n";
+          print "And I create dataset with local source\n";
           $dataset = self::$api->create_dataset($source->resource);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
           $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
-          print "check the dataset is ready " . $dataset->resource . " \n";
+          print "And I wait the  dataset is ready " . $dataset->resource . " \n";
           $resource = self::$api->_check_resource($dataset->resource, null, 20000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-          print "I create a sample from a dataset\n";
+          print "And I create a sample from a dataset\n";
 	  $sample = self::$api->create_sample($dataset->resource, array('name'=> 'new sample'));
 	  $this->assertEquals(BigMLRequest::HTTP_CREATED, $sample->code);
 	  $this->assertEquals(BigMLRequest::QUEUED, $sample->object->status->code);
 
-          print "check the sample is ready " . $sample->resource . " \n";
+          print "And I wait the sample is ready " . $sample->resource . " \n";
 	  $resource = self::$api->_check_resource($sample->resource, null, 20000, 30);
 	  $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
           
@@ -60,6 +61,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 	  $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 	 
 	  $sample = self::$api->get_sample($sample->resource);
+          print "Then the sample name is " . $item["sample_name"] . "\n";
 
           $this->assertEquals($sample->object->name, $item["sample_name"]);
       } 

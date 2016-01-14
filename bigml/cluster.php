@@ -21,6 +21,18 @@ if (!class_exists('centroid')) {
    include('centroid.php'); 
 }
 
+
+function parse_items($text, $regexp) {
+  /*Returns the list of parsed items*/
+  if (is_null($text)) {
+    return array();
+  }
+  
+  $regex_string = "/". $regexp . "/";
+  return preg_split($regex_string, $text);
+  
+}
+
 function parse_terms($text, $case_sensitive=true) {
    /*
       Returns the list of parsed terms
@@ -91,6 +103,8 @@ class Cluster extends ModelFields {
    public $term_forms;
    public $tag_clouds;
    public $term_analysis;
+   public $item_analysis;
+   public $items;
 
    public function __construct($cluster, $api=null, $storage="storage") {
 
@@ -131,6 +145,8 @@ class Cluster extends ModelFields {
             $this->term_forms = array(); 
             $this->tag_clouds = array();
             $this->term_analysis = array();
+	    $this->item_analysis = array();
+	    $this->items=array();
 
             $fields = $cluster->clusters->fields;
             $summary_fields = $cluster->summary_fields;
@@ -145,7 +161,10 @@ class Cluster extends ModelFields {
                   $this->term_forms[$field_id]=$field->summary->term_forms;
                   $this->tag_clouds[$field_id]=$field->summary->tag_cloud;
                   $this->term_analysis[$field_id]=$field->term_analysis;
-               }
+               } else if ($field->optype == 'items' ) {
+	          $this->items[$field_id]= $field->summary->items;
+		  $this->item_analysis[$field_id]=$field->item_analysis;
+	       }
 
             }
 
@@ -223,7 +242,6 @@ class Cluster extends ModelFields {
                }
 
 
-
                $unique_terms[$field_id] = get_unique_terms($terms,
                                                         $this->term_forms[$field_id],
                                                         array_key_exists($field_id, $this->tag_clouds) ? $this->tag_clouds[$field_id] : array());
@@ -234,7 +252,34 @@ class Cluster extends ModelFields {
             unset($input_data[$field_id]); 
   
          }
-      } 
+      }
+
+      # the same for items fields
+      foreach($this->item_analysis as $field_id => $field){
+
+         if ( array_key_exists($field_id, $input_data) ) {
+	    $input_data_field = (array_key_exists($field_id, $input_data)) ?  $input_data[$field_id] : ''; 
+	 }
+       
+         if (is_string($input_data_field)) {
+           $separator = (array_key_exists('separator', $this->item_analysis[$field_id])) ? $this->item_analysis[$field_id]->separator : ' ';
+	   $regexp = (array_key_exists('separator_regexp', $this->item_analysis[$field_id])) ? $this->item_analysis[$field_id]->separator_regexp : null;
+
+	   if (is_null($regexp)) {
+	      $regexp='' . preg_quote($separator);
+	   }
+
+	   $terms = parse_items($input_data_field, $regexp);
+	   $unique_terms[$field_id] = get_unique_terms($terms,
+	                                               array(),
+						       array_key_exists($field_id, $this->items) ? $this->items[$field_id] : array());
+	 } else {
+	   $unique_terms[$field_id] = $input_data_field; 
+	 }
+
+	 unset($input_data[$field_id]);
+  
+      }
 
       return array($unique_terms,$input_data);
    }

@@ -14,6 +14,67 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+function term_matches($text, $forms_list, $options) {
+  /*
+    Counts the number of occurences of the words in forms_list in the text
+    The terms in forms_list can either be tokens or full terms. The
+    matching for tokens is contains and for full terms is equals.
+  */
+
+  $token_mode = property_exists($options, 'token_mode') ? $options->token_mode : Predicate::TM_TOKENS;
+  $case_sensitive = property_exists($options, 'case_sensitive') ? $options->case_sensitive : false;
+  $first_term = $forms_list[0];
+
+  if ($token_mode == Predicate::TM_FULL_TERM) {
+     return full_term_match($text, $first_term, $case_sensitive);
+  }
+
+   # In token_mode='all' we will match full terms using equals and
+   # # tokens using contains
+
+   if ($token_mode == Predicate::TM_ALL && count($forms_list) == 1) {
+      if ( preg_match(Predicate::FULL_TERM_PATTERN, $first_term) ) {
+         return full_term_match($text, $first_term, $case_sensitive);
+      }
+   }
+
+  return term_matches_tokens($text, $forms_list, $case_sensitive);
+}
+
+function term_matches_tokens($text, $forms_list, $case_sensitive) {
+  /*
+    Counts the number of occurences of the words in forms_list in the text
+  */
+  $flags = get_tokens_flags($case_sensitive);
+  $expression = "/(\b|_)" . join("(\b|_)|(\b|_)",$forms_list) . "(\b|_)/" . $flags;
+  $total = preg_match_all($expression, $text, $matches);
+  return $total;
+
+}
+
+function get_tokens_flags($case_sensitive) {
+ /*
+   Returns flags for regular expression matching depending on text analysis options
+  */
+  $flags = "u";
+  if (!$case_sensitive) {
+     $flags = "iu";
+  }
+
+  return $flags;
+}
+
+function full_term_match($text, $full_term, $case_sensitive) {
+  /*
+    Counts the match for full terms according to the case_sensitive option
+  */
+  if (!$case_sensitive) {
+     $text = strtolower($text);
+     $full_term = strtolower($full_term);
+  }
+  return ($text == $full_term) ? 1 : 0;
+}
+
 function plural($text, $num) {
     /*
       Pluralizer: adds "s" at the end of a string if a given number is > 1
@@ -116,10 +177,10 @@ class Predicate {
           $relation_missing =' or missing';
       }
 
-      #$value = $this->value;
-      #if (is_array($this->value)) {
-      #    $value = implode(',', $this->value);
-      #}
+      $value = $this->value;
+      if (is_array($this->value)) {
+          $value = implode(',', $this->value);
+      }
 
       if ($this->term != null ) {
 
@@ -145,7 +206,7 @@ class Predicate {
              return $name . " is not missing";
       }
 
-      return $name . " " . $this->operator . " ". $this->value . $relation_missing;
+      return $name . " " . $this->operator . " ". $value . $relation_missing;
  
    }
 
@@ -171,7 +232,7 @@ class Predicate {
          $terms = array_merge($terms, $term_forms);
          $options = $fields->{$this->field}->term_analysis;
 
-         return $op($this->term_matches($input_data[$this->field], $terms, $options), $this->value);
+         return $op(term_matches($input_data[$this->field], $terms, $options), $this->value);
       }
 
       if ($this->operator == "in") {
@@ -181,67 +242,40 @@ class Predicate {
       }  
    }
 
-   function term_matches($text, $forms_list, $options) {
-      /*
-         Counts the number of occurences of the words in forms_list in the text
-         The terms in forms_list can either be tokens or full terms. The
-         matching for tokens is contains and for full terms is equals.
+   function to_list_rule($fields) {
+     /*
+       Builds rule string in LISP from a predicate
       */
+     if (!is_null($this->term)) {
+        if (fields[$this->field]['optype'] == 'text') {
+           $options = $fields[$this->field]["term_analysis"];
+           $case_insensitive =  array_key_exists("case_sensitive", $options) ? !$options["case_sensitive"] : true;
+           $case_insensitive = $case_sensitive ? 'true' : 'false';
+           $language = array_key_exists("language", $options) ? $options['language'] : null;
+	   $language = is_null($language) ? '' : " " . $language;
 
-      $token_mode = property_exists($options, 'token_mode') ? $options->token_mode : Predicate::TM_TOKENS;
-      $case_sensitive = property_exists($options, 'case_sensitive') ? $options->case_sensitive : false;
-      $first_term = $forms_list[0];
+           return  "(" . $operator . " (occurrences (f " . $this->field_id .
+                    ") " . $this->term . " " . $case_insensitive . $language .") ". $this->value . ")";
 
-      if ($token_mode == Predicate::TM_FULL_TERM) {
-         return $this->full_term_match($text, $first_term, $case_sensitive);
-      }
+	} else if (fields[$this->field]['optype'] == 'items') {
+	}
 
-      # In token_mode='all' we will match full terms using equals and
-      # # tokens using contains
+     }
 
-      if ($token_mode == Predicate::TM_ALL && count($forms_list) == 1) {
-         if ( preg_match(Predicate::FULL_TERM_PATTERN, $first_term) ) {
-            return $this->full_term_match($text, $first_term, $case_sensitive);
-         }
-      }
+     if (is_null($this->value)) {
+        $negation = ($this->operator == "=") ? "" : "not ";
+	return "(" . $negation . " (missing? " . $this->field . ")";
+     }
 
-      return $this->term_matches_tokens($text, $forms_list, $case_sensitive);
+     $rule = "(" . $this->operator ." (f " . $this->field . ") " . $this->value .")";
+
+     if ($this->missing) {
+       $rule = "(or (missing? " . $this->field .") ". $rule .")";
+     }
+
+     return rule;
    }
 
-
-   function full_term_match($text, $full_term, $case_sensitive) {
-      /*
-         Counts the match for full terms according to the case_sensitive option
-      */
-      if (!$case_sensitive) {
-         $text = strtolower($text);
-         $full_term = strtolower($full_term);
-      }
-      return ($text == $full_term) ? 1 : 0; 
-   }
-
-   function term_matches_tokens($text, $forms_list, $case_sensitive) {
-      /*
-         Counts the number of occurences of the words in forms_list in the text
-      */
-      $flags = $this->get_tokens_flags($case_sensitive);
-      $expression = "/(\b|_)" . join("(\b|_)|(\b|_)",$forms_list) . "(\b|_)/" . $flags;
-      $total = preg_match_all($expression, $text, $matches);
-      return $total;
-
-   }
-
-   function get_tokens_flags($case_sensitive) {
-      /*
-         Returns flags for regular expression matching depending on text analysis options
-      */
-      $flags = "u";
-      if (!$case_sensitive) {
-         $flags = "iu";
-      }
-
-      return $flags;
-   }
 }
 
 ?>

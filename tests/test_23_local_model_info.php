@@ -1,11 +1,12 @@
 <?php
-include '../bigml/bigml.php';
-include '../bigml/ensemble.php';
-include '../bigml/cluster.php';
-include '../bigml/fields.php';
-#include '../bigml/multimodel.php';
+if (!class_exists('bigml')) {
+ include '../bigml/bigml.php';
+}
+if (!class_exists('model')) {
+ include '../bigml/model.php';
+}
 
-class BigMLTest extends PHPUnit_Framework_TestCase
+class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
@@ -48,36 +49,35 @@ class BigMLTest extends PHPUnit_Framework_TestCase
                             "expected_file" => "data/model/if_then_rules_tiny_kdd.txt")
 	             );
 
-        print " Testing local model information output methods\n";
         foreach($data as $item) {
-            print "Successfully creating a model and translate the tree model into a set of IF-THEN rules\n";
-	    print "I create a data source uploading a ". $item["filename"]. " file\n";
+            print "\nSuccessfully creating a model and translate the tree model into a set of IF-THEN rules\n";
+	    print "Given I create a data source uploading a ". $item["filename"]. " file\n";
 	    $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
 	    $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
 	    $this->assertEquals(1, $source->object->status->code);
 
-            print "check local source is ready\n";
+            print "And I wait until the local source is ready\n";
 	    $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
 	    $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "create dataset with local source\n";
+            print "And I create dataset with local source\n";
 	    $dataset = self::$api->create_dataset($source->resource);
 	    $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
 	    $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
-            print "check the dataset is ready\n";
+            print "And I wait until the dataset is ready\n";
 	    $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
 	    $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "create model\n";
+            print "And I create model\n";
 	    $model = self::$api->create_model($dataset->resource);
 	    $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
 
-            print "check model is ready\n";
+            print "And I wail until the model is ready\n";
             $resource = self::$api->_check_resource($model->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
             
-            print "I create a local model\n";
+            print "And I create a local model\n";
 	    $local_model = new Model($model->resource, self::$api);
             print "I translate the tree into IF_THEN rules\n";
 
@@ -98,37 +98,37 @@ class BigMLTest extends PHPUnit_Framework_TestCase
                             "local_file" => "tmp/if_then_rules_iris_missing2_MISSINGS.txt",
                             "expected_file" => "data/model/if_then_rules_iris_missing2_MISSINGS.txt"));
         foreach($data as $item) {
-            print "Successfully creating a model with missing values and translate the tree model into a set of IF-THEN rules\n"; 
+            print "\nSuccessfully creating a model with missing values and translate the tree model into a set of IF-THEN rules\n"; 
 
-            print "I create a data source uploading a ". $item["filename"]. " file\n";
+            print "Given I create a data source uploading a ". $item["filename"]. " file\n";
             $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
-            print "check local source is ready\n";
+            print "And I wait until the source is ready\n";
             $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "create dataset with local source\n";
+            print "And I create dataset with local source\n";
             $dataset = self::$api->create_dataset($source->resource);
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
             $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
-            print "check the dataset is ready\n";
+            print "And I wait until the dataset is ready\n";
             $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "create model\n";
+            print "And I create model\n";
             $model = self::$api->create_model($dataset->resource, array("missing_splits" => true));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
 
-            print "check model is ready\n";
+            print "And I wail until the model is ready\n";
             $resource = self::$api->_check_resource($model->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "I create a local model\n";
+            print "And I create a local model\n";
             $local_model = new Model($model->resource, self::$api);
-            print "I translate the tree into IF_THEN rules\n";
+            print "And I translate the tree into IF_THEN rules\n";
 
             $fp = fopen($item["local_file"], 'w');
             $local_model->rules($fp);
@@ -166,41 +166,41 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
 
         foreach($data as $item) {
-            print " Successfully creating a model and translate the tree model into a set of IF-THEN rules\n";
+            print "\nSuccessfully creating a model and translate the tree model into a set of IF-THEN rules\n";
 
-            print "I create a data source uploading a ". $item["filename"]. " file\n";
+            print "Given I create a data source uploading a ". $item["filename"]. " file\n";
             $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
-            print "check local source is ready\n";
+            print "And I wait until the source is ready\n";
             $resource = self::$api->_check_resource($source->resource, null, 10000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "I update the source with params " . json_encode($item["options"]) . "\n";
+            print "And I update the source with options " . json_encode($item["options"]) . "\n";
 	    $source = self::$api->update_source($source->resource, $item["options"]);
 	    $this->assertEquals(BigMLRequest::HTTP_ACCEPTED, $source->code);
 
-            print "create dataset with local source\n";
+            print "And I create dataset with local source\n";
             $dataset = self::$api->create_dataset($source->resource);
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
             $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
-            print "check the dataset is ready\n";
+            print "And I wait until the dataset is ready\n";
             $resource = self::$api->_check_resource($dataset->resource, null, 10000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "create model\n";
+            print "And I create model\n";
             $model = self::$api->create_model($dataset->resource);
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
 
-            print "check model is ready ". $model->resource  . "\n";
+            print "And I wait until the model is ready ". $model->resource  . "\n";
             $resource = self::$api->_check_resource($model->resource, null, 10000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "I create a local model\n";
+            print "And I create a local model\n";
             $local_model = new Model($model->resource, self::$api);
-            print "I translate the tree into IF_THEN rules\n";
+            print "And I translate the tree into IF_THEN rules\n";
 
             $fp = fopen($item["local_file"], 'w');
             $local_model->rules($fp);
@@ -229,38 +229,39 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
 
         foreach($data as $item) {
-            print " Successfully creating a model and translate the tree model into a set of IF-THEN rules\n";
+            print "\nSuccessfully creating a model and check its data distribution\n";
 
-            print "I create a data source uploading a ". $item["filename"]. " file\n";
+            print "Given I create a data source uploading a ". $item["filename"]. " file\n";
             $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
-            print "check local source is ready\n";
+            print "And I wait until source is ready\n";
             $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "create dataset with local source\n";
+            print "And I create dataset with local source\n";
             $dataset = self::$api->create_dataset($source->resource);
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
             $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
-            print "check the dataset is ready\n";
+            print "And I wail until the dataset is ready\n";
             $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "create model\n";
+            print "And I create model\n";
             $model = self::$api->create_model($dataset->resource);
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
            
-            print "check model is ready ". $model->resource  . "\n";
+            print "And I wail until the model is ready ". $model->resource  . "\n";
             $resource = self::$api->_check_resource($model->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "I create a local model\n";
+            print "And I create a local model\n";
             $local_model = new Model($model->resource, self::$api);
 
             $file_distribution = file_get_contents($item["expected_file"]);
+            print "And I translate the tree into IF_THEN rules\n";
             $distribution = $local_model->get_data_distribution();
             $distribution_str='';
             foreach($distribution as $value) {
@@ -288,35 +289,35 @@ class BigMLTest extends PHPUnit_Framework_TestCase
                     );
 
        foreach($data as $item) {
-            print " Successfully creating a model and translate the tree model into a set of IF-THEN rules\n";
+            print "\n Successfully creating a model and check its predictions distribution\n";
 
-            print "I create a data source uploading a ". $item["filename"]. " file\n";
+            print "Given I create a data source uploading a ". $item["filename"]. " file\n";
             $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
-            print "check local source is ready\n";
+            print "And I wait until the source is ready\n";
             $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "create dataset with local source\n";
+            print "And I create dataset with local source\n";
             $dataset = self::$api->create_dataset($source->resource);
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
             $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
-            print "check the dataset is ready\n";
+            print "And I wait until the dataset is ready\n";
             $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "create model\n";
+            print "And I create model\n";
             $model = self::$api->create_model($dataset->resource);
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
            
-            print "check model is ready ". $model->resource  . "\n";
+            print "And I wait until the model is ready ". $model->resource  . "\n";
             $resource = self::$api->_check_resource($model->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "I create a local model\n";
+            print "And I create a local model\n";
             $local_model = new Model($model->resource, self::$api);
             print "Then I check the predictions distribution with ". $item["expected_file"] . " file\n";
 
@@ -348,38 +349,38 @@ class BigMLTest extends PHPUnit_Framework_TestCase
                     );
 
        foreach($data as $item) {
-            print " Successfully creating a model and translate the tree model into a set of IF-THEN rules\n";
-
-            print "I create a data source uploading a ". $item["filename"]. " file\n";
+            print "\nSuccessfully creating a model and check its summary information:\n";
+            print "Given I create a data source uploading a ". $item["filename"]. " file\n";
             $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
-            print "check local source is ready\n";
+            print "And I wait until the source is ready\n";
             $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "create dataset with local source\n";
+            print "And I  create dataset with local source\n";
             $dataset = self::$api->create_dataset($source->resource);
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
             $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
-            print "check the dataset is ready\n";
+            print "And I wait until the dataset is ready\n";
             $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "create model\n";
+            print "And I create model\n";
             $model = self::$api->create_model($dataset->resource);
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
 
-            print "check model is ready ". $model->resource  . "\n";
+            print "And I wait until the model is ready ". $model->resource  . "\n";
             $resource = self::$api->_check_resource($model->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "I create a local model\n";
+            print "And I create a local model\n";
             $local_model = new Model($model->resource, self::$api);
-            print "Then I check the predictions distribution with ". $item["expected_file"] . " file\n";
+            print "And I translate the tree into IF_THEN rules\n";
 	    $local_model->summarize(fopen($item["local_file"],'w'));
+            print "Then I check the predictions distribution with ". $item["expected_file"] . " file\n";
 	    $this->assertEquals(0, strcmp(trim(file_get_contents($item["local_file"])), trim(file_get_contents($item["expected_file"]))));
 
        }

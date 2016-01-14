@@ -1,10 +1,8 @@
 <?php
-include '../bigml/bigml.php';
-include '../bigml/ensemble.php';
-include '../bigml/cluster.php';
-include '../bigml/fields.php';
-
-class BigMLTest extends PHPUnit_Framework_TestCase
+if (!class_exists('bigml')) {
+  include '../bigml/bigml.php';
+}
+class BigMLTestPublicDataset extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
@@ -24,21 +22,21 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 
 
       foreach($data as $item) {
-          print "I create a data source uploading a ". $item["filename"]. " file\n";
+          print "Given I create a data source uploading a ". $item["filename"]. " file\n";
           $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 
-          print "check local source is ready\n";
+          print "And I wait until source is ready\n";
           $resource = self::$api->_check_resource($source->resource, null, 20000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-          print "create dataset with local source\n";
+          print "And I create dataset with local source\n";
           $dataset = self::$api->create_dataset($source->resource);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
           $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
-          print "check the dataset is ready " . $dataset->resource . " \n";
+          print "And I wait until the dataset is ready " . $dataset->resource . " \n";
           $resource = self::$api->_check_resource($dataset->resource, null, 20000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
@@ -46,8 +44,9 @@ class BigMLTest extends PHPUnit_Framework_TestCase
 	  $dataset = self::$api->update_dataset($dataset->resource, array('private'=> false));
           $this->assertEquals(BigMLRequest::HTTP_ACCEPTED, $dataset->code);
 
-          print "I get the dataset's public url \n";
+          print "When I get the dataset status using the dataset's public url\n";
           $dataset = self::$api->get_dataset("public/" . $dataset->resource);
+          print "Then the dataset's status is FINISHED\n";
           $this->assertEquals(BigMLRequest::FINISHED, $dataset->object->status->code);
 
  

@@ -92,9 +92,13 @@ function invert_dictionary($dictionary, $field='name') {
          Useful to make predictions using fields' names instead of Ids.
          It does not check whether new keys are duplicated though.
      **/
-     $new_dictionary = null;
+     $new_dictionary = array();
      foreach((array_keys(get_object_vars($dictionary))) as $key) {
-         $new_dictionary[$dictionary->{$key}->{$field}] = $key; 
+         $field_value=$dictionary->{$key}->{$field};
+         if (!mb_detect_encoding($field_value, 'UTF-8', true)) {
+            $field = utf8_encode($field_value);
+	 }
+         $new_dictionary[strval($field_value)] = $key; 
      }
      return $new_dictionary;     
  }
@@ -209,23 +213,25 @@ class ModelFields {
              }
  
          }
-
          $new_input_data = array();
          if ($by_name) {
             # We no longer check that the input data keys match some of
             # the dataset fields. We only remove the keys that are not
             # used as predictors in the model
+
+
             foreach($input_data as $key => $value) { 
-        
-               if (array_key_exists($key, $this->inverted_fields) && ($this->objective_id == null || $this->inverted_fields[$key] != $this->objective_id))
+                if (!mb_detect_encoding($key, 'UTF-8', true)) {
+		   $key = utf8_encode($key);
+		}
+               if (array_key_exists($key, $this->inverted_fields) && (is_null($this->objective_id) || $this->inverted_fields[$key] != $this->objective_id))
                {
                   $new_input_data[$this->inverted_fields[$key]] = $value;
                }
             }
-
          } else {
             foreach($input_data as $key => $value) {
-               if (array_key_exists($key, $this->fields) && ($this->objective_id == null || $key != $this->objective_id) ) {
+               if (array_key_exists($key, $this->fields) && (is_null($this->objective_id) || $key != $this->objective_id) ) {
                   $new_input_data[$key] = $value;
                }  else {
                } 

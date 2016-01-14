@@ -1,10 +1,9 @@
 <?php
-
 if (!class_exists('bigml')) {
   include '../bigml/bigml.php';
-}
+}  
 
-class BigMLTestCorrelation extends PHPUnit_Framework_TestCase
+class BigMLTestStatistical extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
@@ -16,16 +15,16 @@ class BigMLTestCorrelation extends PHPUnit_Framework_TestCase
        ini_set('memory_limit', '512M');
     }
     /*
-     Successfully creating a correlation from a dataset
+     Successfully creating an statistical test from a dataset
     */
 
     public function test_scenario1() {
-      $data = array(array('filename' => 'data/iris.csv',
-			  'correlation_name' => "my new correlation name")); 
+      $data = array(array('filename' => 'data/iris.csv', 'test_name'=> 'my new statistical test name'));
 
 
+      print "Uploading source \n";
       foreach($data as $item) {
-          print "\nSuccessfully creating a correlation from a dataset\n";
+          print "\nSuccessfully creating an statistical test from a dataset\n";
           print "Given I create a data source uploading a ". $item["filename"]. " file\n";
           $source = self::$api->create_source($item["filename"]);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
@@ -39,27 +38,28 @@ class BigMLTestCorrelation extends PHPUnit_Framework_TestCase
           $dataset = self::$api->create_dataset($source->resource);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
           $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
-          
+
           print "And I wait until the dataset is ready\n";
           $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-          print "And I create a correlation from a dataset\n";
-          $correlation = self::$api->create_correlation($dataset->resource);
-          $this->assertEquals(BigMLRequest::HTTP_CREATED, $correlation->code);
+          print "And I create an statistical test from a dataset\n";
+          $statistical_test = self::$api->create_statistical_test($dataset->resource,  array('name'=> 'new statistical test'));
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $statistical_test->code);
 
-          print "And I wait until the correlation is ready\n";
-          $resource = self::$api->_check_resource($correlation->resource, null, 10000, 30);
-          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+          print "And I wait until the statistical test is ready\n";
+          $resource = self::$api->_check_resource($statistical_test->resource, null, 10000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]); 
 
-          print "And I update the correlation with new name ". $item["correlation_name"] . "\n";
-          $updated= self::$api->update_correlation($correlation->resource, array('name'=> $item["correlation_name"]));
+          print "And I update the statistical test name to " . $item["test_name"] . "\n";
+          $updated= self::$api->update_statistical_test($statistical_test->resource, array('name'=> $item["test_name"]));
 
-          $correlation = self::$api->get_correlation($correlation->resource);
+          print "When I wait until the statistical test is ready\n";
+          $statistical_test = self::$api->get_statistical_test($statistical_test->resource);
+            
+          print "Then the statistical test name is " . $item["test_name"] . "\n";
+          $this->assertEquals($item["test_name"], $statistical_test->object->name);
 
-          print "Then the correlation name is " . $item["correlation_name"]. "\n";
-          $this->assertEquals($item["correlation_name"], $correlation->object->name);
-         
       } 
     }
 

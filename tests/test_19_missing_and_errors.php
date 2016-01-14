@@ -1,10 +1,12 @@
 <?php
-include '../bigml/bigml.php';
-include '../bigml/ensemble.php';
-include '../bigml/cluster.php';
-include '../bigml/fields.php';
+if (!class_exists('bigml')) {
+  include '../bigml/bigml.php';
+}
+if (!class_exists('fields')) {
+  include '../bigml/fields.php';
+}  
 
-class BigMLTest extends PHPUnit_Framework_TestCase
+class BigMLTestMissingErrors extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
@@ -24,31 +26,33 @@ class BigMLTest extends PHPUnit_Framework_TestCase
                           'params' => array("fields"=> array("000000"=> array("optype"=> "numeric"))),
                           'missing_values' => array("000000" =>  1)));
 
-      print "Successfully obtaining missing values counts\n";
       foreach($data as $item) {
-          print "I create a data source uploading a ". $item["filename"]. " file\n";
+          print "\nSuccessfully obtaining missing values counts\n"; 
+          print "Given I create a data source uploading a ". $item["filename"]. " file\n";
           $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 
-          print "check local source is ready\n";
+          print "And I wait until the source is ready\n";
           $resource = self::$api->_check_resource($source->resource, null, 20000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-          print "I update the source with params ";
+          print "And I update the source with params " . json_encode($item["params"]) . "\n";
 	  $source = self::$api->update_source($source->resource, $item["params"]);
 
-          print "create dataset with local source\n";
+          print "And I create dataset with local source\n";
           $dataset = self::$api->create_dataset($source->resource);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
           $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
-          print "check the dataset is ready " . $dataset->resource . " \n";
+          print "And I wait the dataset is ready " . $dataset->resource . " \n";
           $resource = self::$api->_check_resource($dataset->resource, null, 20000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
+          $resource= "dataset/56967fd69ed2333cd50018b6";
+          $dataset = self::$api->get_dataset($resource);
           print "When I ask for the missing values counts in the fields\n";
-	  $fields = new Fields($resource["resource"]->object->fields);
+          $fields = new Fields($dataset);
 	  print "Then the missing values counts dict is " . json_encode($item["missing_values"]) . "\n";
 	  $this->assertEquals($item["missing_values"], $fields->missing_counts());
 
@@ -58,6 +62,7 @@ class BigMLTest extends PHPUnit_Framework_TestCase
     /*
      Successfully obtaining parsing error counts
     */
+
     public function test_scenario2() {
 
       $data = array(array('filename' => 'data/iris_missing.csv',
@@ -65,24 +70,25 @@ class BigMLTest extends PHPUnit_Framework_TestCase
                           'missing_values' => array("000000" =>  1)));
 
       foreach($data as $item) {
-          print "I create a data source uploading a ". $item["filename"]. " file\n";
+          print "\nSuccessfully obtaining parsing error counts\n";
+          print "\nGiven I create a data source uploading a ". $item["filename"]. " file\n";
           $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 
-          print "check local source is ready\n";
+          print "And I wait until the source is ready\n";
           $resource = self::$api->_check_resource($source->resource, null, 20000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-          print "I update the source with params ";
+          print "And I update the source with params " . json_encode($item["params"]) ."\n";
           $source = self::$api->update_source($source->resource, $item["params"]);
 
-          print "create dataset with local source\n";
+          print "And I create dataset with local source\n";
           $dataset = self::$api->create_dataset($source->resource);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
           $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
-          print "check the dataset is ready " . $dataset->resource . " \n";
+          print "And I wait until the dataset is ready " . $dataset->resource . " \n";
           $resource = self::$api->_check_resource($dataset->resource, null, 20000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 

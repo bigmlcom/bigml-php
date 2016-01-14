@@ -1,11 +1,13 @@
 <?php
-include '../bigml/bigml.php';
-include '../bigml/ensemble.php';
-include '../bigml/cluster.php';
-include '../bigml/fields.php';
-#include '../bigml/multimodel.php';
+if (!class_exists('bigml')) {
+  include '../bigml/bigml.php';
+} 
 
-class BigMLTest extends PHPUnit_Framework_TestCase
+if (!class_exists('model')) {  
+ include '../bigml/model.php';
+}
+
+class BigMLTestLocalPredictions extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
@@ -25,11 +27,16 @@ class BigMLTest extends PHPUnit_Framework_TestCase
                             "data_input" => array("petal length" => 0.5),
                             "prediction" => "Iris-setosa",
                             "confidence" => 0.90594));
-	
+
         foreach($data as $item) {
+	   print "\nSuccessfully creating a prediction from a local model in a json file\n";
+           print "Given I create a local model from a " . $item["model"] . " file\n";
            $model =  new Model($item["model"], self::$api);
+	   print "When I create a local prediction for " . json_encode($item["data_input"]) . " with confidence\n";
            $prediction = $model->predict($item["data_input"]);
+	   print "Then the local prediction is " . $item["prediction"] . "\n";
            $this->assertEquals($prediction->output, $item["prediction"]);
+	   print "And the local prediction's confidence is " . $item["confidence"] . "\n";
 	   $this->assertEquals($prediction->confidence, $item["confidence"]);
         }
     }
@@ -48,9 +55,15 @@ class BigMLTest extends PHPUnit_Framework_TestCase
                                                   "confidence" => 0.3890868795664999, 
                                                   "prediction" => "Iris-virginica", 
                                                   "probability" => 0.4939759036144578))));
+
+
         foreach($data as $item) {
+	   print "\nSuccessfully creating a multiple prediction from a local model in a json file\n";
+	   print "Given I create a local model from a " . $item["model"] . "\n";
 	   $model =  new Model($item["model"], self::$api);
+	   print "When I create a multiple local prediction for " . json_encode($item["data_input"]) . "\n";
 	   $prediction = $model->predict($item["data_input"], true, false, STDOUT, false, Tree::LAST_PREDICTION, false, false, false, false, false, false, false, false, 'all');
+	   print " Then the multiple local prediction is " . json_encode($item["prediction"]) . "\n";
 	   $this->assertEquals($prediction, $item["prediction"]);
 	}
 

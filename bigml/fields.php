@@ -22,11 +22,14 @@
 */
 
 function get_fields_structure($resource) {
+   $DEFAULT_LOCALE = 'en-US'; 
+   $DEFAULT_MISSING_TOKENS = array("", "N/A", "n/a", "NULL", "null", "-", "#DIV/0",
+                                   "#REF!", "#NAME?", "NIL", "nil", "NA", "na",
+			           "#VALUE!", "#NULL!", "NaN", "#N/A", "#NUM!", "?");
    /*
     Returns the field structure for a resource, its locale and missing_tokens
     */
       $resource_type = null;
-
       if ($resource instanceof STDClass && property_exists($resource, "resource")) {
          $resourceId = $resource->resource;
       } else if (is_string($resource)) {
@@ -35,7 +38,7 @@ function get_fields_structure($resource) {
          $resourceId = null;
       }
 
-      if (preg_match('/(source|dataset|model)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resourceId, $result)) {
+      if (preg_match('/(source|dataset|model|prediction|cluster|anomaly|sample|correlation|statisticaltest|logisticregression|association)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resourceId, $result)) {
          $resource_type = $result[1];
       } 
 
@@ -48,22 +51,53 @@ function get_fields_structure($resource) {
            $resource_locale = $resource->object->source_parser->locale;
            $missing_tokens = $resource->object->source_parser->missing_tokens;
         } else { 
-           $resource_locale = $resource->object->locale;
-           $missing_tokens = $resource->object->missing_tokens;
+           $resource_locale = property_exists($resource->object, "locale") ? 
+	                         $resource->object->locale : $DEFAULT_LOCALE; 
+           $missing_tokens = property_exists($resource->object, "missing_tokens") ?
+	                         $resource->object->missing_tokens : $DEFAULT_MISSING_TOKENS;
         } 
 
-        if ($resource_type == "model") {
+        if (in_array($resource_type, array("model", "anomaly"))) {
            $fields=$resource->object->model->fields;
-        } else {
+        } else if ($resource_type == "cluster") {
+	   $fields=$resource->object->clusters->fields;
+	} else if ($resource_type == "correlation") {
+           $fields=$resource->object->correlations->fields;
+        } else if ($resource_type == "statisticaltest") {
+	   $fields=$resource->object->statistical_tests->fields;
+	} else if ($resource_type == "logisticregression") {
+           $fields=$resource->object->logistic_regression->fields;
+	} else if ($resource_type == "associations") {
+	   $fields=$resource->object->associations->fields;
+	} else if ($resource_type == "sample") {
+	   $fields = array();
+	   foreach ($resource->object->sample as $key => $field) {
+               array_push($fields, array($field->id, $field));
+	   }
+	} else {
            $fields=$resource->object->fields; 
         }
 
-        return array($fields,$resource_locale, $missing_tokens);
-     } else {
+	$objective_column= null;
+	if ($resource_type == "dataset") {
+	  $objective_column = property_exists($resource->object, "objective_field") ?
+	                         $resource->object->objective_field->id : null;
+
+	  
+	} else if (in_array($resource_type, array('model', 'logisticregression'))) {
+	  $objective_id = property_exists($resource->object,"objective_fields") ? 
+	                     $resource->object->objective_fields[0] : null;
+          $objective_column = array_key_exists($objective_id, $fields) ? $fields[$objective_id]->column_number : null;
+
+        }
+        return array($fields,$resource_locale, $missing_tokens, $objective_column);
+     } else { 
+        return array(null, null, null, null);
         throw new Exception("Unknown resource structure");
      }
      
 }
+
 
 class Fields {
   /*
@@ -95,12 +129,13 @@ class Fields {
            $this->fields = $resource_info[0];
            $resource_locale = $resource_info[1];
            $resource_missing_tokens= $resource_info[2];
+	   $objective_column = $resource_info[3];
 
            if (is_null($data_locale)) {
               $data_locale = $resource_locale;
            }
            if (is_null($missing_tokens)) {
-              if (!is_null($$resource_missing_tokens)) {
+              if (!empty($resource_missing_tokens)) {
                  $missing_tokens = $resource_missing_tokens;
               }
            }
@@ -111,24 +146,24 @@ class Fields {
           } 
           if (is_null($missing_tokens)) {
              $missing_tokens = $DEFAULT_MISSING_TOKENS;
-          } 
+          }
+	  $objective_column= null;
        }
         
        if (is_null($this->fields)) {
           error_log("No fields structure was found.");
 	  return;
        } 
-
-       $this->fields_by_name = invert_dictionary($this->fields, 'name');
-       $this->fields_by_column_number  = invert_dictionary($this->fields, 'column_number');
+       $this->fields_by_name = $this->invert_dictionary($this->fields, 'name');
+       $this->fields_by_column_number  = $this->invert_dictionary($this->fields, 'column_number');
 
        find_locale($data_locale, $verbose); 
 
        $this->missing_tokens = $missing_tokens;
-       
+
        $this->fields_columns=array();
-       foreach ($this->fields_by_column_number as $value) {
-          array_push($this->fields_columns, $value);
+       foreach ($this->fields_by_column_number as $key => $value) {
+          array_push($this->fields_columns, $key);
        }
 
        sort($this->fields_columns);
@@ -140,13 +175,22 @@ class Fields {
 	  }
        } else { 
          $this->filtered_fields = $include;
-       } 
+       }
+
        # To be updated in update_objective_field
        $this->row_ids = null;
        $this->headers = null;
        $this->objective_field = null;
        $this->objective_field_present = null;
        $this->filtered_indexes = null;
+
+
+       if (is_null($objective_field)  && !is_null($objective_column) ) {
+           $objective_field = $objective_column;
+	   $objective_field_present = true;
+       }
+
+       $this->update_objective_field($objective_field, $objective_field_present);
 
    }
 
@@ -169,13 +213,13 @@ class Fields {
 
        if (is_string($key)) {
           try {
-            return $this->fields_by_name->${key};
+            return $this->fields_by_name[$key];
           } catch  (Exception $e) {
             exit("Error: field name '" . $key . "' does not exist ");
           }
        } else if (is_int($key)) {
           try {
-            return $this->fields_by_column_number->{$key}; 
+            return $this->fields_by_column_number[$key]; 
           } catch  (Exception $e) {
              exit("Error: field column number '" . $key . "' does not exist ");
           }
@@ -195,7 +239,7 @@ class Fields {
         }
       } else if (is_int($key)) { 
         try {
-          return $this->fields->{$this->fields_by_column_number->{$key}}->$name;
+          return $this->fields->{$this->fields_by_column_number[$key]}->$name;
         } catch  (Exception $e) {
           exit("Error: field column number '" . $key . "' does not exist ");
         } 
@@ -228,13 +272,24 @@ class Fields {
 
       if (is_null($headers)) {
          # The row is supposed to contain the fields sorted by column number
-         uasort($this->fields, array($this, "sort_field_items"));
-         $this->row_ids = array();
-         foreach($this->fields as $field) {
-            if (!is_null($objective_field_present) || $field[1]->column_number != $this->objective_field) {
-               array_push($this->row_ids, $field[0]); 
-            }
-         }  
+	 /*
+	 [item[0] for item in
+                            sorted(self.fields.items(),
+                                   key=lambda x: x[1]['column_number'])
+                            if objective_field_present or
+                            item[1]['column_number'] != self.objective_field]
+	 */
+         $sorted_fields_items=array();
+         $this->row_ids=array();
+	 foreach($this->fields as $key => $field) {
+           if ($objective_field_present || $field->column_number != $this->objective_field)
+              $sorted_fields_items[$key] = $field->column_number;
+	 }
+         arsort($sorted_fields_items);
+         foreach($sorted_fields_items as $key => $value) {
+            array_push($this->row_ids, $key); 
+         }
+
          $this->headers = $this->row_ids; 
       } else {
          $this->row_ids = array();
@@ -370,7 +425,6 @@ class Fields {
        Returns the ids for the fields that contain missing values
       */
       $summaries = array();
-
       foreach($this->fields as $key => $value) {
           $field_data = array();
           if (property_exists($value, "summary")) {
@@ -448,15 +502,20 @@ class Fields {
       } 
    }
  
-   private function invert_dictionary($dictionary, $field='name') {
+
+   function invert_dictionary($dictionary, $field='name') {
      /*Inverts a dictionary.
   
          Useful to make predictions using fields' names instead of Ids.
          It does not check whether new keys are duplicated though.
      **/
-     $new_dictionary = null;
+     $new_dictionary = array();
      foreach((array_keys(get_object_vars($dictionary))) as $key) {
-         $new_dictionary->{$dictionary->{$key}->{$field}} = $key;
+         $field_value=$dictionary->{$key}->{$field};
+         if (!mb_detect_encoding($field_value, 'UTF-8', true)) {
+            $field = utf8_encode($field_value);
+         }
+         $new_dictionary[strval($field_value)] = $key;
      }
      return $new_dictionary;
    }

@@ -271,7 +271,7 @@ class BigML {
          $resource = $r->resource;
       }
 
-      if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid|anomaly|anomalyscore|sample|project|correlation)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
+      if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid|anomaly|anomalyscore|sample|project|correlation|statisticaltest|association|logisticregression)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
          $count = 0;
          $status = self::_check_resource_status($resource, $queryString); 
          while ($count<$retries && !$status["ready"]) {
@@ -471,6 +471,102 @@ class BigML {
       return $errors_dict;
  
    }
+   ##########################################################################
+   #
+   # Models
+   # https://bigml.com/developers/logisticregressions
+   #
+   ##########################################################################
+
+   public static function create_logistic_regression($datasetIds, $data=array(), $waitTime=3000, $retries=10) {
+     /* Creates a logistic regression from a `dataset`
+         of a list o `datasets` */
+  
+     $datasets=array();
+     if (!is_array($datasetIds)) {
+         $datasetIds=array($datasetIds);
+     }
+   
+     foreach ($datasetIds as $var => $datasetId) {
+         $resource = self::_check_resource($datasetId, null, $waitTime, $retries);
+         if ($resource == null || $resource['type'] != "dataset") {
+            error_log("Wrong dataset id");
+            return null;
+         } elseif ($resource["status"] != BigMLRequest::FINISHED) {
+            error_log($resource['message']);
+            return null;
+         }
+         array_push($datasets, $resource["id"]);
+      }
+  
+      $rest = new BigMLRequest('CREATE', 'logisticregression');
+
+      if (sizeof($datasets) > 1) {
+         $data["datasets"] = $datasets;
+      } else {
+         $data["dataset"] = $datasets[0];
+      }
+
+      $rest->setData($data);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+   public static function get_logistic_regression($logisticregression, $queryString=null, $shared_username=null,  $shared_api_key=null)
+   {
+      /*
+         Retrieves a logisticregression.
+         The logisticregression parameter should be a string containing the
+         logisticregression id or the dict returned by create_logistic_regression.
+         As model is an evolving object that is processed
+         until it reaches the FINISHED or FAULTY state, the function will
+         return a dict that encloses the model values and state info
+         available at the time it is called.
+         If this is a shared logistic regression, the username and sharing api key must
+         also be provided.
+      */
+      $rest = self::get_resource_request($logisticregression, "logisticregression", "GET", $queryString, true, 3000, 0, $shared_username, $shared_api_key);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
+
+   public static function list_logistic_regressions($queryString=null)
+   {
+      /*
+         Lists all your logistic regressions
+      */
+      $rest = new BigMLRequest('LIST', 'logisticregression');
+
+      if ($queryString!=null) {
+         $rest->setQueryString($queryString);
+      }
+
+      return $rest->getResponse();
+   }
+
+   public static function update_logistic_regression($logisticregressionId, $data, $waitTime=3000, $retries=10) {
+
+      /*
+         Updates a logistic regression 
+      */
+      $rest = self::get_resource_request($logisticregressionId, "logisticregression", "UPDATE", null, true, $waitTime, $retries);
+      if ($rest == null) return null;
+
+      $rest->setData($data);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+   public static function delete_logistic_regression($logisticregressionId) {
+      /*
+        Deletes a logistic regression 
+      */
+      $rest = self::get_resource_request($logisticregressionId, "logisticregression", "DELETE", null);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
 
    ##########################################################################
    #
@@ -491,7 +587,7 @@ class BigML {
    
       foreach ($datasetIds as $var => $datasetId) {
          $resource = self::_check_resource($datasetId, null, $waitTime, $retries);
-         if ($resource == null || $resource['type'] != "dataset") {
+         if ($resource == null || !in_array($resource['type'], array("dataset","cluster"))) {
             error_log("Wrong dataset id");
             return null;
          } elseif ($resource["status"] != BigMLRequest::FINISHED) {
@@ -506,7 +602,21 @@ class BigML {
       if (sizeof($datasets) > 1) {
          $data["datasets"] = $datasets;   
       } else {
-         $data["dataset"] = $datasets[0];
+
+         if ($resource['type'] == "cluster") {
+            if (!array_key_exists("centroid",$data)) {
+                           $cluster = self::get_cluster($datasets[0]);
+                           if ( $cluster == null || !property_exists($cluster, "object") || !property_exists($cluster->object, "cluster_datasets") ) {
+                   error_log("Failed to generate the dataset. A centroid id is needed in the args argument to generate a dataset from a cluster.");
+                   return null;
+                           }
+
+               $data['centroid'] = key(get_object_vars($cluster->object->cluster_models));
+               $data["cluster"] =  $datasets[0];
+            }
+         } else {
+           $data["dataset"] = $datasets[0];
+         }
       }
 
       $rest->setData($data);
@@ -685,8 +795,8 @@ class BigML {
 
       $resource = self::_check_resource($modelOrEnsembleId, null, $waitTime, $retries);
 
-      if ($resource == null || !in_array($resource['type'],array("model","ensemble")) ) {
-          error_log("Wrong model or ensemble id. A model or ensemble id is needed to create a prediction");
+      if ($resource == null || !in_array($resource['type'],array("model","ensemble", "logisticregression")) ) {
+          error_log("Wrong model, ensemble or logistic regression id. A model, ensemble or logistic regression id is needed to create a prediction");
           return null;
       } elseif ($resource["status"] != BigMLRequest::FINISHED) {
           error_log($resource['message']);
@@ -777,8 +887,8 @@ class BigML {
 
       $resource = self::_check_resource($modelOrEnsembleId, null, $waitTime, $retries);
 
-      if ($resource == null || !in_array($resource['type'],array("model","ensemble")) ) {
-         error_log("Wrong model or ensemble id. A model or ensemble id is needed to create a batch prediction");
+      if ($resource == null || !in_array($resource['type'],array("model","ensemble", "logisticregression")) ) {
+         error_log("Wrong model , ensemble or logistic regression id. A model, ensemble or logistic regression id is needed to create a batch prediction");
          return null;
       } elseif ($resource["status"] != BigMLRequest::FINISHED) {
          error_log($resource['message']);
@@ -1813,6 +1923,162 @@ class BigML {
       return $rest->getResponse();
    }
 
+   ##########################################################################
+   #
+   # Associations 
+   # https://bigml.com/developers/associations
+   #
+   ##########################################################################
+
+   public static function create_association($datasetId, $data=array(), $waitTime=3000, $retries=10) {
+      /*
+       Creates a association from a `dataset`
+      */
+
+      $resource = self::_check_resource($datasetId, null, $waitTime, $retries);
+      if ($resource == null || $resource['type'] != "dataset") {
+         error_log("Wrong dataset id");
+         return null;
+      } elseif ($resource["status"] != BigMLRequest::FINISHED) {
+         error_log($resource['message']);
+         return null;
+      }
+
+      $rest = new BigMLRequest('CREATE', 'association');
+
+      $data["dataset"] = $resource["id"];
+
+      $rest->setData($data);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+   public static function get_association($association, $queryString=null)
+   {
+      /*
+        Retrieves an association
+      */
+      $rest = self::get_resource_request($association, "association", "GET", $queryString);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+
+   }
+
+   public static function list_associations($queryString=null)
+   {
+      /*
+       Lists all your associations.
+      */
+      $rest = new BigMLRequest('LIST', 'association');
+
+      if ($queryString!=null) {
+         $rest->setQueryString($queryString);
+      }
+
+      return $rest->getResponse();
+   }
+
+   public static function update_association($association, $data, $waitTime=3000, $retries=10) {
+      /*
+         Updates a association 
+      */
+      $rest = self::get_resource_request($association, "association", "UPDATE", null, true,  $waitTime, $retries);
+      if ($rest == null) return null;
+
+      $rest->setData($data);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+   public static function delete_association($association) {
+      /*
+        Deletes a association
+      */
+      $rest = self::get_resource_request($association, "association", "DELETE", null);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
+
+   ##########################################################################
+   #
+   # Statisticaltests 
+   # https://bigml.com/developers/statisticaltests
+   #
+   ##########################################################################
+
+   public static function create_statistical_test($datasetId, $data=array(), $waitTime=3000, $retries=10) {
+      /*
+       Creates a statistical test from a `dataset`
+      */
+
+      $resource = self::_check_resource($datasetId, null, $waitTime, $retries);
+      if ($resource == null || $resource['type'] != "dataset") {
+         error_log("Wrong dataset id");
+         return null;
+      } elseif ($resource["status"] != BigMLRequest::FINISHED) {
+         error_log($resource['message']);
+         return null;
+      }
+
+      $rest = new BigMLRequest('CREATE', 'statisticaltest');
+
+      $data["dataset"] = $resource["id"];
+
+      $rest->setData($data);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+   public static function get_statistical_test($statisticaltest, $queryString=null)
+   {
+      /*
+        Retrieves an statistical test
+      */
+      $rest = self::get_resource_request($statisticaltest, "statisticaltest", "GET", $queryString);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+
+   } 
+ 
+   public static function list_statistical_tests($queryString=null)
+   {
+      /*
+       Lists all your statistical tests.
+      */
+      $rest = new BigMLRequest('LIST', 'statisticaltest');
+
+      if ($queryString!=null) {
+         $rest->setQueryString($queryString);
+      }
+
+      return $rest->getResponse();
+   }
+
+   public static function update_statistical_test($statisticaltest, $data, $waitTime=3000, $retries=10) {
+      /*
+         Updates a statistical test
+      */
+      $rest = self::get_resource_request($statisticaltest, "statisticaltest", "UPDATE", null, true,  $waitTime, $retries);
+      if ($rest == null) return null;
+
+      $rest->setData($data);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+   public static function delete_statistical_test($statisticaltest) {
+      /*
+        Deletes a statistical test
+      */
+      $rest = self::get_resource_request($statisticaltest, "statisticaltest", "DELETE", null);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
+ 
    private static function _create_local_source($file_name, $options=array()) {
       $rest = new BigMLRequest('CREATE', 'source');
 
@@ -1895,6 +2161,10 @@ class BigML {
 
    public static function _checkAnomalyId($stringID) {
       return preg_match("/^anomaly\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
+   }
+   
+   public static function _checkAssociationId($stringID) {
+      return preg_match("/^association\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
    public static function get_fields($resource) {

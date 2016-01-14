@@ -10,6 +10,9 @@ Requirements
 
 PHP 5.3.2 or higher are currently supported by these bindings.
 
+You need `mbstring <http://www.php.net/manual/en/mbstring.installation.php`_. installed
+And Https Module Support for Curl.
+
 Importing the module
 --------------------
 
@@ -1059,15 +1062,16 @@ To run the test you need phpunit that you can download from here `http://phpunit
 
 Make sure that you have set up your authentication variables in your environment.
 
-To run the tests::
+To run all tests::
 
      cd tests
+     configtests.xml
+     phpunit.phar --configuration configtests.xml
 
-     phpunit.phar bigmlTest.php
 
-All tests models, datasets, sources etc... will be created in the development environment. 
-You can delete all uncommenting the following line in bigmlTest.php::
-    
-     self::clean_all(self::$api);
+To Run a specific test::
+
+     phpunit.phar test_01_prediction.php
+
 
 
