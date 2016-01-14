@@ -32,7 +32,7 @@ function print_importance($instance, $out=STDOUT) {
      $importance = $item[1];
 
      fwrite($out,"    " . $count . ". " .  $fields->{$field}->name . ": " . number_format(strval(round($importance, 4, PHP_ROUND_HALF_DOWN)*100), 2)  . "%\n");
-     flush($out);
+     fflush($out);
      $count+=1; 
    }   
 
