@@ -49,8 +49,7 @@ class BigMLTestMissingErrors extends PHPUnit_Framework_TestCase
           $resource = self::$api->_check_resource($dataset->resource, null, 20000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-          $resource= "dataset/56967fd69ed2333cd50018b6";
-          $dataset = self::$api->get_dataset($resource);
+          $dataset = self::$api->get_dataset($dataset->resource);
           print "When I ask for the missing values counts in the fields\n";
           $fields = new Fields($dataset);
 	  print "Then the missing values counts dict is " . json_encode($item["missing_values"]) . "\n";

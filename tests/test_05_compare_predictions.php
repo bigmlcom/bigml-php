@@ -35,7 +35,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
     #
     # Successfully comparing predictions
     # 
-   /* public function test_scenario1() {
+    public function test_scenario1() {
 
         $data = array(array("filename" => "data/iris.csv", 
 	 		    "data_input" => array("petal width"=> 0.5),
@@ -290,7 +290,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
 	    $this->assertEquals(round($confidence_value, 4), round($item["confidence"], 4));
         }
     }
-*/ 
+ 
     public function test_scenario4() {
      $data = array(array("filename" => "data/spam.csv",
                                "options" => array("fields" => array("000001" => array("optype" => "text",  
@@ -440,7 +440,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
       }
 
     }
-/* 
+ 
     public function test_scenario5() {
       $data = array(array("filename"=> "data/iris.csv", "options" =>  array("summary_fields" => array("sepal width"), 'seed'=>'BigML tests','cluster_seed'=> 'BigML', 'k' => 8), 
                     "data_input"=> array("petal length"=> 1, "petal width"=> 1, "sepal length" => 1, "species" => "Iris-setosa"), 
@@ -833,8 +833,6 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
        
          $logistic_regression = self::$api->get_logistic_regression($logistic_regression->resource);
 
-         $logistic_regression = self::$api->get_logistic_regression("logisticregression/569643928a318f4846000cf4");
-
          print "And I create a local logistic regression model . " . $logistic_regression->resource . " .\n";
          $localLogisticRegression = new LogisticRegression($logistic_regression);
 
@@ -859,5 +857,5 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
          $this->assertEquals($item["prediction"],  $local_prediction["prediction"]);
 
       }	
-    }  */ 
+    } 
 }    

@@ -219,12 +219,6 @@ class LogisticRegression extends ModelFields {
       # Checks and cleans input_data leaving the fields used in the model
 
       $input_data = $this->filter_input_data($input_data, $by_name);
-      foreach ($this->fields as $field_id => $field) {
-         if (!in_array($field->optype, json_decode(OPTIONAL_FIELDS)) && !array_key_exists($field_id, $input_data)) {
-	    throw new Exception("Failed to predict. Input data must contain values for all numeric 
-	                         fields to get a logistic regression prediction");
-	 }
-      }
 
       #Strips affixes for numeric values and casts to the final field type
       cast($input_data, $this->fields);
