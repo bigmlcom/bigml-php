@@ -10,7 +10,7 @@ Requirements
 
 PHP 5.3.2 or higher are currently supported by these bindings.
 
-You need `mbstring <http://www.php.net/manual/en/mbstring.installation.php`_. installed
+You need `mbstring <http://www.php.net/manual/en/mbstring.installation.php>`_. installed
 And Https Module Support for Curl.
 
 Importing the module
