@@ -98,20 +98,20 @@ You can easily generate a prediction following these steps::
 
     $api = new BigML("myusername", "my_api_key");
 
-    $source = $api::create_source('./tests/data/iris.csv');
-    $dataset = $api::create_dataset($source);
-    $model = $api::create_model($dataset);
-    $prediction = $api::create_prediction($model, array('sepal length'=> 5, 'sepal width'=> 2.5));
+    $source = $api->create_source('./tests/data/iris.csv');
+    $dataset = $api->create_dataset($source);
+    $model = $api->create_model($dataset);
+    $prediction = $api->create_prediction($model, array('sepal length'=> 5, 'sepal width'=> 2.5));
 
-    $api::pprint($prediction);
+    $api->pprint($prediction);
 
     petal width for {"sepal length":5,"sepal width":2.5} is 0.30455
 
 also generate an evaluation for the model by using::
 
-    $test_source = $api::create_source('./tests/data/iris.csv');
-    $test_dataset = $api::create_dataset($test_source);
-    $evaluation = $api::create_evaluation($model, $test_dataset);
+    $test_source = $api->create_source('./tests/data/iris.csv');
+    $test_dataset = $api->create_dataset($test_source);
+    $evaluation = $api->create_evaluation($model, $test_dataset);
 
 
 Dataset
@@ -120,12 +120,12 @@ Dataset
 If you want to get some basic statistics for each field you can retrieve 
 the fields from the dataset as follows to get a dictionary keyed by field id::
 
-    $dataset = $api::get_dataset($dataset);
-    print_r($api::get_fields($dataset))
+    $dataset = $api->get_dataset($dataset);
+    print_r($api->get_fields($dataset))
 
 The field filtering options are also available using a query string expression, for instance::
 
-    $dataset = $api::get_dataset($dataset, "limit=20")
+    $dataset = $api->get_dataset($dataset, "limit=20")
 
 limits the number of fields that will be included in dataset to 20.
 
@@ -135,7 +135,7 @@ Model
 One of the greatest things about BigML is that the models that it generates for you are fully white-boxed. 
 To get the explicit tree-like predictive model for the example above::
 
-    $model = $api::get_model($model_id);
+    $model = $api->get_model($model_id);
 
     print_r($model->object->model->root);
 
@@ -151,7 +151,7 @@ To get the explicit tree-like predictive model for the example above::
 
 Again, filtering options are also available using a query string expression, for instance::
 
-    $model = $api::get_model($model_id, "limit=5");
+    $model = $api->get_model($model_id, "limit=5");
 
 limits the number of fields that will be included in model to 5.
 
@@ -164,7 +164,7 @@ In BigML these measures can be obtained by creating evaluations.
 To create an evaluation you need the id of the model you are evaluating and the id of 
 the dataset that contains the data to be tested with. The result is shown as::
 
-    $evaluation = $api::get_evaluation($evaluation_id);
+    $evaluation = $api->get_evaluation($evaluation_id);
 
 Cluster
 -------
@@ -173,7 +173,7 @@ For unsupervised learning problems, the cluster is used to classify in a limited
 The cluster structure is defined by the centers of each group of data, named centroids, and the data enclosed in the group. 
 As for in the model’s case, the cluster is a white-box resource and can be retrieved as a JSON::
 
-    $cluster = $api::get_cluster($cluster_id)
+    $cluster = $api->get_cluster($cluster_id)
 
 Anomaly detector
 ----------------
@@ -404,6 +404,1309 @@ For anomaly detection problems, BigML anomaly detector uses iforest as an unsupe
     'updated': '2014-09-08T23:54:28.647000',
     'white_box': False}
 
+
+Samples
+-------
+
+To provide quick access to your row data you can create a ``sample``. Samples
+are in-memory objects that can be queried for subsets of data by limiting
+their size, the fields or the rows returned. The structure of a sample would
+be::
+
+Samples are not permanent objects. Once they are created, they will be
+available as long as GETs are requested within periods smaller than
+a pre-established TTL (Time to Live). The expiration timer of a sample is
+reset every time a new GET is received.
+
+If requested, a sample can also perform linear regression and compute
+Pearson's and Spearman's correlations for either one numeric field
+against all other numeric fields or between two specific numeric fields.
+
+Correlations
+------------
+
+A ``correlation`` resource contains a series of computations that reflect the
+degree of dependence between the field set as objective for your predictions
+and the rest of fields in your dataset. The dependence degree is obtained by
+comparing the distributions in every objective and non-objective field pair,
+as independent fields should have probabilistic
+independent distributions. Depending on the types of the fields to compare,
+the metrics used to compute the correlation degree will be:
+
+- for numeric to numeric pairs:
+  `Pearson's <https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient>`_
+  and `Spearman's correlation <https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient>`_
+  coefficients.
+- for numeric to categorical pairs:
+  `One-way Analysis of Variance <https://en.wikipedia.org/wiki/One-way_analysis_of_variance>`_, with the
+  categorical field as the predictor variable.
+- for categorical to categorical pairs:
+  `contingency table (or two-way table) <https://en.wikipedia.org/wiki/Contingency_table>`,
+  `Chi-square test of independence <https://en.wikipedia.org/wiki/Pearson%27s_chi-squared_test>`_
+  , and `Cramer's V <https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V>`_
+  and `Tschuprow's T <https://en.wikipedia.org/wiki/Tschuprow%27s_T>`_ coefficients.
+
+An example of the correlation resource JSON structure is::
+
+    {   u'category': 0,
+        u'clones': 0,
+        u'code': 200,
+        u'columns': 5,
+        u'correlations': {   u'correlations': [   {   u'name': u'one_way_anova',
+                                                      u'result': {   u'000000': {   u'eta_square': 0.61871,
+                                                                                    u'f_ratio': 119.2645,
+                                                                                    u'p_value': 0,
+                                                                                    u'significant': [   True,
+                                                                                                        True,
+                                                                                                        True]},
+                                                                     u'000001': {   u'eta_square': 0.40078,
+                                                                                    u'f_ratio': 49.16004,
+                                                                                    u'p_value': 0,
+                                                                                    u'significant': [   True,
+                                                                                                        True,
+                                                                                                        True]},
+                                                                     u'000002': {   u'eta_square': 0.94137,
+                                                                                    u'f_ratio': 1180.16118,
+                                                                                    u'p_value': 0,
+                                                                                    u'significant': [   True,
+                                                                                                        True,
+                                                                                                        True]},
+                                                                     u'000003': {   u'eta_square': 0.92888,
+                                                                                    u'f_ratio': 960.00715,
+                                                                                    u'p_value': 0,
+                                                                                    u'significant': [   True,
+                                                                                                        True,
+                                                                                                        True]}}}],
+                             u'fields': {   u'000000': {   u'column_number': 0,
+                                                           u'datatype': u'double',
+                                                           u'idx': 0,
+                                                           u'name': u'sepal length',
+                                                           u'optype': u'numeric',
+                                                           u'order': 0,
+                                                           u'preferred': True,
+                                                           u'summary': {   u'bins': [   [   4.3,
+                                                                                            1],
+                                                                                        [   4.425,
+                                                                                            4],
+                                                                                          ...
+                                                                                        [   7.9,
+                                                                                            1]],
+                                                                           u'kurtosis': -0.57357,
+                                                                           u'maximum': 7.9,
+                                                                           u'mean': 5.84333,
+                                                                           u'median': 5.8,
+                                                                           u'minimum': 4.3,
+                                                                           u'missing_count': 0,
+                                                                           u'population': 150,
+                                                                           u'skewness': 0.31175,
+                                                                           u'splits': [   4.51526,
+                                                                                          4.67252,
+                                                                                          4.81113,
+                                                                                          4.89582,
+                                                                                          4.96139,
+                                                                                          5.01131,
+    ...
+                                                                                          6.92597,
+                                                                                          7.20423,
+                                                                                          7.64746],
+                                                                           u'standard_deviation': 0.82807,
+                                                                           u'sum': 876.5,
+                                                                           u'sum_squares': 5223.85,
+                                                                           u'variance': 0.68569}},
+                                            u'000001': {   u'column_number': 1,
+                                                           u'datatype': u'double',
+                                                           u'idx': 1,
+                                                           u'name': u'sepal width',
+                                                           u'optype': u'numeric',
+                                                           u'order': 1,
+                                                           u'preferred': True,
+                                                           u'summary': {   u'counts': [   [   2,
+                                                                                              1],
+                                                                                          [   2.2,
+    ...
+                                            u'000004': {   u'column_number': 4,
+                                                           u'datatype': u'string',
+                                                           u'idx': 4,
+                                                           u'name': u'species',
+                                                           u'optype': u'categorical',
+                                                           u'order': 4,
+                                                           u'preferred': True,
+                                                           u'summary': {   u'categories': [   [   u'Iris-setosa',
+                                                                                                  50],
+                                                                                              [   u'Iris-versicolor',
+                                                                                                  50],
+                                                                                              [   u'Iris-virginica',
+                                                                                                  50]],
+                                                                           u'missing_count': 0},
+                                                           u'term_analysis': {   u'enabled': True}}},
+                             u'significance_levels': [0.01, 0.05, 0.1]},
+        u'created': u'2015-07-28T18:07:37.010000',
+        u'credits': 0.017581939697265625,
+        u'dataset': u'dataset/55b7a6749841fa2500000d41',
+        u'dataset_status': True,
+        u'dataset_type': 0,
+        u'description': u'',
+        u'excluded_fields': [],
+        u'fields_meta': {   u'count': 5,
+                            u'limit': 1000,
+                            u'offset': 0,
+                            u'query_total': 5,
+                            u'total': 5},
+        u'input_fields': [u'000000', u'000001', u'000002', u'000003'],
+        u'locale': u'en_US',
+        u'max_columns': 5,
+        u'max_rows': 150,
+        u'name': u"iris' dataset correlation",
+        u'objective_field_details': {   u'column_number': 4,
+                                        u'datatype': u'string',
+                                        u'name': u'species',
+                                        u'optype': u'categorical',
+                                        u'order': 4},
+        u'out_of_bag': False,
+        u'price': 0.0,
+        u'private': True,
+        u'project': None,
+        u'range': [1, 150],
+        u'replacement': False,
+        u'resource': u'correlation/55b7c4e99841fa24f20009bf',
+        u'rows': 150,
+        u'sample_rate': 1.0,
+        u'shared': False,
+        u'size': 4609,
+        u'source': u'source/55b7a6729841fa24f100036a',
+        u'source_status': True,
+        u'status': {   u'code': 5,
+                       u'elapsed': 274,
+                       u'message': u'The correlation has been created',
+                       u'progress': 1.0},
+        u'subscription': True,
+        u'tags': [],
+        u'updated': u'2015-07-28T18:07:49.057000',
+        u'white_box': False}
+
+Note that the output in the snippet above has been abbreviated. As you see, the
+``correlations`` attribute contains the information about each field
+correlation to the objective field.
+
+
+Statistical Tests
+-----------------
+
+A ``statisticaltest`` resource contains a series of tests
+that compare the
+distribution of data in each numeric field of a dataset
+to certain canonical distributions,
+such as the
+`normal distribution <https://en.wikipedia.org/wiki/Normal_distribution>`_
+or `Benford's law <https://en.wikipedia.org/wiki/Benford%27s_law>`_
+distribution. Statistical test are useful in tasks such as fraud, normality,
+or outlier detection.
+
+- Fraud Detection Tests:
+Benford: This statistical test performs a comparison of the distribution of
+first significant digits (FSDs) of each value of the field to the Benford's
+law distribution. Benford's law applies to numerical distributions spanning
+several orders of magnitude, such as the values found on financial balance
+sheets. It states that the frequency distribution of leading, or first
+significant digits (FSD) in such distributions is not uniform.
+On the contrary, lower digits like 1 and 2 occur disproportionately
+often as leading significant digits. The test compares the distribution
+in the field to Bendford's distribution using a Chi-square goodness-of-fit
+test, and Cho-Gaines d test. If a field has a dissimilar distribution,
+it may contain anomalous or fraudulent values.
+
+- Normality tests:
+These tests can be used to confirm the assumption that the data in each field
+of a dataset is distributed according to a normal distribution. The results
+are relevant because many statistical and machine learning techniques rely on
+this assumption.
+Anderson-Darling: The Anderson-Darling test computes a test statistic based on
+the difference between the observed cumulative distribution function (CDF) to
+that of a normal distribution. A significant result indicates that the
+assumption of normality is rejected.
+Jarque-Bera: The Jarque-Bera test computes a test statistic based on the third
+and fourth central moments (skewness and kurtosis) of the data. Again, a
+significant result indicates that the normality assumption is rejected.
+Z-score: For a given sample size, the maximum deviation from the mean that
+would expected in a sampling of a normal distribution can be computed based
+on the 68-95-99.7 rule. This test simply reports this expected deviation and
+the actual deviation observed in the data, as a sort of sanity check.
+
+- Outlier tests:
+Grubbs: When the values of a field are normally distributed, a few values may
+still deviate from the mean distribution. The outlier tests reports whether
+at least one value in each numeric field differs significantly from the mean
+using Grubb's test for outliers. If an outlier is found, then its value will
+be returned.
+
+The JSON structure for ``statisticaltest`` resources is similar to this one::
+
+     {  u'category': 0,
+        u'clones': 0,
+        u'code': 200,
+        u'columns': 5,
+        u'created': u'2015-07-28T18:16:40.582000',
+        u'credits': 0.017581939697265625,
+        u'dataset': u'dataset/55b7a6749841fa2500000d41',
+        u'dataset_status': True,
+        u'dataset_type': 0,
+        u'description': u'',
+        u'excluded_fields': [],
+        u'fields_meta': {   u'count': 5,
+                            u'limit': 1000,
+                            u'offset': 0,
+                            u'query_total': 5,
+                            u'total': 5},
+        u'input_fields': [u'000000', u'000001', u'000002', u'000003'],
+        u'locale': u'en_US',
+        u'max_columns': 5,
+        u'max_rows': 150,
+        u'name': u"iris' dataset test",
+        u'out_of_bag': False,
+        u'price': 0.0,
+        u'private': True,
+        u'project': None,
+        u'range': [1, 150],
+        u'replacement': False,
+        u'resource': u'statisticaltest/55b7c7089841fa25000010ad',
+        u'rows': 150,
+        u'sample_rate': 1.0,
+        u'shared': False,
+        u'size': 4609,
+        u'source': u'source/55b7a6729841fa24f100036a',
+        u'source_status': True,
+        u'status': {   u'code': 5,
+                       u'elapsed': 302,
+                       u'message': u'The test has been created',
+                       u'progress': 1.0},
+        u'subscription': True,
+        u'tags': [],
+        u'statistical_tests': {   u'ad_sample_size': 1024,
+                      u'fields': {   u'000000': {   u'column_number': 0,
+                                                    u'datatype': u'double',
+                                                    u'idx': 0,
+                                                    u'name': u'sepal length',
+                                                    u'optype': u'numeric',
+                                                    u'order': 0,
+                                                    u'preferred': True,
+                                                    u'summary': {   u'bins': [   [   4.3,
+                                                                                     1],
+                                                                                 [   4.425,
+                                                                                     4],
+                                                                                 [   7.9,
+                                                                                     1]],
+                                                                    u'kurtosis': -0.57357,
+                                                                    u'maximum': 7.9,
+                                                                    u'mean': 5.84333,
+                                                                    u'median': 5.8,
+                                                                    u'minimum': 4.3,
+                                                                    u'missing_count': 0,
+                                                                    u'population': 150,
+                                                                    u'skewness': 0.31175,
+                                                                    u'splits': [   4.51526,
+                                                                                   4.67252,
+                                                                                   4.81113,
+                                                                                   4.89582,
+                                                                                   ...
+                                                                                   7.20423,
+                                                                                   7.64746],
+                                                                    u'standard_deviation': 0.82807,
+                                                                    u'sum': 876.5,
+                                                                    u'sum_squares': 5223.85,
+                                                                    u'variance': 0.68569}},
+                                     ...
+                                     u'000004': {   u'column_number': 4,
+                                                    u'datatype': u'string',
+                                                    u'idx': 4,
+                                                    u'name': u'species',
+                                                    u'optype': u'categorical',
+                                                    u'order': 4,
+                                                    u'preferred': True,
+                                                    u'summary': {   u'categories': [   [   u'Iris-setosa',
+                                                                                           50],
+                                                                                       [   u'Iris-versicolor',
+                                                                                           50],
+                                                                                       [   u'Iris-virginica',
+                                                                                           50]],
+                                                                    u'missing_count': 0},
+                                                    u'term_analysis': {   u'enabled': True}}},
+                      u'fraud': [   {   u'name': u'benford',
+                                        u'result': {   u'000000': {   u'chi_square': {   u'chi_square_value': 506.39302,
+                                                                                         u'p_value': 0,
+                                                                                         u'significant': [   True,
+                                                                                                             True,
+                                                                                                             True]},
+                                                                      u'cho_gaines': {   u'd_statistic': 7.124311073683573,
+                                                                                         u'significant': [   True,
+                                                                                                             True,
+                                                                                                             True]},
+                                                                      u'distribution': [   0,
+                                                                                           0,
+                                                                                           0,
+                                                                                           22,
+                                                                                           61,
+                                                                                           54,
+                                                                                           13,
+                                                                                           0,
+                                                                                           0],
+                                                                      u'negatives': 0,
+                                                                      u'zeros': 0},
+                                                       u'000001': {   u'chi_square': {   u'chi_square_value': 396.76556,
+                                                                                         u'p_value': 0,
+                                                                                         u'significant': [   True,
+                                                                                                             True,
+                                                                                                             True]},
+                                                                      u'cho_gaines': {   u'd_statistic': 7.503503138331123,
+                                                                                         u'significant': [   True,
+                                                                                                             True,
+                                                                                                             True]},
+                                                                      u'distribution': [   0,
+                                                                                           57,
+                                                                                           89,
+                                                                                           4,
+                                                                                           0,
+                                                                                           0,
+                                                                                           0,
+                                                                                           0,
+                                                                                           0],
+                                                                      u'negatives': 0,
+                                                                      u'zeros': 0},
+                                                       u'000002': {   u'chi_square': {   u'chi_square_value': 154.20728,
+                                                                                         u'p_value': 0,
+                                                                                         u'significant': [   True,
+                                                                                                             True,
+                                                                                                             True]},
+                                                                      u'cho_gaines': {   u'd_statistic': 3.9229974017266054,
+                                                                                         u'significant': [   True,
+                                                                                                             True,
+                                                                                                             True]},
+                                                                      u'distribution': [   50,
+                                                                                           0,
+                                                                                           11,
+                                                                                           43,
+                                                                                           35,
+                                                                                           11,
+                                                                                           0,
+                                                                                           0,
+                                                                                           0],
+                                                                      u'negatives': 0,
+                                                                      u'zeros': 0},
+                                                       u'000003': {   u'chi_square': {   u'chi_square_value': 111.4438,
+                                                                                         u'p_value': 0,
+                                                                                         u'significant': [   True,
+                                                                                                             True,
+                                                                                                             True]},
+                                                                      u'cho_gaines': {   u'd_statistic': 4.103257341299901,
+                                                                                         u'significant': [   True,
+                                                                                                             True,
+                                                                                                             True]},
+                                                                      u'distribution': [   76,
+                                                                                           58,
+                                                                                           7,
+                                                                                           7,
+                                                                                           1,
+                                                                                           1,
+                                                                                           0,
+                                                                                           0,
+                                                                                           0],
+                                                                      u'negatives': 0,
+                                                                      u'zeros': 0}}}],
+                      u'normality': [   {   u'name': u'anderson_darling',
+                                            u'result': {   u'000000': {   u'p_value': 0.02252,
+                                                                          u'significant': [   False,
+                                                                                              True,
+                                                                                              True]},
+                                                           u'000001': {   u'p_value': 0.02023,
+                                                                          u'significant': [   False,
+                                                                                              True,
+                                                                                              True]},
+                                                           u'000002': {   u'p_value': 0,
+                                                                          u'significant': [   True,
+                                                                                              True,
+                                                                                              True]},
+                                                           u'000003': {   u'p_value': 0,
+                                                                          u'significant': [   True,
+                                                                                              True,
+                                                                                              True]}}},
+                                        {   u'name': u'jarque_bera',
+                                            u'result': {   u'000000': {   u'p_value': 0.10615,
+                                                                          u'significant': [   False,
+                                                                                              False,
+                                                                                              False]},
+                                                           u'000001': {   u'p_value': 0.25957,
+                                                                          u'significant': [   False,
+                                                                                              False,
+                                                                                              False]},
+                                                           u'000002': {   u'p_value': 0.0009,
+                                                                          u'significant': [   True,
+                                                                                              True,
+                                                                                              True]},
+                                                           u'000003': {   u'p_value': 0.00332,
+                                                                          u'significant': [   True,
+                                                                                              True,
+                                                                                              True]}}},
+                                        {   u'name': u'z_score',
+                                            u'result': {   u'000000': {   u'expected_max_z': 2.71305,
+                                                                          u'max_z': 2.48369},
+                                                           u'000001': {   u'expected_max_z': 2.71305,
+                                                                          u'max_z': 3.08044},
+                                                           u'000002': {   u'expected_max_z': 2.71305,
+                                                                          u'max_z': 1.77987},
+                                                           u'000003': {   u'expected_max_z': 2.71305,
+                                                                          u'max_z': 1.70638}}}],
+                      u'outliers': [   {   u'name': u'grubbs',
+                                           u'result': {   u'000000': {   u'p_value': 1,
+                                                                         u'significant': [   False,
+                                                                                             False,
+                                                                                             False]},
+                                                          u'000001': {   u'p_value': 0.26555,
+                                                                         u'significant': [   False,
+                                                                                             False,
+                                                                                             False]},
+                                                          u'000002': {   u'p_value': 1,
+                                                                         u'significant': [   False,
+                                                                                             False,
+                                                                                             False]},
+                                                          u'000003': {   u'p_value': 1,
+                                                                         u'significant': [   False,
+                                                                                             False,
+                                                                                             False]}}}],
+                      u'significance_levels': [0.01, 0.05, 0.1]},
+        u'updated': u'2015-07-28T18:17:11.829000',
+        u'white_box': False}
+
+Note that the output in the snippet above has been abbreviated. As you see, the
+``statistical_tests`` attribute contains the ``fraud`, ``normality``
+and ``outliers``
+sections where the information for each field's distribution is stored.
+
+Logistic Regressions
+--------------------
+
+A logistic regression is a supervised machine learning method for
+solving classification problems. Each of the classes in the field
+you want to predict, the objective field, is assigned a probability depending
+on the values of the input fields. The probability is computed
+as the value of a logistic function,
+whose argument is a linear combination of the predictors' values.
+You can create a logistic regression selecting which fields from your
+dataset you want to use as input fields (or predictors) and which
+categorical field you want to predict, the objective field. Then the
+created logistic regression is defined by the set of coefficients in the
+linear combination of the values. Categorical
+and text fields need some prior work to be modelled using this method. They
+are expanded as a set of new fields, one per category or term (respectively)
+where the number of occurrences of the category or term is store. Thus,
+the linear combination is made on the frequency of the categories or terms.
+
+The JSON structure for a logistic regression is::
+ 
+    {   u'balance_objective': False,
+        u'category': 0,
+        u'code': 200,
+        u'columns': 5,
+        u'created': u'2015-10-09T16:11:08.444000',
+        u'credits': 0.017581939697265625,
+        u'credits_per_prediction': 0.0,
+        u'dataset': u'dataset/561304f537203f4c930001ca',
+        u'dataset_field_types': {   u'categorical': 1,
+                                    u'datetime': 0,
+                                    u'effective_fields': 5,
+                                    u'numeric': 4,
+                                    u'preferred': 5,
+                                    u'text': 0,
+                                    u'total': 5},
+        u'dataset_status': True,
+        u'description': u'',
+        u'excluded_fields': [],
+        u'fields_meta': {   u'count': 5,
+                            u'limit': 1000,
+                            u'offset': 0,
+                            u'query_total': 5,
+                            u'total': 5},
+        u'input_fields': [u'000000', u'000001', u'000002', u'000003'],
+        u'locale': u'en_US',
+        u'logistic_regression': {   u'bias': 1,
+                                    u'c': 1,
+                                    u'coefficients': [   [   u'Iris-virginica',
+                                                             [   -1.7074433493289376,
+                                                                 -1.533662474502423,
+                                                                 2.47026986670851,
+                                                                 2.5567582221085563,
+                                                                 -1.2158200612711925]],
+                                                         [   u'Iris-setosa',
+                                                             [   0.41021712519841674,
+                                                                 1.464162165246765,
+                                                                 -2.26003266131107,
+                                                                 -1.0210350909174153,
+                                                                 0.26421852991732514]],
+                                                         [   u'Iris-versicolor',
+                                                             [   0.42702327817072505,
+                                                                 -1.611817241669904,
+                                                                 0.5763832839459982,
+                                                                 -1.4069842681625884,
+                                                                 1.0946877732663143]]],
+                                    u'eps': 1e-05,
+                                    u'fields': {   u'000000': {   u'column_number': 0,
+                                                                  u'datatype': u'double',
+                                                                  u'name': u'sepal length',
+                                                                  u'optype': u'numeric',
+                                                                  u'order': 0,
+                                                                  u'preferred': True,
+                                                                  u'summary': {   u'bins': [   [   4.3,
+                                                                                                   1],
+                                                                                               [   4.425,
+                                                                                                   4],
+                                                                                               [   4.6,
+                                                                                                   4],
+    ...
+                                                                                               [   7.9,
+                                                                                                   1]],
+                                                                                  u'kurtosis': -0.57357,
+                                                                                  u'maximum': 7.9,
+                                                                                  u'mean': 5.84333,
+                                                                                  u'median': 5.8,
+                                                                                  u'minimum': 4.3,
+                                                                                  u'missing_count': 0,
+                                                                                  u'population': 150,
+                                                                                  u'skewness': 0.31175,
+                                                                                  u'splits': [   4.51526,
+                                                                                                 4.67252,
+                                                                                                 4.81113,
+    ...
+                                                                                                 6.92597,
+                                                                                                 7.20423,
+                                                                                                 7.64746],
+                                                                                  u'standard_deviation': 0.82807,
+                                                                                  u'sum': 876.5,
+                                                                                  u'sum_squares': 5223.85,
+                                                                                  u'variance': 0.68569}},
+                                                   u'000001': {   u'column_number': 1,
+                                                                  u'datatype': u'double',
+                                                                  u'name': u'sepal width',
+                                                                  u'optype': u'numeric',
+                                                                  u'order': 1,
+                                                                  u'preferred': True,
+                                                                  u'summary': {   u'counts': [   [   2,
+                                                                                                     1],
+                                                                                                 [   2.2,
+                                                                                                     3],
+    ...
+                                                                                                 [   4.2,
+                                                                                                     1],
+                                                                                                 [   4.4,
+                                                                                                     1]],
+                                                                                  u'kurtosis': 0.18098,
+                                                                                  u'maximum': 4.4,
+                                                                                  u'mean': 3.05733,
+                                                                                  u'median': 3,
+                                                                                  u'minimum': 2,
+                                                                                  u'missing_count': 0,
+                                                                                  u'population': 150,
+                                                                                  u'skewness': -0.27213,
+                                                                                  u'splits': [   1.25138,
+                                                                                                 1.32426,
+                                                                                                 1.37171,
+    ...
+                                                                                                 6.02913,
+                                                                                                 6.38125],
+                                                                                  u'standard_deviation': 1.7653,
+                                                                                  u'sum': 563.7,
+                                                                                  u'sum_squares': 2582.71,
+                                                                                  u'variance': 3.11628}},
+                                                   u'000003': {   u'column_number': 3,
+                                                                  u'datatype': u'double',
+                                                                  u'name': u'petal width',
+                                                                  u'optype': u'numeric',
+                                                                  u'order': 3,
+                                                                  u'preferred': True,
+                                                                  u'summary': {   u'counts': [   [   0.1,
+                                                                                                     5],
+                                                                                                 [   0.2,
+                                                                                                     29],
+    ...
+                                                                                                 [   2.4,
+                                                                                                     3],
+                                                                                                 [   2.5,
+                                                                                                     3]],
+                                                                                  u'kurtosis': -1.33607,
+                                                                                  u'maximum': 2.5,
+                                                                                  u'mean': 1.19933,
+                                                                                  u'median': 1.3,
+                                                                                  u'minimum': 0.1,
+                                                                                  u'missing_count': 0,
+                                                                                  u'population': 150,
+                                                                                  u'skewness': -0.10193,
+                                                                                  u'standard_deviation': 0.76224,
+                                                                                  u'sum': 179.9,
+                                                                                  u'sum_squares': 302.33,
+                                                                                  u'variance': 0.58101}},
+                                                   u'000004': {   u'column_number': 4,
+                                                                  u'datatype': u'string',
+                                                                  u'name': u'species',
+                                                                  u'optype': u'categorical',
+                                                                  u'order': 4,
+                                                                  u'preferred': True,
+                                                                  u'summary': {   u'categories': [   [   u'Iris-setosa',
+                                                                                                         50],
+                                                                                                     [   u'Iris-versicolor',
+                                                                                                         50],
+                                                                                                     [   u'Iris-virginica',
+                                                                                                         50]],
+                                                                                  u'missing_count': 0},
+                                                                  u'term_analysis': {   u'enabled': True}}},
+                                    u'normalize': False,
+                                    u'regularization': u'l2'},
+        u'max_columns': 5,
+        u'max_rows': 150,
+        u'name': u"iris' dataset's logistic regression",
+        u'number_of_batchpredictions': 0,
+        u'number_of_evaluations': 0,
+        u'number_of_predictions': 1,
+        u'objective_field': u'000004',
+        u'objective_field_name': u'species',
+        u'objective_field_type': u'categorical',
+        u'objective_fields': [u'000004'],
+        u'out_of_bag': False,
+        u'private': True,
+        u'project': u'project/561304c137203f4c9300016c',
+        u'range': [1, 150],
+        u'replacement': False,
+        u'resource': u'logisticregression/5617e71c37203f506a000001',
+        u'rows': 150,
+        u'sample_rate': 1.0,
+        u'shared': False,
+        u'size': 4609,
+        u'source': u'source/561304f437203f4c930001c3',
+        u'source_status': True,
+        u'status': {   u'code': 5,
+                       u'elapsed': 86,
+                       u'message': u'The logistic regression has been created',
+                       u'progress': 1.0},
+        u'subscription': False,
+        u'tags': [u'species'],
+        u'updated': u'2015-10-09T16:14:02.336000',
+        u'white_box': False}
+
+Note that the output in the snippet above has been abbreviated. As you see,
+the ``logistic_regression`` attribute stores the coefficients used in the
+logistic function as well as the configuration parameters described in
+the `developers section <https://bigml.com/developers/logisticregressions>`_ .
+
+
+
+Associations
+------------
+
+Association Discovery is a popular method to find out relations among values
+in high-dimensional datasets.
+
+A common case where association discovery is often used is
+market basket analysis. This analysis seeks for customer shopping
+patterns across large transactional
+datasets. For instance, do customers who buy hamburgers and ketchup also
+consume bread?
+
+Businesses use those insights to make decisions on promotions and product
+placements.
+Association Discovery can also be used for other purposes such as early
+incident detection, web usage analysis, or software intrusion detection.
+
+In BigML, the Association resource object can be built from any dataset, and
+its results are a list of association rules between the items in the dataset.
+In the example case, the corresponding
+association rule would have hamburguers and ketchup as the items at the
+left hand side of the association rule and bread would be the item at the
+right hand side. Both sides in this association rule are related,
+in the sense that observing
+the items in the left hand side implies observing the items in the right hand
+side. There are some metrics to ponder the quality of these association rules:
+
+- Support: the proportion of instances which contain an itemset.
+
+For an association rule, it means the number of instances in the dataset which
+contain the rule's antecedent and rule's consequent together
+over the total number of instances (N) in the dataset.
+
+It gives a measure of the importance of the rule. Association rules have
+to satisfy a minimum support constraint (i.e., min_support).
+
+- Coverage: the support of the antedecent of an association rule.
+It measures how often a rule can be applied.
+
+- Confidence or (strength): The probability of seeing the rule's consequent
+under the condition that the instances also contain the rule's antecedent.
+Confidence is computed using the support of the association rule over the
+coverage. That is, the percentage of instances which contain the consequent
+and antecedent together over the number of instances which only contain
+the antecedent.
+
+Confidence is directed and gives different values for the association
+rules Antecedent → Consequent and Consequent → Antecedent. Association
+rules also need to satisfy a minimum confidence constraint
+(i.e., min_confidence).
+
+- Leverage: the difference of the support of the association
+rule (i.e., the antecedent and consequent appearing together) and what would
+be expected if antecedent and consequent where statistically independent.
+This is a value between -1 and 1. A positive value suggests a positive
+relationship and a negative value suggests a negative relationship.
+0 indicates independence.
+
+Lift: how many times more often antecedent and consequent occur together
+than expected if they where statistically independent.
+A value of 1 suggests that there is no relationship between the antecedent
+and the consequent. Higher values suggest stronger positive relationships.
+Lower values suggest stronger negative relationships (the presence of the
+antecedent reduces the likelihood of the consequent)
+
+As to the items used in association rules, each type of field is parsed to
+extract items for the rules as follows:
+
+- Categorical: each different value (class) will be considered a separate item.
+- Text: each unique term will be considered a separate item.
+- Items: each different item in the items summary will be considered.
+- Numeric: Values will be converted into categorical by making a
+segmentation of the values.
+For example, a numeric field with values ranging from 0 to 600 split
+into 3 segments:
+segment 1 → [0, 200), segment 2 → [200, 400), segment 3 → [400, 600].
+You can refine the behavior of the transformation using
+`discretization <https://bigml.com/developers/associations#ad_create_discretization>`_
+and `field_discretizations <https://bigml.com/developers/associations#ad_create_field_discretizations>`_.
+
+The JSON structure for an association resource is::
+
+ {
+        "associations":{
+            "complement":false,
+            "discretization":{
+                "pretty":true,
+                "size":5,
+                "trim":0,
+                "type":"width"
+            },
+            "items":[
+                {
+                    "complement":false,
+                    "count":32,
+                    "field_id":"000000",
+                    "name":"Segment 1",
+                    "bin_end":5,
+                    "bin_start":null
+                },
+                {
+                    "complement":false,
+                    "count":49,
+                    "field_id":"000000",
+                    "name":"Segment 3",
+                    "bin_end":7,
+                    "bin_start":6
+                },
+                {
+                    "complement":false,
+                    "count":12,
+                    "field_id":"000000",
+                    "name":"Segment 4",
+                    "bin_end":null,
+                    "bin_start":7
+                },
+                {
+                    "complement":false,
+                    "count":19,
+                    "field_id":"000001",
+                    "name":"Segment 1",
+                    "bin_end":2.5,
+                    "bin_start":null
+                },
+                 ...
+                {
+                    "complement":false,
+                    "count":50,
+                    "field_id":"000004",
+                    "name":"Iris-versicolor"
+                },
+                {
+                    "complement":false,
+                    "count":50,
+                    "field_id":"000004",
+                    "name":"Iris-virginica"
+                }
+            ],
+            "max_k": 100,
+            "min_confidence":0,
+            "min_leverage":0,
+            "min_lift":1,
+            "min_support":0,
+            "rules":[
+                {
+                    "confidence":1,
+                    "id":"000000",
+                    "leverage":0.22222,
+                    "lhs":[
+                        13
+                    ],
+                    "lhs_cover":[
+                        0.33333,
+                        50
+                    ],
+                    "lift":3,
+                    "p_value":0.000000000,
+                    "rhs":[
+                        6
+                    ],
+                    "rhs_cover":[
+                        0.33333,
+                        50
+                    ],
+                    "support":[
+                        0.33333,
+                        50
+                    ]
+                },
+                {
+                    "confidence":1,
+                    "id":"000001",
+                    "leverage":0.22222,
+                    "lhs":[
+                        6
+                    ],
+                    "lhs_cover":[
+                        0.33333,
+                        50
+                    ],
+                    "lift":3,
+                    "p_value":0.000000000,
+                    "rhs":[
+                        13
+                    ],
+                    "rhs_cover":[
+                        0.33333,
+                        50
+                    ],
+                    "support":[
+                        0.33333,
+                        50
+                    ]
+                },
+                ...
+                {
+                    "confidence":0.26,
+                    "id":"000029",
+                    "leverage":0.05111,
+                    "lhs":[
+                        13
+                    ],
+                    "lhs_cover":[
+                        0.33333,
+                        50
+                    ],
+                    "lift":2.4375,
+                    "p_value":0.0000454342,
+                    "rhs":[
+                        5
+                    ],
+                    "rhs_cover":[
+                        0.10667,
+                        16
+                    ],
+                    "support":[  
+                        0.08667,
+                        13
+                    ]
+                },
+                {
+                    "confidence":0.18,
+                    "id":"00002a",
+                    "leverage":0.04,
+                    "lhs":[
+                        15
+                    ],
+                    "lhs_cover":[
+                        0.33333,
+                        50
+                    ],
+                    "lift":3,
+                    "p_value":0.0000302052,
+                    "rhs":[
+                        9
+                    ],
+                    "rhs_cover":[
+                        0.06,
+                        9
+                    ],
+                    "support":[
+                        0.06,
+                        9
+                    ]
+                },
+                {
+                    "confidence":1,
+                    "id":"00002b",
+                    "leverage":0.04,
+                    "lhs":[
+                        9
+                    ],
+                    "lhs_cover":[
+                        0.06,
+                        9
+                    ],
+                    "lift":3,
+                    "p_value":0.0000302052,
+                    "rhs":[
+                        15
+                    ],
+                    "rhs_cover":[
+                        0.33333,
+                        50
+                    ],
+                    "support":[
+                        0.06,
+                        9
+                    ]
+                }
+            ],
+            "rules_summary":{
+                "confidence":{
+                    "counts":[
+                        [
+                            0.18,
+                            1
+                        ],
+                        [
+                            0.24,
+                            1
+                        ],
+                        [
+                            0.26,
+                            2
+                        ],
+                        ...
+                        [
+                            0.97959,
+                            1
+                        ],
+                        [
+                            1,
+                            9
+                        ]
+                    ],
+                    "maximum":1,
+                    "mean":0.70986,
+                    "median":0.72864,
+                    "minimum":0.18,
+                    "population":44,
+                    "standard_deviation":0.24324,
+                    "sum":31.23367,
+                    "sum_squares":24.71548,
+                    "variance":0.05916
+                },
+                "k":44,
+                "leverage":{
+                    "counts":[
+                       [
+                            0.04,
+                            2
+                        ],
+                        [
+                            0.05111,
+                            4
+                        ],
+                        [
+                            0.05316,
+                            2
+                        ],
+                        ...
+                        [
+                            0.22222,
+                            2
+                        ]
+                    ],
+                    "maximum":0.22222,
+                    "mean":0.10603,
+                    "median":0.10156,
+                    "minimum":0.04,
+                    "population":44,
+                    "standard_deviation":0.0536,
+                    "sum":4.6651,
+                    "sum_squares":0.61815,
+                    "variance":0.00287
+                },
+                "lhs_cover":{
+                    "counts":[
+                        [
+                            0.06,
+                            2
+                        ],
+                        [
+                            0.08,
+                            2
+                        ],
+                        [
+                            0.10667,
+                            4
+                        ],
+                        [
+                            0.12667,
+                            1
+                        ],
+                        ...
+                        [
+                            0.5,
+                            4
+                        ]
+                    ],
+                    "maximum":0.5,
+                    "mean":0.29894,
+                    "median":0.33213,
+                    "minimum":0.06,
+                    "population":44,
+                    "standard_deviation":0.13386,
+                    "sum":13.15331,
+                    "sum_squares":4.70252,
+                    "variance":0.01792
+                },
+                "lift":{
+                    "counts":[
+                        [
+                            1.40625,
+                            2
+                        ],
+                        [
+                            1.5067,
+                            2
+                        ],
+                        ...
+                        [
+                            2.63158,
+                            4
+                        ],
+                        [
+                            3,
+                            10
+                        ],
+                        [
+                            4.93421,
+                            2
+                        ],
+                        [
+                            12.5,
+                            2
+                        ]
+                    ],
+                    "maximum":12.5,
+                    "mean":2.91963,
+                    "median":2.58068,
+                    "minimum":1.40625,
+                    "population":44,
+                    "standard_deviation":2.24641,
+                    "sum":128.46352,
+                    "sum_squares":592.05855,
+                    "variance":5.04635
+                },
+                "p_value":{
+                    "counts":[
+                        [
+                            0.000000000,
+                            2
+                        ],
+                        [
+                            0.000000000,
+                            4
+                        ],
+                        [
+                            0.000000000,
+                            2
+                        ],
+                        ...
+                        [
+                            0.0000910873,
+                            2
+                        ]
+                    ],
+                    "maximum":0.0000910873,
+                    "mean":0.0000106114,
+                    "median":0.00000000,
+                    "minimum":0.000000000,
+                    "population":44,
+                    "standard_deviation":0.0000227364,
+                    "sum":0.000466903,
+                    "sum_squares":0.0000000,
+                    "variance":0.000000001
+                },
+                "rhs_cover":{
+                    "counts":[
+                        [
+                            0.06,
+                            2
+                        ],
+                        [
+                            0.08,
+                            2
+                        ],
+                        ...
+                        [
+                            0.42667,
+                            2
+                        ],
+                        [
+                            0.46667,
+                            3
+                        ],
+                        [
+                            0.5,
+                            4
+                        ]
+                    ],
+                    "maximum":0.5,
+                    "mean":0.29894,
+                    "median":0.33213,
+                    "minimum":0.06,
+                    "population":44,
+                    "standard_deviation":0.13386,
+                    "sum":13.15331,
+                    "sum_squares":4.70252,
+                    "variance":0.01792
+                },
+                "support":{
+                    "counts":[
+                        [
+                            0.06,
+                            4
+                        ],
+                        [
+                            0.06667,
+                            2
+                        ],
+                        [
+                            0.08,
+                            2
+                        ],
+                        [
+                            0.08667,
+                            4
+                        ],
+                        [
+                            0.10667,
+                            4
+                        ],
+                        [
+                            0.15333,
+                            2
+                        ],
+                        [
+                            0.18667,
+                            4
+                        ],
+                        [
+                            0.19333,
+                            2
+                        ],
+                        [
+                            0.20667,
+                            2
+                        ],
+                        [
+                            0.27333,
+                            2
+                        ],
+                        [
+                            0.28667,
+                            2
+                        ],
+                        [
+                            0.3,
+                            4
+                        ],
+                        [
+                            0.32,
+                            2
+                        ],
+                        [
+                            0.33333,
+                            6
+                        ],
+                        [
+                            0.37333,
+                            2
+                        ]
+                    ],
+                    "maximum":0.37333,
+                    "mean":0.20152,
+                    "median":0.19057,
+                    "minimum":0.06,
+                    "population":44,
+                    "standard_deviation":0.10734,
+                    "sum":8.86668,
+                    "sum_squares":2.28221,
+                    "variance":0.01152
+                }
+            },
+            "search_strategy":"leverage",
+            "significance_level":0.05
+        },
+        "category":0,
+        "clones":0,
+        "code":200,
+        "columns":5,
+        "created":"2015-11-05T08:06:08.184000",
+        "credits":0.017581939697265625,
+        "dataset":"dataset/562fae3f4e1727141d00004e",
+        "dataset_status":true,
+        "dataset_type":0,
+        "description":"",
+        "excluded_fields":[ ],
+        "fields_meta":{
+            "count":5,
+            "limit":1000,
+            "offset":0,
+            "query_total":5,
+            "total":5
+        },
+        "input_fields":[
+            "000000",
+            "000001",
+            "000002",
+            "000003",
+            "000004"
+        ],
+        "locale":"en_US",
+        "max_columns":5,
+        "max_rows":150,
+        "name":"iris' dataset's association",
+        "out_of_bag":false,
+        "price":0,
+        "private":true,
+        "project":null,
+        "range":[
+            1,
+            150
+        ],
+        "replacement":false,
+        "resource":"association/5621b70910cb86ae4c000000",
+        "rows":150,
+        "sample_rate":1,
+        "shared":false,
+        "size":4609,
+        "source":"source/562fae3a4e1727141d000048",
+        "source_status":true,
+        "status":{
+            "code":5,
+            "elapsed":1072,
+            "message":"The association has been created",
+            "progress":1
+        },
+        "subscription":false,
+        "tags":[ ],
+        "updated":"2015-11-05T08:06:20.403000",
+        "white_box":false
+     }
+
+Note that the output in the snippet above has been abbreviated. As you see,
+the ``associations`` attribute stores items, rules and metrics extracted
+from the datasets as well as the configuration parameters described in
+the `developers section <https://bigml.com/developers/associations>`_ .
+
 Statuses
 --------
 Please, bear in mind that resource creation is almost always asynchronous (predictions are the only exception). 
@@ -425,19 +1728,65 @@ See the documentation on status codes for the listing of potential states and th
 
 You can query the status of any resource with the status method::
     
-    $api::status($source)
-    $api::status($dataset)
-    $api::status($model)
-    $api::status($prediction)
-    $api::status($evaluation)
-    $api::status($ensemble)
-    $api::status($batch_prediction)
-    $api::status($cluster)
-    $api::status($centroid)
-    $api::status($batch_centroid)
-    $api::status($anomaly)
-    $api::status($anomaly_score)
-    $api::status($batch_anomaly_score)
+    $api->status($source)
+    $api->status($dataset)
+    $api->status($model)
+    $api->status($prediction)
+    $api->status($evaluation)
+    $api->status($ensemble)
+    $api->status($batch_prediction)
+    $api->status($cluster)
+    $api->status($centroid)
+    $api->status($batch_centroid)
+    $api->status($anomaly)
+    $api->status($anomaly_score)
+    $api->status($batch_anomaly_score)
+
+Projects
+---------
+
+A special kind of resource is ``project``. Projects are repositories
+for resources, intended to fulfill organizational purposes. Each project can
+contain any other kind of resource, but the project that a certain resource
+belongs to is determined by the one used in the ``source``
+they are generated from. Thus, when a source is created
+and assigned a certain ``project_id``, the rest of resources generated from
+this source will remain in this project.
+
+The REST calls to manage the ``project`` resemble the ones used to manage the
+rest of resources. When you create a ``project``::
+
+    $api = new BigML();
+    $project = $api->create_project(array('name' => 'my first project'));
+
+the resulting resource is similar to the rest of resources, although shorter::
+
+    {'code': 201,
+     'resource': u'project/54a1bd0958a27e3c4c0002f0',
+     'location': 'http://bigml.io/andromeda/project/54a1bd0958a27e3c4c0002f0',
+     'object': {u'category': 0,
+                u'updated': u'2014-12-29T20:43:53.060045',
+                u'resource': u'project/54a1bd0958a27e3c4c0002f0',
+                u'name': u'my first project',
+                u'created': u'2014-12-29T20:43:53.060013',
+                u'tags': [],
+                u'private': True,
+                u'dev': None,
+                u'description': u''},
+     'error': None}
+
+and you can use its project id to get, update or delete it::
+
+    $project = $api->get_project('project/54a1bd0958a27e3c4c0002f0');
+    $api->update_project($project->resource,
+                         array('description' => 'This is my first project'));
+
+    $api->delete_project($project->resource);
+
+**Important**: Deleting a non-empty project will also delete **all resources**
+assigned to it, so please be extra-careful when using
+the ``$api->delete_project`` call.
+
 
 Creating sources
 ----------------
@@ -446,11 +1795,11 @@ To create a source from a local data file, you can use the create_source method.
 
 Here’s a sample invocation::
    
-    $source = $api::create_source('./tests/data/iris.csv', array('name'=> 'my source'));
+    $source = $api->create_source('./tests/data/iris.csv', array('name'=> 'my source'));
 
 or you may want to create a source from a file in a remote location::
 
-    $source = $api::create_source('s3://bigml-public/csv/iris.csv');
+    $source = $api->create_source('s3://bigml-public/csv/iris.csv');
 
 Creating datasets 
 -----------------
@@ -460,23 +1809,23 @@ You can add all the additional arguments accepted by BigML and documented in `th
 
 For example, to create a dataset named “my dataset” with the first 1024 bytes of a source, you can submit the following request::
 
-    $dataset = $api::create_dataset($source, array("name"=> "mydata", "size"=> 1024));
+    $dataset = $api->create_dataset($source, array("name"=> "mydata", "size"=> 1024));
 
 You can also extract samples from an existing dataset and generate a new one with them using the api.create_dataset method::
 
-    $dataset = $api::create_dataset($origin_dataset, array("sample_rate"=> 0.8));
+    $dataset = $api->create_dataset($origin_dataset, array("sample_rate"=> 0.8));
 
 It is also possible to generate a dataset from a list of datasets (multidataset)::
 
-    $dataset1 = $api::create_dataset($source1);
-    $dataset2 = $api::create_dataset($source2);
-    $multidataset = $api::create_dataset(array($dataset1, $dataset2));
+    $dataset1 = $api->create_dataset($source1);
+    $dataset2 = $api->create_dataset($source2);
+    $multidataset = $api->create_dataset(array($dataset1, $dataset2));
 
 Clusters can also be used to generate datasets containing the instances grouped around each centroid. 
 You will need the cluster id and the centroid id to reference the dataset to be created. For instance::
 
-    $cluster = $api::create_cluster($dataset);
-    $cluster_dataset_1 = $api::create_dataset($cluster,array('centroid'=>'000000'));
+    $cluster = $api->create_cluster($dataset);
+    $cluster_dataset_1 = $api->create_dataset($cluster,array('centroid'=>'000000'));
 
 would generate a new dataset containing the subset of instances in the cluster associated to the centroid id 000000.
 
@@ -491,7 +1840,7 @@ You can also include in the request all the additional arguments accepted by Big
 
 For example, to create a model only including the first two fields and the first 10 instances in the dataset, you can use the following invocation::
 
-    $model = $api::create_model($dataset, array("name"=>"my model", "input_fields"=> array("000000", "000001"), "range"=> array(1, 10)));
+    $model = $api->create_model($dataset, array("name"=>"my model", "input_fields"=> array("000000", "000001"), "range"=> array(1, 10)));
 
 the model is scheduled for creation.
 
@@ -506,7 +1855,7 @@ You can also include in the request all the additional arguments accepted by Big
 
 Let’s create a cluster from a given dataset::
 
-    $cluster = $api::create_cluster($dataset, array("name"=> "my cluster", "k"=> 5}));
+    $cluster = $api->create_cluster($dataset, array("name"=> "my cluster", "k"=> 5}));
 
 that will create a cluster with 5 centroids.    
 
@@ -518,7 +1867,36 @@ If your problem is finding the anomalous data in your dataset, you can build an 
 
 Let’s create an anomaly detector from a given dataset::
 
-    $anomaly = $api::create_anomaly($dataset, array("name"=>"my anomaly"})
+    $anomaly = $api->create_anomaly($dataset, array("name"=>"my anomaly"})
+
+Creating associations
+~~~~~~~~~~~~~~~~~~~~~
+
+To find relations between the field values you can create an association
+discovery resource. The only required argument to create an association
+is a dataset id.
+You can also
+include in the request all the additional arguments accepted by BigML
+and documented in the `Association section of the Developer's
+documentation <https://bigml.com/developers/associations>`_.
+
+For example, to create an association only including the first two fields and
+the first 10 instances in the dataset, you can use the following
+invocation::
+
+    $model = $api->create_association($dataset,
+                                       array("name" => "my association",
+                                             "input_fields" => array("000000", "000001"),
+                                             "range" => array(1,10)));
+
+Associations can also be created from lists of datasets. Just use the
+list of ids as the first argument in the api call::
+
+    $model = $api->create_association(array(dataset1, dataset2),
+                                      array("name" => "my association",
+                                            "input_fields" => array("000000", "000001"),
+                                            "range" => array(1,10)));
+
 
 Creating predictions
 --------------------
@@ -526,12 +1904,12 @@ Creating predictions
 You can now use the model resource identifier together with some input parameters to ask for predictions, using the create_prediction method. 
 You can also give the prediction a name::
 
-    $prediction = $api::create_prediction($model,
+    $prediction = $api->create_prediction($model,
                                           array("sepal length"=> 5,
                                                 "sepal width" => 2.5),
                                           array("name"=>"my prediction"));
 
-    $api::pprint($prediction);
+    $api->pprint($prediction);
 
     petal width for {"sepal length":5,"sepal width":2.5} is 0.30455
 
@@ -542,7 +1920,7 @@ To obtain the centroid associated to new input data, you can now use the create_
 Give the method a cluster identifier and the input data to obtain the centroid. 
 You can also give the centroid predicition a name::
 
-    $centroid = $api::create_centroid($cluster,
+    $centroid = $api->create_centroid($cluster,
                                       array("pregnancies"=> 0,
                                             "plasma glucose"=> 118,
                                             "blood pressure"=> 84,
@@ -561,10 +1939,23 @@ Creating anomaly scores
 To obtain the anomaly score associated to new input data, you can now use the
 create_anomaly_score method. Give the method an anomaly detector identifier and the input data to obtain the score::
 
-     $anomaly_score = $api::create_anomaly_score($anomaly, 
+     $anomaly_score = $api->create_anomaly_score($anomaly, 
                                                  array("src_bytes"=> 350),
                                                  array("name"=> "my score"));
 
+
+
+Creating association sets
+-------------------------
+
+Using the association resource, you can obtain the consequent items associated
+by its rules to your input data. These association sets can be obtained calling
+the ``create_association_set`` method. The first argument is the association
+ID or object and the next one is the input data::
+
+     $association_set = $api->create_association_set($association, 
+                                                      array('genres'=> "Action\$Adventure"),
+                                                      array('name' => "my association set"));
 
 
 Creating evaluations
@@ -577,14 +1968,14 @@ You can also include in the request all the additional arguments accepted by Big
 
 For instance, to evaluate a previously created model using at most 10000 rows from an existing dataset you can use the following call::
     
-    $evaluation = $api::create_evaluation($model, 
+    $evaluation = $api->create_evaluation($model, 
                                           $dataset, 
                                           array("name"=>"my model", "max_rows"=>10000));
 
 Evaluations can also check the ensembles’ performance. 
 To evaluate an ensemble you can do exactly what we just did for the model case, using the ensemble object instead of the model as first argument::
 
-    $evaluation = $api::create_evaluation($ensemble, $dataset);
+    $evaluation = $api->create_evaluation($ensemble, $dataset);
 
 
 Creating ensembles
@@ -593,12 +1984,12 @@ Creating ensembles
 To improve the performance of your predictions, you can create an ensemble of models and combine their individual predictions. 
 The only required argument to create an ensemble is the dataset id::
 
-    $ensemble = $api::create_ensemble($datasetid);
+    $ensemble = $api->create_ensemble($datasetid);
 
 but you can also specify the number of models to be built and the parallelism level for the task::
 
     $args = array('number_of_models'=> 20, 'tlp'=> 3);
-    $ensemble = $api::create_ensemble($datasetid, $args);
+    $ensemble = $api->create_ensemble($datasetid, $args);
 
 
 Creating batch predictions
@@ -608,7 +1999,7 @@ We have shown how to create predictions individually, but when the amount of pre
 In this case, the more efficient way of predicting remotely is to create a dataset containing the input data you want your model to predict 
 from and to give its id and the one of the model to the create_batch_prediction api call::
 
-    $batch_prediction = $api::$create_batch_prediction($model, 
+    $batch_prediction = $api->$create_batch_prediction($model, 
                                                        $dataset, 
                                                        array("name"=>"my batch prediction", 
                                                              "all_fields"=> true,
@@ -621,10 +2012,10 @@ is included in the file or not and confidence set to true causes the confidence 
 If none of these arguments is given, the resulting file will contain the name of the objective field as a header row followed by the predictions.
 
 As for the rest of resources, the create method will return an incomplete object, that can be updated by issuing the corresponding 
-$api::get_batch_prediction call until it reaches a FINISHED status. 
+$api->get_batch_prediction call until it reaches a FINISHED status. 
 Then you can download the created predictions file using::
 
-   $api::download_batch_prediction('batchprediction/526fc344035d071ea3031d70',
+   $api->download_batch_prediction('batchprediction/526fc344035d071ea3031d70',
                                    'my_dir/my_predictions.csv'); 
 
 
@@ -635,7 +2026,7 @@ As described in the previous section, it is also possible to make centroids’ p
 First you create a dataset containing the input data you want your cluster to relate to a centroid. 
 The create_batch_centroid call will need the id of the dataset and the cluster to assign a centroid to each input data::
 
-    $batch_centroid = $api::create_batch_centroid($cluster, 
+    $batch_centroid = $api->create_batch_centroid($cluster, 
                                                   $dataset, 
                                                   array("name"=>"my batch centroid", 
                                                         "all_fields"=> true,
@@ -647,7 +2038,7 @@ Creating batch anomaly scores
 
 Input data can also be assigned an anomaly score in batch. You train an anomaly detector with your training data and then build a dataset from your input data. The create_batch_anomaly_score call will need the id of the dataset and of the anomaly detector to assign an anomaly score to each input data instance::
 
-   $batch_anomaly_score = $api::create_batch_anomaly_score($anomaly, 
+   $batch_anomaly_score = $api->create_batch_anomaly_score($anomaly, 
                                                            $dataset, 
                                                            array("name" => "my batch anomaly score"
                                                                  "all_fields" => true,
@@ -658,19 +2049,19 @@ Listing Resources
 
 You can list resources with the appropriate api method::
 
-    $api::list_sources()
-    $api::list_datasets()
-    $api::list_models()
-    $api::list_predictions()
-    $api::list_evaluations()
-    $api::list_ensembles()
-    $api::list_batch_predictions()
-    $api::list_clusters()
-    $api::list_centroids()
-    $api::list_batch_centroids()
-    $api::list_anomalies()
-    $api::list_anomaly_scores()
-    $api::list_batch_anomaly_scores()
+    $api->list_sources()
+    $api->list_datasets()
+    $api->list_models()
+    $api->list_predictions()
+    $api->list_evaluations()
+    $api->list_ensembles()
+    $api->list_batch_predictions()
+    $api->list_clusters()
+    $api->list_centroids()
+    $api->list_batch_centroids()
+    $api->list_anomalies()
+    $api->list_anomaly_scores()
+    $api->list_batch_anomaly_scores()
 
 you will receive a dictionary with the following keys:
 
@@ -693,19 +2084,19 @@ A few examples:
 
 - Ids of the first 5 sources created before April 1st, 2012::
 
-    $api::list_sources("limit=5;created__lt=2012-04-1");
+    $api->list_sources("limit=5;created__lt=2012-04-1");
 
 - Name of the first 10 datasets bigger than 1MB::
 
-    $api::list_datasets("limit=10;size__gt=1048576");
+    $api->list_datasets("limit=10;size__gt=1048576");
 
 - Name of models with more than 5 fields (columns)::
 
-    $api::list_models("columns__gt=5");
+    $api->list_models("columns__gt=5");
 
 - Ids of predictions whose model has not been deleted::
  
-    $api::list_predictions("model_status=true");
+    $api->list_predictions("model_status=true");
 
 Ordering Resources
 ------------------
@@ -716,19 +2107,19 @@ A few examples:
 
 - Name of sources ordered by size::
     
-     $api::list_sources("order_by=size");
+     $api->list_sources("order_by=size");
 
 - Number of instances in datasets created before April 1st, 2012 ordered by size::
 
-     $api::list_datasets("created__lt=2012-04-1;order_by=size");
+     $api->list_datasets("created__lt=2012-04-1;order_by=size");
 
 - Model ids ordered by number of predictions (in descending order)::
   
-     $api::list_models("order_by=-number_of_predictions");
+     $api->list_models("order_by=-number_of_predictions");
 
 - Name of predictions ordered by name::
  
-     $api::list_predictions("order_by=name");
+     $api->list_predictions("order_by=name");
 
 Updating Resources
 ------------------
@@ -736,19 +2127,19 @@ Updating Resources
 When you update a resource, it is returned in a dictionary exactly like the one you get when you create a new one. 
 However the status code will be bigml.api.HTTP_ACCEPTED if the resource can be updated without problems or one of the HTTP standard error codes otherwise::
 
-    $api::update_source($source, array("name"=> "new name"));
-    $api::update_dataset($dataset, array("name"=> "new name"));
-    $api::update_model($model, array("name"=> "new name"));
-    $api::update_prediction($prediction, array("name"=> "new name"));
-    $api::update_evaluation($evaluation, array("name"=> "new name"));
-    $api::update_ensemble($ensemble, array("name"=> "new name"));
-    $api::update_batch_prediction($batch_prediction, array("name"=> "new name"));
-    $api::update_cluster($cluster, array("name"=> "new name"));
-    $api::update_centroid($centroid, array("name"=> "new name"));
-    $api::update_batch_centroid($batch_centroid, array("name"=> "new name"));
-    $api::update_anomaly($anomaly, array("name"=> "new name"));
-    $api::update_anomaly_score($anomaly_score, array("name": "new name"));
-    $api::update_batch_anomaly_score($batch_anomaly_score, array("name": "new name"));
+    $api->update_source($source, array("name"=> "new name"));
+    $api->update_dataset($dataset, array("name"=> "new name"));
+    $api->update_model($model, array("name"=> "new name"));
+    $api->update_prediction($prediction, array("name"=> "new name"));
+    $api->update_evaluation($evaluation, array("name"=> "new name"));
+    $api->update_ensemble($ensemble, array("name"=> "new name"));
+    $api->update_batch_prediction($batch_prediction, array("name"=> "new name"));
+    $api->update_cluster($cluster, array("name"=> "new name"));
+    $api->update_centroid($centroid, array("name"=> "new name"));
+    $api->update_batch_centroid($batch_centroid, array("name"=> "new name"));
+    $api->update_anomaly($anomaly, array("name"=> "new name"));
+    $api->update_anomaly_score($anomaly_score, array("name": "new name"));
+    $api->update_batch_anomaly_score($batch_anomaly_score, array("name": "new name"));
 
 
 
@@ -756,7 +2147,7 @@ Updates can change resource general properties, such as the name or description 
 As an example, let’s say that your source has a certain field whose contents are numeric integers. 
 BigML will assign a numeric type to the field, but you might want it to be used as a categorical field. You could change its type to categorical by calling::
 
-    $api::update_source($source, array("fields"=> array("000001"=> array("optype"=> "categorical"))));
+    $api->update_source($source, array("fields"=> array("000001"=> array("optype"=> "categorical"))));
 
 where 000001 is the field id that corresponds to the updated field. 
 You will find detailed information about the updatable attributes of each resource in `BigML developer’s documentation <https://bigml.com/developers>`_.
@@ -765,19 +2156,19 @@ Deleting Resources
 ------------------
 Resources can be deleted individually using the corresponding method for each type of resource::
 
-    $api::delete_source($source);
-    $api::delete_dataset($dataset);
-    $api::delete_model($model);
-    $api::delete_prediction($prediction);
-    $api::delete_evaluation($evaluation);
-    $api::delete_ensemble($ensemble);
-    $api::delete_batch_prediction($batch_prediction);
-    $api::delete_cluster($cluster);
-    $api::delete_centroid($centroid);
-    $api::delete_batch_centroid($batch_centroid);
-    $api::delete_anomaly(anomaly);
-    $api::delete_anomaly_score(anomaly_score);
-    $api::delete_batch_anomaly_score(batch_anomaly_score);
+    $api->delete_source($source);
+    $api->delete_dataset($dataset);
+    $api->delete_model($model);
+    $api->delete_prediction($prediction);
+    $api->delete_evaluation($evaluation);
+    $api->delete_ensemble($ensemble);
+    $api->delete_batch_prediction($batch_prediction);
+    $api->delete_cluster($cluster);
+    $api->delete_centroid($centroid);
+    $api->delete_batch_centroid($batch_centroid);
+    $api->delete_anomaly(anomaly);
+    $api->delete_anomaly_score(anomaly_score);
+    $api->delete_batch_anomaly_score(batch_anomaly_score);
 
 Each of the calls above will return a dictionary with the following keys:
 
@@ -797,7 +2188,7 @@ If you want to use a specfic connection object for the remote retrieval, you can
 
     $api = new BigML("username", "api_key", false, 'storage');
 
-    $model = api::get_model('model/538XXXXXXXXXXXXXXXXXXX2');
+    $model = api->get_model('model/538XXXXXXXXXXXXXXXXXXX2');
     $local_model = new Model(model);
    
 or::
@@ -833,7 +2224,7 @@ You can also instantiate a local version of a remote cluster::
 
     include 'cluster.php';
 
-    $cluster = $api::get_cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18");
+    $cluster = $api->get_cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18");
     $local_cluster = new Cluster($cluster);
 
 or::
@@ -846,7 +2237,7 @@ If you want to use a specfic connection object for the remote retrieval, you can
 
     $local_cluster = new Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18", $api);
 
-For set default storage if you have storage unset in api::
+For set default storage if you have storage unset in api->
 
     $local_cluster = new Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18", null, storagedirectory);
 
@@ -887,7 +2278,7 @@ This will retrieve the remote anomaly detector information, using an implicitly 
 or even use the remote anomaly information retrieved previously to build the local anomaly detector object::
 
     $api = new BigML()
-    $anomaly = $api::get_anomaly('anomaly/502fcbff15526876610002435',
+    $anomaly = $api->get_anomaly('anomaly/502fcbff15526876610002435',
                                  'limit=-1')
 
 Note that in this example we used a limit=-1 query string for the anomaly retrieval. This ensures that all fields are retrieved by the get method in the same call (unlike in the standard calls where the number of fields returned is limited).
@@ -915,7 +2306,7 @@ or::
 
     $multimodel = new MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"), $api);
 
-or set default storage if you have storage unset in api::
+or set default storage if you have storage unset in api->
 
     $multimodel = new MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"), null, $storage);
 
@@ -1005,7 +2396,7 @@ As in MultipleModel, several prediction combination methods are available, and y
 
     $api = new BigML("username", "password", false, "storagedirectory");
 
-    ensemble = $api::create_ensemble('dataset/5143a51a37203f2cf7000972');
+    ensemble = $api->create_ensemble('dataset/5143a51a37203f2cf7000972');
 
     $ensemble = new Ensemble($ensemble, $api); 
 
