@@ -247,7 +247,7 @@ class Predicate {
        Builds rule string in LISP from a predicate
       */
      if (!is_null($this->term)) {
-        if (fields[$this->field]['optype'] == 'text') {
+        if ($fields[$this->field]['optype'] == 'text') {
            $options = $fields[$this->field]["term_analysis"];
            $case_insensitive =  array_key_exists("case_sensitive", $options) ? !$options["case_sensitive"] : true;
            $case_insensitive = $case_sensitive ? 'true' : 'false';
@@ -257,7 +257,7 @@ class Predicate {
            return  "(" . $operator . " (occurrences (f " . $this->field_id .
                     ") " . $this->term . " " . $case_insensitive . $language .") ". $this->value . ")";
 
-	} else if (fields[$this->field]['optype'] == 'items') {
+	} else if ($fields[$this->field]['optype'] == 'items') {
 	}
 
      }
