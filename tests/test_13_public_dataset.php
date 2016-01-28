@@ -49,6 +49,9 @@ class BigMLTestPublicDataset extends PHPUnit_Framework_TestCase
           print "Then the dataset's status is FINISHED\n";
           $this->assertEquals(BigMLRequest::FINISHED, $dataset->object->status->code);
 
+          print "And I make the dataset private again\n";
+	  $dataset = self::$api->update_dataset($dataset->resource, array('private'=> true));
+	  $this->assertEquals(BigMLRequest::HTTP_ACCEPTED, $dataset->code);
  
       } 
     }

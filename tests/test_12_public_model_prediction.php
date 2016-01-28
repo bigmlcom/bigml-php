@@ -71,6 +71,10 @@ class BigMLTestPublicModel extends PHPUnit_Framework_TestCase
 
           print "Then the prediction for " . $item["objective"] . " is " . $item["prediction"] . "\n";
           $this->assertEquals($item["prediction"], $prediction->object->prediction->{$item["objective"]});
+
+	  print "And I make the model private again\n";
+	  $model = self::$api->update_model($model->resource, array('private'=> true, 'white_box' => true));
+	  $this->assertEquals(BigMLRequest::HTTP_ACCEPTED, $model->code);
  
       } 
     }
