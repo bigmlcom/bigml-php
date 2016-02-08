@@ -54,7 +54,7 @@ class Item {
   }
 
   public function out_format($language="JSON") {
-     # Transforming the rule structure to a string in the required format
+     # Transforming the item structure to a string in the required format
      if (in_array($language, array("JSON", "CSV") )) {
         $name="to_" . language;
         return $this->{$name};
@@ -63,7 +63,7 @@ class Item {
   }
 
   public function to_csv() {
-    # Transforming the rule to CSV formats
+    # Transforming the item to CSV formats
     $output = array($this->complement, $this->complement_index, $this->count, $this->description, 
                     $this->field_info->name, $this->name,  $this->bin_end, $this->bin_start);
 
@@ -89,6 +89,10 @@ class Item {
   public function to_lisp_rule() {
     # Returns the LISP flatline expression to filter this item 
     $flatline = "";
+    if (is_null($this->name)) {
+       return "(missing? (f ". $this->field_id . "))";
+    }
+
     $field_type = $this->field_info->optype;
     if ($field_type == "numeric") {
        $start = $this->complement ? $this->bin_end : $this->bin_start;
@@ -133,7 +137,11 @@ class Item {
 
   public function describe() {
     /*Human-readable description of a item_dict*/
-    $description;
+    $description = "";
+    if (is_null($this->name)) {
+       return $this->field_info->name . ' is ' . $this->complement ? 'not' : '' . 'missing';
+    }
+
     $field_name = $this->field_info->name;
     $field_type = $this->field_info->optype;
   
@@ -172,7 +180,7 @@ class Item {
      */   
     $field_type = $this->field_info->optype; 
     if (is_null($value)) {
-       return false;
+       return is_null($this->name);
     }
    
     if ($field_type == "numeric" and (!is_null($this->bin_end) or is_null($this->bin_start))){

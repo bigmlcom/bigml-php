@@ -33,7 +33,7 @@ class AssociationRule {
 
   public function __construct($rule_info) {
      /*
-      Object encapsulating an association rules as described in
+      Object encapsulating an association rule as described in
               https://bigml.com/developers/associations
       */
      $this->rule_id = $rule_info->id;

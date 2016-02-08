@@ -25,11 +25,11 @@ if (!class_exists('associationrule')) {
 }   
 
 define("NO_ITEMS", json_encode(array('numeric', 'categorical')));
-define("SEARCH_STRATEGY_ATTRIBUTES", json_encode(array(0 =>  "leverage", 
-                                                       1 => "confidence", 
-						       2 => "support", 
-						       3 => "lhs_coverage", 
-						       4=> "lift")));
+#define("SEARCH_STRATEGY_ATTRIBUTES", json_encode(array(0 =>  "leverage", 
+#                                                       1 => "confidence", 
+#						       2 => "support", 
+#						       3 => "lhs_coverage", 
+#						       4=> "lift")));
 
 define("RULE_HEADERS", json_encode(array("Rule ID", "Antecedent", "Consequent", "Antecedent Coverage %",
                                          "Antecedent Coverage", "Support %", "Support", "Confidence",
@@ -42,6 +42,12 @@ define("ASSOCIATION_METRICS",  json_encode(array("lhs_cover", "support", "confid
 define("METRIC_LITERALS", json_encode(array("confidence"=> "Confidence", "support"=> "Support",
                                             "leverage"=> "Leverage", "lhs_cover"=> "Coverage",
                                             "p_value"=> "p-value", "lift"=> "Lift")));
+
+define("SCORES", json_encode(array("lhs_cover", "support", "confidence",
+                                    "leverage", "lift")));
+
+define("DEFAULT_K", 100);
+define("DEFAULT_SEARCH_STRATEGY", "leverage");
 
 class Association extends ModelFields{
   /*
@@ -76,7 +82,7 @@ class Association extends ModelFields{
       $this->search_strategy = Association::DEFAULT_SEARCH_STRATEGY;
       $this->rules = array();
 
-      $SEARCH_STRATEGY_CODES = array("leverage"=> 0, "confidence"=> 1, "support"=> 2, "coverage" => 3, "lift" => 4);
+      #$SEARCH_STRATEGY_CODES = array("leverage"=> 0, "confidence"=> 1, "support"=> 2, "coverage" => 3, "lift" => 4);
 
       if (is_string($association)) {
          
@@ -128,8 +134,10 @@ class Association extends ModelFields{
                $this->min_support = property_exists($associations, "min_support") ? $associations->min_support : 0;
                $this->min_lift = property_exists($associations, "min_lift") ? $associations->min_lift : 0;
                $this->prune = property_exists($associations, "prune") ? $associations->prune : true;
-               $this->search_strategy = $SEARCH_STRATEGY_CODES[property_exists($associations, "search_strategy") ? $associations->search_strategy : Association::DEFAULT_SEARCH_STRATEGY];
-      
+               #$this->search_strategy = $SEARCH_STRATEGY_CODES[property_exists($associations, "search_strategy") ? $associations->search_strategy : Association::DEFAULT_SEARCH_STRATEGY];
+            
+	       $this->search_strategy = property_exists($associations, "search_strategy") ? $associations->search_strategy : $DEFAULT_SEARCH_STRATEGY;
+
                $rules=property_exists($associations, "rules") ? $associations->rules : array();
                foreach ($rules as $rule) {
                    array_push($this->rules, new AssociationRule($rule));
@@ -165,18 +173,22 @@ class Association extends ModelFields{
             @param k integer Maximum number of item predictions to return
                              (Default 100)
             @param max_rules integer Maximum number of rules to return per item
-            @param score_by [0-4] Code for the metric used in scoring
-                                  (default search_strategy)
-                0 - Leverage
-                1 - Confidence
-                2 - Support
-                3 - Coverage
-                4 - Lift
+	    @param score_by Code for the metric used in scoring
+	           (default search_strategy)
+                Leverage
+                Confidence
+                Support
+                Coverage
+                Lift
 
             @param by_name boolean If True, input_data is keyed by field
                                    name, field_id is used otherwise. 
      */ 
      $predictions = array();
+     if ($score_by != null && !in_array($score_by, json_decode($SCORES)) ) {
+        throw new Exception("The available values of score_by are " . $SCORES); 
+     }
+
      $input_data = $this->filter_input_data($input_data, $by_name);
      # retrieving the items in input_data
      $item_indexes = array();
@@ -216,7 +228,7 @@ class Association extends ModelFields{
           if (!in_array($rhs, $predictions) ) {
              $predictions[$rhs] = array("score" => 0);
           }
-          $predictions[$rhs]["score"] += $cosine*$rule->{json_decode(SEARCH_STRATEGY_ATTRIBUTES)[$score_by]};
+          $predictions[$rhs]["score"] += $cosine*$rule->{$score_by};
 
        } 
 

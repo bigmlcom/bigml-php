@@ -21,6 +21,7 @@ if (!class_exists('centroid')) {
    include('centroid.php'); 
 }
 
+define("OPTIONAL_FIELDS", json_encode(array('categorical', 'text','items','datetime')));
 
 function parse_items($text, $regexp) {
   /*Returns the list of parsed items*/
@@ -195,7 +196,7 @@ class Cluster extends ModelFields {
       $input_data = $this->filter_input_data($input_data, $by_name);
       # Checks that all numeric fields are present in input data
       foreach($this->fields as $field_id=>$field) {
-         if (!in_array($field->optype, array('categorical', 'text')) && !array_key_exists($field_id, $input_data) ) {
+         if (!in_array($field->optype, json_decode($OPTIONAL_FIELDS)) && !array_key_exists($field_id, $input_data) ) {
             throw new Exception("Failed to predict a centroid. Input data must contain values for all numeric fields to find a centroid.");
          } 
       }
