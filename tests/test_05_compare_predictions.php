@@ -261,7 +261,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
             $resource = self::$api->_check_resource($model->resource, null, 10000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "And I create a local model";
+            print "And I create a local model\n";
             $localmodel = new Model($model->resource, self::$api);
 
             print "When I create a proportional missing strategy prediction for " . json_encode($item["data_input"]) . "\n";
