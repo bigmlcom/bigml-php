@@ -103,9 +103,22 @@ You can easily generate a prediction following these steps::
     $model = $api->create_model($dataset);
     $prediction = $api->create_prediction($model, array('sepal length'=> 5, 'sepal width'=> 2.5));
 
+    then: 
+
+    $objective_field_name = $prediction->object->fields->{$prediction->object->objective_fields[0]}->name;
+
+    "petal width"
+
+    $value = $prediction->object->prediction->{$prediction->object->objective_fields[0]};
+
+    0.30455
+
     $api->pprint($prediction);
 
     petal width for {"sepal length":5,"sepal width":2.5} is 0.30455
+
+    or get data direct: 
+
 
 also generate an evaluation for the model by using::
 
