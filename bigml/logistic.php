@@ -225,6 +225,8 @@ class LogisticRegression extends ModelFields {
 
       #Compute text and categorical field expansion
       $unique_terms = $this->get_unique_terms($input_data);
+      $input_data = $unique_terms[1];
+      $unique_terms = $unique_terms[0];
 
       $probablities=array();
       $total=0;
@@ -256,15 +258,20 @@ class LogisticRegression extends ModelFields {
    public function category_probability($input_data, $unique_terms, $coefficients) {
      /* Computes the probability for a concrete category */
      $probability=0;
+
      foreach ($input_data as $field_id => $value) {
        $shift = $this->fields->{$field_id}->coefficients_shift;
        $probability += $coefficients[$shift]* $input_data[$field_id];
      }
 
      foreach ($unique_terms as $field_id => $value) {
+
+       foreach($unique_terms[$field_id] as $term_value) {
+
           $shift = $this->fields->{$field_id}->coefficients_shift;
-          $term = reset($unique_terms[$field_id]);
-	  $ocurrences = end($unique_terms[$field_id]);
+          $term =  $term_value[0];
+          $occurrences=$term_value[1];
+
           try { 
 	    if ( array_key_exists($field_id, $this->tag_clouds) ) {
 	      $index = array_search($term, $this->tag_clouds[$field_id]);
@@ -278,8 +285,10 @@ class LogisticRegression extends ModelFields {
 	  } catch (Exception $e) {
 	    continue;
 	  }   
+
+        }
      }
- 
+
      foreach ($this->numeric_fields as $field_id => $value) {
          if (!array_key_exists($field_id, $input_data)) {
 	    $shift = $this->fields->{$field_id}->coefficients_shift +1;
@@ -385,7 +394,7 @@ class LogisticRegression extends ModelFields {
 	 }    
       }
 
-      return $unique_terms;
+      return array($unique_terms, $input_data);
    }
 
 

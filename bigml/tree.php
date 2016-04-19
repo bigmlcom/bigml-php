@@ -370,7 +370,6 @@ class Tree {
 
       if ($missing_strategy == Tree::PROPORTIONAL) {
          $predict_pro = $this->predict_proportional($input_data, $path);
-
          $final_distribution = $predict_pro[0];
          $d_min = $predict_pro[1];
          $d_max = $predict_pro[2];
@@ -415,7 +414,12 @@ class Tree {
             return new Prediction($prediction, $path, $confidence, $distribution, $total_instances, $distribution_unit, dist_median($distribution, $total_instances), $last_node->children, $d_min, $d_max);
 
          } else {
-            ksort($final_distribution);
+	    uksort($final_distribution, function($x, $y) use ($final_distribution) {
+	       if($final_distribution[$x]==$final_distribution[$y]) {
+		 return $x<$y?-1:$x!=$y;
+               }
+	      return $final_distribution[$y]-$final_distribution[$x];
+	    });
 
 	    $distribution = array();
             foreach ($final_distribution as $key => $val) {
@@ -452,7 +456,6 @@ class Tree {
          The function returns the merged distribution and the
          last node reached by a unique path.
       */
-
       if ($path==null) {
          $path == array();
       }
@@ -468,7 +471,7 @@ class Tree {
          return array(merge_distributions(array(), $a), $this->min, $this->max, $this);
       }
 
-      if (one_branch($this->children, $input_data)) {
+      if ( one_branch($this->children, $input_data) || in_array($this->fields->{splitChildren($this->children)}->optype, array("text", "items")) ) {
          foreach($this->children as $child) {
             $predicate = $child->predicate;
 

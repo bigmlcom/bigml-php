@@ -6,12 +6,19 @@ class BigMLTestClusterDerived extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
-
     protected static $api;
+    protected static $project;
 
     public static function setUpBeforeClass() {
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
+       $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
+       self::$api->delete_all_project_by_name($test_name);
+       self::$project=self::$api->create_project(array('name'=> $test_name));
+    }
+
+    public static function tearDownAfterClass() {
+       self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
     }
     /*
      Creating datasets and models associated to a cluster
@@ -23,7 +30,7 @@ class BigMLTestClusterDerived extends PHPUnit_Framework_TestCase
       foreach($data as $item) {
           print "\nSuccessfully creating datasets for first centroid of a cluster\n";
           print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-          $source = self::$api->create_source($item["filename"]);
+          $source = self::$api->create_source($item["filename"], $options=array('project'=> self::$project->resource));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 
@@ -76,7 +83,7 @@ class BigMLTestClusterDerived extends PHPUnit_Framework_TestCase
       foreach($data as $item) {
           print "\nSuccessfully creating models for first centroid of a cluster\n";
           print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-          $source = self::$api->create_source($item["filename"]);
+          $source = self::$api->create_source($item["filename"], $options=array('project'=> self::$project->resource));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 

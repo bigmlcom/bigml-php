@@ -30,12 +30,10 @@ function print_importance($instance, $out=STDOUT) {
    foreach($field_importance as $item) {
      $field = $item[0];
      $importance = $item[1];
-
-     fwrite($out,"    " . $count . ". " .  $fields->{$field}->name . ": " . number_format(strval(round($importance, 4, PHP_ROUND_HALF_DOWN)*100), 2)  . "%\n");
+     fwrite($out,"    " . $count . ". " .  $fields->{$field}->name . ": " . number_format(strval(round($importance, 4, PHP_ROUND_HALF_UP)*100), 2)  . "%\n");
      fflush($out);
      $count+=1; 
    }   
-
 }
 
 class BaseModel extends ModelFields{

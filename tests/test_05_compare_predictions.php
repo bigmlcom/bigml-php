@@ -24,17 +24,26 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
-
     protected static $api;
+    protected static $project;
 
     public static function setUpBeforeClass() {
        self::$api =  new BigML(self::$username, self::$api_key, false);
        ini_set('memory_limit', '512M');
        ini_set('xdebug.max_nesting_level', '300');
+       $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
+       self::$api->delete_all_project_by_name($test_name);
+       self::$project=self::$api->create_project(array('name'=> $test_name));
     }
+
+    public static function tearDownAfterClass() {     
+       self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
+    }
+
     #
     # Successfully comparing predictions
-    # 
+    #
+    
     public function test_scenario1() {
 
         $data = array(array("filename" => "data/iris.csv", 
@@ -58,7 +67,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
             print "\nSuccessfully comparing predictions:\n";
 
             print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
@@ -103,7 +112,8 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
     }
     #
     # Successfully comparing predictions
-    # 
+    #
+ 
     public function test_scenario2() {
        $data = array(array("filename" => "data/spam.csv",
                            "options" => array("fields" => array("000001" => array("optype" => "text", 
@@ -123,12 +133,12 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                            "data_input" => array("Message" => "A normal message"),
                            "objective" => "000000",
                            "prediction" => "ham"),
-	             #array("filename" => "data/spam.csv",
-                     #      "options" => array("fields" => array("000001" => array("optype" => "text", "term_analysis" => array("case_sensitive" => false, "stem_words" => false, "use_stopwords"=> false,"language" => "en")))),
-                     #      "data_input" => array("Message" => "Mobile calls"),
-		     #	   "objective" => "000000",
-		     #	   "prediction" => "spam",
-		     #     ),
+	             array("filename" => "data/spam.csv",
+                           "options" => array("fields" => array("000001" => array("optype" => "text", "term_analysis" => array("case_sensitive" => false, "stem_words" => false, "use_stopwords"=> false,"language" => "en")))),
+                           "data_input" => array("Message" => "Mobile calls"),
+		     	   "objective" => "000000",
+		     	   "prediction" => "spam",
+		          ),
 		     array("filename" => "data/spam.csv",
                            "options" => array("fields" => array("000001" => array("optype" => "text", "term_analysis" => array("case_sensitive" => false, "stem_words" => false, "use_stopwords"=> false,"language" => "en")))),
                            "data_input" => array("Message" => "A normal message"),
@@ -147,28 +157,40 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                            "objective" => "000000",
                            "prediction" => "ham",
                           ),
-                      #array("filename" => "data/spam.csv",
-                      #     "options" => array("fields" => array("000001" => array("optype" => "text", "term_analysis" => array("token_mode" => "full_terms_only", "language" => "en")))),
-                      #     "data_input" => array("Message" => "FREE for 1st week! No1 Nokia tone 4 ur mob every week just txt NOKIA to 87077 Get txting and tell ur mates. zed POBox 36504 W45WQ norm150p/tone 16+"),                           
-                      #     "objective" => "000000",
-                      #     "prediction" => "spam", 
-                      #    ),
+                     array("filename" => "data/spam.csv",
+                           "options" => array("fields" => array("000001" => array("optype" => "text", "term_analysis" => array("token_mode" => "full_terms_only", "language" => "en")))),
+                           "data_input" => array("Message" => "FREE for 1st week! No1 Nokia tone 4 ur mob every week just txt NOKIA to 87077 Get txting and tell ur mates. zed POBox 36504 W45WQ norm150p/tone 16+"),                           
+                           "objective" => "000000",
+                           "prediction" => "spam", 
+                           ),
                       array("filename" => "data/spam.csv",
                            "options" => array("fields" => array("000001" => array("optype" => "text", "term_analysis" => array("token_mode" => "full_terms_only", "language" => "en")))),
                            "data_input" => array("Message" => "Ok"),  
                            "objective" => "000000",
                            "prediction" => "ham",
-                          )
+                          ),
+		      array("filename" => "data/movies.csv",
+		            "options" => array("fields" => array("000007" => array("optype"=> "items", "item_analysis" => array("separator" => "\$")))),
+			    "data_input" => array("genres" => "Adventure\$Action", "timestamp" => 993906291, "occupation" => "K-12 student"),
+			    "objective" => "000009",
+			    "prediction" => 3.93064
+		           ),
+		      array("filename"=> "data/text_missing.csv",
+		            "options" => array("fields" => array("000001" => array("optype" => "text", "term_analysis" => array("token_mode" => "all", "language" => "en")), "000000" => array("optype" => "text", "term_analysis" => array("token_mode" => "all", "language" => "en" )))),
+			    "data_input" => array(), 
+			    "objective" => "000003",
+			    "prediction" => "swap"
+		           )
 		     );
 
        foreach($data as $item) {
 	    print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
             print "And I wait until the source is ready\n";
-            $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
+            $resource = self::$api->_check_resource($source->resource, null, 5000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
             print "And I update the source with params " . json_encode($item["options"]) . "\n";
@@ -180,7 +202,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
             $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
             print "And I wait until the dataset is ready\n";
-            $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
+            $resource = self::$api->_check_resource($dataset->resource, null, 5000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
             print "And I create model\n";
@@ -188,11 +210,11 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
 
             print "And I wait until the model is ready\n";
-            $resource = self::$api->_check_resource($model->resource, null, 3000, 30);
+            $resource = self::$api->_check_resource($model->resource, null, 5000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
             print "And I create a local model";
-            $localmodel = new Model($model->resource, self::$api);#$model->resource, self::$api);
+            $localmodel = new Model($model->resource, self::$api);
 
             print "When I create a prediction for " . json_encode($item["data_input"]) . "\n";
             $prediction = self::$api->create_prediction($model, $item["data_input"]);
@@ -208,9 +230,11 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
             $this->assertEquals($prediction->output, $item["prediction"]);
        }
     }
+    
     #
     # Successfully comparing predictions with proportional missing strategy
     #
+     
     public function test_scenario3() {
         $data = array(array("filename" => "data/iris.csv",
                                "data_input" => array(), 
@@ -236,7 +260,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
         foreach($data as $item) {
 	    print "\nSuccessfully comparing predictions with proportional missing strategy\n";
             print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
@@ -290,7 +314,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
 	    $this->assertEquals(round($confidence_value, 4), round($item["confidence"], 4));
         }
     }
- 
+
     public function test_scenario4() {
      $data = array(array("filename" => "data/spam.csv",
                                "options" => array("fields" => array("000001" => array("optype" => "text",  
@@ -299,17 +323,17 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
 													       "use_stopwords"=>false, 
 													       "language"=> "en")))), 
                                "data_input" => array("Type" => "ham", "Message" => "Mobile call"),
-                               "centroid" => "Cluster 4",
-                               "distance" => 0.35566243270259357),
-                    #array("filename" => "data/spam.csv",
-                    #           "options" => array("fields" => array("000001" => array("optype" => "text",
-                    #                                                                  "term_analysis" => array("case_sensitive" => true,
-                    #                                                                                           "stem_words"=> true,
-                    #                                                                                           "use_stopwords"=>false
-                    #                                                                                           )))),
-                    #           "data_input" => array("Type" => "ham", "Message" => "A normal message"),
-                    #           "centroid" => "Cluster 5",
-                    #           "distance" => 0.375),
+                               "centroid" => "Cluster 0",
+                               "distance" => 0.5),
+                    array("filename" => "data/spam.csv",
+                               "options" => array("fields" => array("000001" => array("optype" => "text",
+                                                                                      "term_analysis" => array("case_sensitive" => true,
+                                                                                                               "stem_words"=> true,
+                                                                                                               "use_stopwords"=>false
+                                                                                                               )))),
+                               "data_input" => array("Type" => "ham", "Message" => "A normal message"),
+                               "centroid" => "Cluster 0",
+                               "distance" => 0.5),
                    array("filename" => "data/spam.csv",
                                "options" => array("fields" => array("000001" => array("optype" => "text",
                                                                                       "term_analysis" => array("case_sensitive" => false,
@@ -338,8 +362,8 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                                                                                                "language"=>"en"
                                                                                                                )))),
                                "data_input" => array("Type" => "ham", "Message" => "Mobile call"),
-                               "centroid" => "Cluster 1",
-                               "distance" => 0.38819660112501053),
+                               "centroid" => "Cluster 2",
+                               "distance" => 0.3933996418221948),
                     array("filename" => "data/spam.csv",
                                "options" => array("fields" => array("000001" => array("optype" => "text",
                                                                                       "term_analysis" => array("case_sensitive" => false,
@@ -348,8 +372,8 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                                                                                                "language"=>"en"
                                                                                                                )))),
                                "data_input" => array("Type" => "ham", "Message" => "A normal message"),
-                               "centroid" => "Cluster 4",
-                               "distance" => 0.3663693790437878),
+                               "centroid" => "Cluster 5",
+                               "distance" => 0.3979379273840342),
                     array("filename" => "data/spam.csv",
                                "options" => array("fields" => array("000001" => array("optype" => "text",
                                                                                       "term_analysis" => array("token_mode" => "full_terms_only",
@@ -381,19 +405,25 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                "data_input" => array("pregnancies" => 0, "plasma glucose" => 118, "blood pressure" => 84, 
                                                      "triceps skin thickness" => 47, "insulin"=> 230, "bmi" => 45.8, 
                                                      "diabetes pedigree" => 0.551, "age" => 31, "diabetes" => true),
-                               "centroid" => "Cluster 5",
-                               "distance" => 0.4006712471727391));
-                     #array("filename" => "data/iris_sp_chars.csv",
-                     #          "options" => array("fields" => new stdClass()),
-                     #          "data_input" => array("pétal.length" => 1, "pétal&width" => 2, "sépal.length" => 1, 
-                     #                                "sépal&width" => 2, "spécies"=> "Iris-setosa"),
-                     #          "centroid" => "Cluster 5",
-                     #          "distance" => 0.4006712471727391)); 
+                               "centroid" => "Cluster 7",
+                               "distance" => 0.4606892984894916),
+                     array("filename" => "data/iris_sp_chars.csv",
+                               "options" => array("fields" => new stdClass()),
+                               "data_input" => array("pétal.length" => 1, utf8_encode("p\xe9tal&width\x00") => 2, "sépal.length" => 1, 
+                                                     "sépal&width" => 2, "spécies"=> "Iris-setosa"),
+                               "centroid" => "Cluster 0",
+                               "distance" => 0.870682622108004),
+	             array("filename" => "data/movies.csv",
+		           "options" => array("fields" => array("000007" => array("optype" => "items", "item_analysis" => array("separator" => "\$")))),
+			   "data_input" => array("gender" => "Female", "age_range" => "18-24", "genres" => "Adventure\$Action", "timestamp" => 993906291, "occupation"=>"K-12 student", "zipcode" => 59583, "rating" => 3),
+			   "centroid" => "Cluster 3",
+			   "distance" => 0.7282376719225614)
+		          );
 
       foreach($data as $item) {
             print "\n Successfully comparing centroids with or without text options\n";
             print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
@@ -421,7 +451,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
             $resource = self::$api->_check_resource($cluster->resource, null, 10000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
            
-            print "And I create a local cluster\n";
+            print "And I create a local cluster " . $cluster->resource . "\n";
 
             $local_cluster = new Cluster($cluster->resource, self::$api);
 
@@ -444,11 +474,12 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
     public function test_scenario5() {
       $data = array(array("filename"=> "data/iris.csv", "options" =>  array("summary_fields" => array("sepal width"), 'seed'=>'BigML tests','cluster_seed'=> 'BigML', 'k' => 8), 
                     "data_input"=> array("petal length"=> 1, "petal width"=> 1, "sepal length" => 1, "species" => "Iris-setosa"), 
-                    "centroid" => "Cluster 0", "distance" => 0.7310939266123302));
+                    "centroid" => "Cluster 3", "distance" => 0.7155571246307187));
+
       foreach($data as $item) {
           print "Successfully comparing centroids with summary fields:\n";
           print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 
@@ -498,7 +529,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
       foreach($data as $item) {
           print "\nSuccessfully comparing predictions with proportional missing strategy for missing_splits models\n";
           print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 
@@ -556,13 +587,14 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
       } 
     }
 
+
     public function test_scenario7() {
-      $data = array(array('filename' => 'data/tiny_kdd.csv', 'data_input' => array("000020" => 255.0, "000004" => 183.0, "000016" => 4.0, "000024" => 0.04, "000025" => 0.01, "000026" => 0.0, "000019" => 0.25, "000017" => 4.0, "000018" => 0.25, "00001e" => 0.0, "000005" => 8654.0, "000009" => 0, "000023" => 0.01, "00001f" => 123.0) , 'score' => 0.68782));
+      $data = array(array('filename' => 'data/tiny_kdd.csv', 'data_input' => array("000020" => 255.0, "000004" => 183.0, "000016" => 4.0, "000024" => 0.04, "000025" => 0.01, "000026" => 0.0, "000019" => 0.25, "000017" => 4.0, "000018" => 0.25, "00001e" => 0.0, "000005" => 8654.0, "000009" => 0, "000023" => 0.01, "00001f" => 123.0) , 'score' => 0.69802));
 
       foreach($data as $item) {
           print "\nSuccessfully comparing scores from anomaly detectors\n";
           print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 
@@ -606,7 +638,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
     public function test_scenario8() {
        $data = array(array('filename' => 'data/iris.csv', 
                            'data_input' => array("petal width" => 0.5, "petal length"=> 0.5, "sepal width" => 0.5, "sepal length"=>0.5), 
-			   'prediction' => 'Iris-versicolor'),
+			   'prediction' => 'Iris-virginica'),
 		     array('filename' => 'data/iris.csv',
                            'data_input' => array("petal width" => 2, "petal length" => 6, "sepal width" => 0.5, "sepal length" => 0.5),
                            'prediction' => 'Iris-virginica'),
@@ -615,16 +647,15 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                            'prediction' => 'Iris-virginica'),
                      array('filename' => 'data/iris.csv',
                            'data_input' => array("petal length" => 1),
-                           'prediction' => 'Iris-versicolor'),
+                           'prediction' => 'Iris-virginica'),
                      array('filename' => 'data/iris_sp_chars.csv',
                            'data_input' => array("pétal.length" => 4, "pétal&width".json_decode('"'.'\u0000'.'"') => 1.5, "sépal&width" => 0.5, "sépal.length" => 0.5),
                            'prediction' => 'Iris-virginica')
    	             );
-
        foreach($data as $item) {
           print "\nSuccessfully comparing logistic regression predictions\n";
           print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 
@@ -671,25 +702,26 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
        }
     }
 
+
     public function test_scenario9() {
         $data = array(array("filename" => "data/spam.csv", 
 	                    "options"=> array("fields" => array("000001" => array("optype"=> "text", 
 			                                                          "term_analysis"=> array("case_sensitive"=> true, "stem_words" => true, 
 										                          "use_stopwords" => false, "language" => "en")))),
 			    "data_input" => array("Message" => "Mobile call"), 
-			    "prediction" => 'ham'),
+			    "prediction" => 'spam'),
                       array("filename" => "data/spam.csv",
                             "options"=> array("fields" => array("000001" => array("optype"=> "text",
                                                                                   "term_analysis"=> array("case_sensitive"=> true, "stem_words" => true,
                                                                                                           "use_stopwords" => false, "language" => "en")))),
                             "data_input" => array("Message" => "A normal message"),
-                            "prediction" => 'ham'),
+                            "prediction" => 'spam'),
                       array("filename" => "data/spam.csv",
                             "options"=> array("fields" => array("000001" => array("optype"=> "text",
                                                                                   "term_analysis"=> array("case_sensitive"=> false, "stem_words" => false,
                                                                                                           "use_stopwords" => false, "language" => "en")))),
                             "data_input" => array("Message" => "Mobile calls"),
-                            "prediction" => 'ham'),
+                            "prediction" => 'spam'),
                       array("filename" => "data/spam.csv",
                             "options"=> array("fields" => array("000001" => array("optype"=> "text",
                                                                                   "term_analysis"=> array("case_sensitive"=> false, "stem_words" => false,
@@ -701,19 +733,19 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                                                                   "term_analysis"=> array("case_sensitive"=> false, "stem_words" => true,
                                                                                                           "use_stopwords" => true, "language" => "en")))),
                             "data_input" => array("Message" => "Mobile call"),
-                            "prediction" => 'ham'),
+                            "prediction" => 'spam'),
                       array("filename" => "data/spam.csv",
                             "options"=> array("fields" => array("000001" => array("optype"=> "text",
                                                                                   "term_analysis"=> array("case_sensitive"=> false, "stem_words" => true,
                                                                                                           "use_stopwords" => true, "language" => "en")))),
                             "data_input" => array("Message" => "A normal message"),
-                            "prediction" => 'ham'),
+                            "prediction" => 'spam'),
                       array("filename" => "data/spam.csv",
                             "options"=> array("fields" => array("000001" => array("optype"=> "text",
                                                                                   "term_analysis"=> array("token_mode"=> "full_terms_only", 
                                                                                                           "language" => "en")))),
                             "data_input" => array("Message" => "FREE for 1st week! No1 Nokia tone 4 ur mob every week just txt NOKIA to 87077 Get txting and tell ur mates. zed POBox 36504 W45WQ norm150p/tone 16+"),
-                            "prediction" => 'ham'),
+                            "prediction" => 'spam'),
                       array("filename" => "data/spam.csv",
                             "options"=> array("fields" => array("000001" => array("optype"=> "text",
                                                                                   "term_analysis"=> array("token_mode"=> "full_terms_only", 
@@ -725,7 +757,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
         foreach($data as $item) { 
            print " Successfully comparing predictions with text options\n";
            print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-           $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+           $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
            $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
            $this->assertEquals(1, $source->object->status->code);
 
@@ -783,7 +815,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                                                                                           "language" => "en")))),
                           'data_input' => array("Message"=> "A normal message"),
                           'prediction' => 'ham',
-                          'probability' => 0.9169
+                          'probability' => 0.7645
                          ),
                      array('filename' => 'data/movies.csv',
                            'objective' => '000002',
@@ -796,13 +828,13 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                                   "zipcode" => 59583,
                                                   "rating" => 3),
                            'prediction' => '25-34',
-                           'probability' => 0.41686)
+                           'probability' => 0.4135)
                    );
  
       foreach($data as $item) { 
          print "Successfully comparing predictions with text options\n";
          print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-         $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+         $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
          $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
          $this->assertEquals(1, $source->object->status->code);
 
@@ -857,5 +889,86 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
          $this->assertEquals($item["prediction"],  $local_prediction["prediction"]);
 
       }	
-    } 
+    }
+
+    public function test_scenario11() {
+       $data = array(array('filename' => 'data/text_missing.csv',
+                           'options' => array("fields" => array("000001" => array("optype" => "text", "term_analysis" => array("token_mode" => "all", "language"=> "en")), "000000"=> array("optype" => "text", "term_analysis" => array("token_mode" => "all", "language" => "en")))),
+                           'data_input' => array(),  
+                           'objective' => "000003",
+                           'prediction' => "swap"
+                          ),
+                     array('filename' => 'data/text_missing.csv',
+                           'options' => array("fields" => array("000001" => array("optype" => "text", "term_analysis" => array("token_mode" => "all", "language"=> "en")), "000000"=> array("optype" => "text", "term_analysis" => array("token_mode" => "all", "language" => "en")))),
+                           'data_input' => array("category1"=> "a"),
+                           'objective' => "000003",
+                           'prediction' => "paperwork"
+                          )
+                    );
+ 
+       foreach($data as $item) {
+
+         print "Scenario: Successfully comparing predictions with text options and proportional missing strategy:\n";
+         print "Given I create a data source uploading a " . $item["filename"] . " file\n";
+
+         $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
+         $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
+         $this->assertEquals(1, $source->object->status->code);
+
+         print "And I wait until the source is ready \n";
+         $resource = self::$api->_check_resource($source->resource, null, 30000, 30);
+         $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+         print "And I update the source with params " . json_encode($item["options"]) . "\n";
+         $source = self::$api->update_source($source->resource, $item["options"]);
+
+         print "And I create a dataset\n";
+         $dataset = self::$api->create_dataset($source->resource);
+         $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
+         $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);  
+
+         print "And I wait until the dataset is ready\n";
+         $resource = self::$api->_check_resource($dataset->resource, null, 30000, 30);
+         $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+         print "And I create a model\n";
+         $model = self::$api->create_model($dataset->resource);
+         $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
+
+         print "And I wait until the model is ready\n";
+         $resource = self::$api->_check_resource($model->resource, null, 10000, 30);
+         $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+         print "When I create a prediction for " . json_encode($item["data_input"]) . "\n";
+         $prediction = self::$api->create_prediction($model, $item["data_input"], array('missing_strategy' => 1));
+         $this->assertEquals(BigMLRequest::HTTP_CREATED, $prediction->code);
+
+         print "Then the prediction for " . $item["objective"] . " is " . $item["prediction"] . "\n";
+         $this->assertEquals($item["prediction"], $prediction->object->prediction->{$item["objective"]});
+
+         print "When I create a proportional missing strategy prediction for " . json_encode($item["data_input"])  . "\n";
+         $prediction = self::$api->create_prediction($model->resource, $item["data_input"], array('missing_strategy' => 1));
+         $this->assertEquals(BigMLRequest::HTTP_CREATED, $prediction->code);
+
+         print "Then the prediction for " . $item["objective"] . " is " . $item["prediction"] . "\n";
+         $this->assertEquals($item["prediction"], $prediction->object->prediction->{$item["objective"]});
+
+         print "And I create a local model\n";
+	 $localmodel = new Model($model->resource, self::$api);
+
+         print "And I create a proportional missing strategy local prediction for ". json_encode($item["data_input"]) . "\n";
+         $local_prediction = $localmodel->predict($item["data_input"], true, false, STDOUT, true, 1);
+
+	 if (is_object($local_prediction)) {
+           $prediction_value  = $local_prediction->output;
+	 } else {
+	   $prediction_value = $local_prediction[0];
+	 }
+
+         print "Then the local prediction is " . $item["prediction"] . "\n";
+	 $this->assertEquals($prediction_value, $item["prediction"]);
+
+       }
+
+    }
 }    

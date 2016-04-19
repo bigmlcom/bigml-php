@@ -21,15 +21,17 @@
    is used for local predictions.
 */
 
-function get_fields_structure($resource) {
-   $DEFAULT_LOCALE = 'en-US'; 
-   $DEFAULT_MISSING_TOKENS = array("", "N/A", "n/a", "NULL", "null", "-", "#DIV/0",
+function get_fields_structure($resource, $errors=false) {
+    $DEFAULT_LOCALE = 'en-US'; 
+    $DEFAULT_MISSING_TOKENS = array("", "N/A", "n/a", "NULL", "null", "-", "#DIV/0",
                                    "#REF!", "#NAME?", "NIL", "nil", "NA", "na",
 			           "#VALUE!", "#NULL!", "NaN", "#N/A", "#NUM!", "?");
-   /*
-    Returns the field structure for a resource, its locale and missing_tokens
+    /*
+     Returns the field structure for a resource, its locale and missing_tokens
     */
       $resource_type = null;
+      $field_errors = null;
+
       if ($resource instanceof STDClass && property_exists($resource, "resource")) {
          $resourceId = $resource->resource;
       } else if (is_string($resource)) {
@@ -37,7 +39,7 @@ function get_fields_structure($resource) {
       } else {
          $resourceId = null;
       }
-
+       
       if (preg_match('/(source|dataset|model|prediction|cluster|anomaly|sample|correlation|statisticaltest|logisticregression|association)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resourceId, $result)) {
          $resource_type = $result[1];
       } 
@@ -83,16 +85,27 @@ function get_fields_structure($resource) {
 	  $objective_column = property_exists($resource->object, "objective_field") ?
 	                         $resource->object->objective_field->id : null;
 
-	  
+          if ($errors) {
+	     $field_errors = property_exists($resource, "status") ? 
+	                       property_exists($resource->status, "field_errors") ? 
+			           $resource->status->field_errors : null : null;
+	  }
+
 	} else if (in_array($resource_type, array('model', 'logisticregression'))) {
 	  $objective_id = property_exists($resource->object,"objective_fields") ? 
 	                     $resource->object->objective_fields[0] : null;
           $objective_column = array_key_exists($objective_id, $fields) ? $fields[$objective_id]->column_number : null;
 
         }
-        return array($fields,$resource_locale, $missing_tokens, $objective_column);
+        
+	$result = array($fields,$resource_locale, $missing_tokens, $objective_column);
+        if ($errors) {
+	   array_push($result, $field_errors);
+	}
+        return $result;
+
      } else { 
-        return array(null, null, null, null);
+        return $errors ? array(null, null, null, null, null) : array(null, null, null, null);
         throw new Exception("Unknown resource structure");
      }
      
@@ -114,8 +127,9 @@ class Fields {
    public $objective_field;
    public $objective_field_present; 
    public $filtered_indexes;
+   public $field_errors;
 
-   public function __construct($resource_or_fields, $missing_tokens=null, $data_locale=null, $verbose=null, $objective_field=null, $objective_field_present=null, $include=null) {
+   public function __construct($resource_or_fields, $missing_tokens=null, $data_locale=null, $verbose=null, $objective_field=null, $objective_field_present=null, $include=null, $errors=null) {
        # The constructor can be instantiated with resources or a fields
        # structure. The structure is checked and fields structure is returned
        # if a resource type is matched.
@@ -124,12 +138,13 @@ class Fields {
                                        "#REF!", "#NAME?", "NIL", "nil", "NA", "na",
 				       "#VALUE!", "#NULL!", "NaN", "#N/A", "#NUM!", "?");
        try {
-           $resource_info = get_fields_structure($resource_or_fields);
+           $resource_info = get_fields_structure($resource_or_fields, true);
        
            $this->fields = $resource_info[0];
            $resource_locale = $resource_info[1];
            $resource_missing_tokens= $resource_info[2];
 	   $objective_column = $resource_info[3];
+           $resource_errors = $resource_info[4]; 
 
            if (is_null($data_locale)) {
               $data_locale = $resource_locale;
@@ -139,6 +154,10 @@ class Fields {
                  $missing_tokens = $resource_missing_tokens;
               }
            }
+	   if (is_null($errors)) {
+	      $errors = $resource_errors;
+	   }
+
        } catch  (Exception $e) {
           $this->fields = $resource_or_fields;
           if (is_null($data_locale)) { 
@@ -183,8 +202,8 @@ class Fields {
        $this->objective_field = null;
        $this->objective_field_present = null;
        $this->filtered_indexes = null;
-
-
+       $this->field_errors = $errors;
+ 
        if (is_null($objective_field)  && !is_null($objective_column) ) {
            $objective_field = $objective_column;
 	   $objective_field_present = true;
@@ -256,6 +275,11 @@ class Fields {
       if (is_null($objective_field)) {
          $this->objective_field = end($this->fields_columns);
       } else if (is_string($objective_field)) {
+         try {
+	    $this->objective_field = $this->field_column_number($objective_field);
+	 } catch  (Exception $e) {
+            $this->objective_field = end($this->fields_columns);
+	 }
          $this->objective_field = $this->field_column_number($objective_field);
       } else {
          $this->objective_field = $objective_field;

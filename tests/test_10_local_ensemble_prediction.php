@@ -13,15 +13,22 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
     protected static $api;
+    protected static $project;
 
     public static function setUpBeforeClass() {
-       self::$api =  new BigML(self::$username, self::$api_key, true);
+       self::$api =  new BigML(self::$username, self::$api_key, false);
        ini_set('memory_limit', '512M');
+       $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
+       self::$api->delete_all_project_by_name($test_name);
+       self::$project=self::$api->create_project(array('name'=> $test_name));
     }
 
-    /*
-     Successfully creating a prediction from a Ensemble
-     */
+    public static function tearDownAfterClass() {
+       self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
+    }
+
+    
+    // Successfully creating a prediction from a Ensemble
 
     public function test_scenario1() {
 
@@ -36,7 +43,7 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
         foreach($data as $item) {
             print "\nSuccessfully creating a local prediction from an Ensemble\n";
             print "I create a data source uploading a ". $item["filename"]. " file\n";
-            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
@@ -76,7 +83,8 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
 
         }
     }
-    /*Successfully obtaining field importance from an Ensemble */
+
+    // Successfully obtaining field importance from an Ensemble
     public function test_scenario2() {
 
         $data = array(array("filename" => 'data/iris.csv',
@@ -89,7 +97,7 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
         foreach($data as $item) {
             print "\nSuccessfully obtaining field importance from an Ensemble\n";
             print "I create a data source uploading a ". $item["filename"]. " file\n";
-            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
@@ -141,7 +149,7 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
         }
  
     }
-    /* Successfully creating a local prediction from an Ensemble adding confidence */
+    // Successfully creating a local prediction from an Ensemble adding confidence 
     public function test_scenario3() {
 
         $data = array(array("filename" => 'data/iris.csv',
@@ -155,7 +163,7 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
         foreach($data as $item) {
             print "\nSuccessfully creating a local prediction from an Ensemble adding confidence\n";
             print "I create a data source uploading a ". $item["filename"]. " file\n";
-            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
@@ -196,7 +204,7 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
         }
 
    }
-   /* Successfully obtaining field importance from an Ensemble created from local models */
+   // Successfully obtaining field importance from an Ensemble created from local models 
    public function test_scenario4() {
 
         $data = array(array("filename" => 'data/iris.csv',
@@ -209,7 +217,7 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
         foreach($data as $item) {
             print "\nSuccessfully obtaining field importance from an Ensemble created from local models\n";
             print "I create a data source uploading a ". $item["filename"]. " file\n";
-            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
@@ -268,7 +276,8 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
 
         }
    }
-   /*  Successfully creating a local prediction from an Ensemble */
+   
+   //  Successfully creating a local prediction from an Ensemble 
    public function test_scenario5() {
         $data = array(array("filename" => 'data/grades.csv',
                             "number_of_models" => 2,
@@ -280,7 +289,7 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
         foreach($data as $item) {
             print "\nSuccessfully creating a local prediction from an Ensemble\n";
             print "I create a data source uploading a ". $item["filename"]. " file\n";
-            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 

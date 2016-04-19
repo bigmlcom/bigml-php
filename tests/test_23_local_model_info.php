@@ -10,8 +10,8 @@ class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
-
     protected static $api;
+    protected static $project;
 
     public static function setUpBeforeClass() {
        self::$api =  new BigML(self::$username, self::$api_key, false);
@@ -20,6 +20,13 @@ class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
        }
        ini_set('memory_limit', '512M');
        ini_set('xdebug.max_nesting_level', '300');
+       $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
+       self::$api->delete_all_project_by_name($test_name);
+       self::$project=self::$api->create_project(array('name'=> $test_name));
+    }
+
+    public static function tearDownAfterClass() {
+       self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
     }
 
     /*   Testing local model information output methods */ 
@@ -52,7 +59,7 @@ class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
         foreach($data as $item) {
             print "\nSuccessfully creating a model and translate the tree model into a set of IF-THEN rules\n";
 	    print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-	    $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+	    $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
 	    $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
 	    $this->assertEquals(1, $source->object->status->code);
 
@@ -91,7 +98,7 @@ class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
 
     }
 
-    /* Successfully creating a model with missing values and translate the tree model into a set of IF-THEN rules */
+    //Successfully creating a model with missing values and translate the tree model into a set of IF-THEN rules
 
     public function test_scenario2() {
         $data = array(array("filename"=>  "data/iris_missing2.csv",
@@ -101,7 +108,7 @@ class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
             print "\nSuccessfully creating a model with missing values and translate the tree model into a set of IF-THEN rules\n"; 
 
             print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
@@ -138,7 +145,7 @@ class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
         } 
     }
 
-    /*  Successfully creating a model and translate the tree model into a set of IF-THEN rules */
+    // Successfully creating a model and translate the tree model into a set of IF-THEN rules
 
     public function test_scenario3() {
 
@@ -169,7 +176,7 @@ class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
             print "\nSuccessfully creating a model and translate the tree model into a set of IF-THEN rules\n";
 
             print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
@@ -232,7 +239,7 @@ class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
             print "\nSuccessfully creating a model and check its data distribution\n";
 
             print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
@@ -273,9 +280,8 @@ class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
         } 
     }  
 
-    /*
-     Successfully creating a model and check its predictions distribution
-     */
+    
+    // Successfully creating a model and check its predictions distribution
      
     public function test_scenario5() {
 
@@ -292,7 +298,7 @@ class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
             print "\n Successfully creating a model and check its predictions distribution\n";
 
             print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
@@ -334,9 +340,7 @@ class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
       }
     }
   
-    /*
-      Successfully creating a model and check its summary information
-    */
+    //  Successfully creating a model and check its summary information
     
     public function test_scenario6() {
        $data = array(array('filename' => 'data/iris.csv', 'expected_file' => 'data/model/summarize_iris.txt', 'local_file' => 'tmp/summarize_iris.txt'),
@@ -351,7 +355,7 @@ class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
        foreach($data as $item) {
             print "\nSuccessfully creating a model and check its summary information:\n";
             print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
@@ -385,5 +389,5 @@ class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
 
        }
 
-    } 
+    }
 }   

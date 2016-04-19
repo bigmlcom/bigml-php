@@ -12,16 +12,25 @@ class BigMLTestMultiModelPredictions extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
-
     protected static $api;
+    protected static $project;
 
     public static function setUpBeforeClass() {
-       self::$api =  new BigML(self::$username, self::$api_key, true);
+       self::$api =  new BigML(self::$username, self::$api_key, false);
        ini_set('memory_limit', '512M');
+       $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
+       self::$api->delete_all_project_by_name($test_name);
+       self::$project=self::$api->create_project(array('name'=> $test_name));
     }
+   
+    public static function tearDownAfterClass() {
+       self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
+    }
+
     /*
      Successfully creating a prediction from a multi model
     */
+    
     public function test_scenario1() {
       $data = array(array('filename' => 'data/iris.csv', 
                           'params' => array("tags" => array("mytag"), 'missing_splits' => false),
@@ -33,7 +42,7 @@ class BigMLTestMultiModelPredictions extends PHPUnit_Framework_TestCase
       foreach($data as $item) {
           print "\nSuccessfully creating a prediction from a multi model\n";
           print "I create a data source uploading a ". $item["filename"]. " file\n";
-          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 
@@ -75,10 +84,9 @@ class BigMLTestMultiModelPredictions extends PHPUnit_Framework_TestCase
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
           $list_of_models = array();
-          $models = self::$api->list_models("tags__in="+$item["tag"]);
-          foreach ($models->resources as $m) {
-             array_push($list_of_models, self::$api->get_model($m->resource));
-          }
+	  array_push($list_of_models, self::$api->get_model($model_1->resource));
+          array_push($list_of_models, self::$api->get_model($model_2->resource));
+	  array_push($list_of_models, self::$api->get_model($model_3->resource));
 
           print "And I create a local multi model\n";
           $local_multimodel = new MultiModel($list_of_models);
@@ -91,7 +99,8 @@ class BigMLTestMultiModelPredictions extends PHPUnit_Framework_TestCase
  
       } 
     }
-    /*Successfully creating a local batch prediction from a multi model */
+    
+    // Successfully creating a local batch prediction from a multi model
     public function test_scenario2() {
       $data = array(array('filename' => 'data/iris.csv',
                           'params' => array("tags" => array("mytag"), 'missing_splits' => false),
@@ -102,7 +111,7 @@ class BigMLTestMultiModelPredictions extends PHPUnit_Framework_TestCase
       foreach($data as $item) {
           print "\nSuccessfully creating a local batch prediction from a multi model\n";
           print "I create a data source uploading a ". $item["filename"]. " file\n";
-          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 

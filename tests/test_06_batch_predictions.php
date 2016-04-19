@@ -10,6 +10,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
     protected static $api_key; # "your_api_key"
 
     protected static $api;
+    protected static $project;
 
     public static function setUpBeforeClass() {
        self::$api =  new BigML(self::$username, self::$api_key, true);
@@ -18,7 +19,14 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
        if (!file_exists('tmp')) {
           mkdir('tmp');
        }
+       $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
+       self::$api->delete_all_project_by_name($test_name);
+       self::$project=self::$api->create_project(array('name'=> $test_name));
  
+    }
+
+    public static function tearDownAfterClass() {
+       self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
     }
 
     /*  Successfully creating a batch prediction
@@ -30,7 +38,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
       foreach($data as $item) {
           print "\nSuccessfully creating a batch prediction\n";
           print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 
@@ -73,7 +81,8 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
       } 
     }
 
-    /* Successfully creating a batch prediction for an ensemble */
+    // Successfully creating a batch prediction for an ensemble
+
     public function test_scenario2() {
       $data = array(array('filename' => 'data/iris.csv',
                           'number_of_models' => 5,
@@ -85,7 +94,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
       foreach($data as $item) {
           print_r("\nSuccessfully creating a batch prediction for an ensemble\n");
           print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 
@@ -137,7 +146,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
       foreach($data as $item) {
           print "Successfully creating a batch centroid from a cluster\n";
           print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 
@@ -180,14 +189,15 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
 
       }
     }
-    /* Successfully creating a source from a batch prediction */
+    
+    // Successfully creating a source from a batch prediction 
     public function test_scenario4() {
       $data = array(array('filename' => 'data/iris.csv'));
 
       foreach($data as $item) {
           print "\nSuccessfully creating a source from a batch prediction\n";
           print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 
@@ -231,7 +241,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
 
       }
     }
-    /* Successfully creating a batch anomaly score from an anomaly detector */
+    // Successfully creating a batch anomaly score from an anomaly detector 
     public function test_scenario5() {
 
       $data = array(array('filename' => 'data/tiny_kdd.csv', 
@@ -241,7 +251,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
       foreach($data as $item) {
           print "\nSuccessfully creating a batch anomaly score from an anomaly detector\n";
           print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 
@@ -283,7 +293,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
       }
     }
 
-    /*  Successfully creating a batch prediction for a logistic regression */ 
+    // Successfully creating a batch prediction for a logistic regression 
     public function test_scenario6() {
 
       $data = array(array('filename' => 'data/iris.csv',
@@ -293,7 +303,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
       foreach($data as $item) {
           print "\nSuccessfully creating a batch prediction for a logistic regression\n";
           print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source'));
+          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
 

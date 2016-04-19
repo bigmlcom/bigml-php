@@ -52,6 +52,35 @@ function term_matches_tokens($text, $forms_list, $case_sensitive) {
 
 }
 
+function item_matches($text, $item, $options) {
+  /*
+   Counts the number of occurences of the item in the text
+   The matching considers the separator or the separating regular expression.
+  */
+  $separator=property_exists($options, 'separator') ? $options->separator : ' ';
+  $regexp=property_exists($options, 'separator_regexp') ? $options->separator_regexp : null;
+
+  if (is_null($regexp)) {
+     $regexp=preg_quote($separator, '/');
+  }
+
+  return count_items_matches($text, $item, $regexp);
+
+}
+
+function count_items_matches($text, $item, $regexp) {
+  /*
+   Counts the number of occurences of the item in the text
+  */
+  $expression="/(^|". $regexp  .")". $item ."($|". $regexp .")/u";
+
+  #expression = ur'(^|%s)%s($|%s)' % (regexp, item, regexp)
+
+  $total = preg_match_all($expression, $text, $matches);
+  return $total;
+
+}
+
 function get_tokens_flags($case_sensitive) {
  /*
    Returns flags for regular expression matching depending on text analysis options
@@ -139,6 +168,10 @@ class Predicate {
          Returns a boolean showing if a term is considered as a full_term
       */
       if ($this->term != null) {
+         if ($fields->{$this->field}->optype == 'items') {
+	    return false;
+	 }
+
          $options = $fields->{$this->field}->term_analysis;
          $token_mode = property_exists($options, 'token_mode') ? $options->token_mode : Predicate::TM_TOKENS;
 
@@ -217,23 +250,33 @@ class Predicate {
 
       // for missing operators
       if (!array_key_exists($this->field, $input_data) ) {
-        return ( $this->missing || ($this->operator == '=' && is_null($this->value)) ); 
+        // text and item fields will treat missing values by following the
+	// doesn't contain branch
+	if (is_null($this->term)){
+           return ( $this->missing || ($this->operator == '=' && is_null($this->value)) ); 
+	}
       } else if ($this->operator == "!=" && is_null($this->value)) {
         return true;
       }
-        $op = operatorFunction($this->operator);
+
+      $op = operatorFunction($this->operator);
+
       if ($this->term != null ) {
-         $term_forms = property_exists($fields->{$this->field}->summary, 'term_forms') && !empty($fields->{$this->field}->summary->term_forms) ? 
-                     property_exists($fields->{$this->field}->summary->term_forms, $this->term) ? $fields->{$this->field}->summary->term_forms->{$this->term} 
-                     : array() 
-                    : array();
 
-         $terms = array($this->term);
-         $terms = array_merge($terms, $term_forms);
-         $options = $fields->{$this->field}->term_analysis;
-
-         return $op(term_matches($input_data[$this->field], $terms, $options), $this->value);
-      }
+         if ($fields->{$this->field}->optype == 'text') {
+            $term_forms = property_exists($fields->{$this->field}->summary, 'term_forms') && !empty($fields->{$this->field}->summary->term_forms) ? 
+                           property_exists($fields->{$this->field}->summary->term_forms, $this->term) ? $fields->{$this->field}->summary->term_forms->{$this->term} 
+                           : array() 
+                           : array();
+            $terms = array($this->term);
+	    $terms = array_merge($terms, $term_forms);
+            $options = $fields->{$this->field}->term_analysis;
+	    return $op(term_matches(array_key_exists($this->field, $input_data) ? $input_data[$this->field] : "", $terms, $options), $this->value);
+	 } else {
+	    $options = $fields->{$this->field}->item_analysis;
+	    return $op(item_matches(array_key_exists($this->field, $input_data) ? $input_data[$this->field] : "", $this->term, $options), $this->value);
+	 } 
+      } 
 
       if ($this->operator == "in") {
           return $op($this->value, $input_data[$this->field]);

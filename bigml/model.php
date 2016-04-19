@@ -140,7 +140,6 @@ class Model extends BaseModel{
 
       $prediction = $tree->predict($input_data, null, $missing_strategy);
 
-
       # Prediction path   
       if ($print_path == true) {
          fwrite($out, join(" AND ", $prediction->path) . ' => ' . $prediction->output . "\n");
@@ -415,6 +414,8 @@ class Model extends BaseModel{
      ksort($predictions);
      return $predictions;
 
+     #return sorted(predictions, key=lambda x: x[0])
+
    }
 
    function extract_common_path($groups) {
@@ -444,19 +445,21 @@ class Model extends BaseModel{
            }     
         }
         $groups[$key]["total"][0] = $common_path;
-        if (count($details) > 0 ) { 
-           $order_array = array();
-           foreach ($details as $k => $row)
-           {
-              $order_array[$k] = $row[1];
-           }
-           array_multisort($order_array, SORT_DESC, $details);
-           $groups[$key]["details"] = $details;
-           
+        if (count($details) > 0 ) {
+
+           uksort($details,  function($x, $y) use ($details) {
+               if ($details[$x][1] == $details[$y][1]) {
+                  return $x<$y?-1:$x!=$y;
+               }
+
+               return $details[$y][1]-$details[$x][1];
+
+           });
+
+           $groups[$key]["details"]=$details;
         }
 
       } 
-
       return $groups;
    }
 
@@ -510,12 +513,11 @@ class Model extends BaseModel{
       }
 
       $groups = $this->extract_common_path($groups);
-
       fwrite($out, "\n\nRules summary:");
       foreach ($a_to_print as $x) {
             $group = $x[0];
             $details = $groups[$group]["details"];
-            
+ 
             $path = new Path($groups[$group]["total"][0]);
             $data_per_group = ($groups[$group]["total"][1] * 1.0) / $tree->count;
             $pred_per_group = ($groups[$group]["total"][2] * 1.0) / $tree->count; 
@@ -531,15 +533,12 @@ class Model extends BaseModel{
                fwrite($out, $this->confidence_error($subgroup[2], $subgroup[3], $tree) . "\n");
             } else {
                fwrite($out, "\n");
-               foreach (range(0, count($details)-1) as $j) {
-                  $subgroup = $details[$j];
-                    
+               foreach ($details as $key => $subgroup) { 
                   $pred_per_sgroup = $subgroup[1] * 1.0 / $groups[$group]["total"][2];
                   $path = new Path($subgroup[0]);
-                  $path_chain = (!is_null($path->predicates)) ? $path->to_rules($this->fields, 'name', $format) : "(root node)";
+                  $path_chain = (!is_null($path->predicates) or $path->predicates == false) ? $path->to_rules($this->fields, 'name', $format) : "(root node)";
                   fwrite($out, "    · " . number_format(round($pred_per_sgroup, 4) * 100,2) . "%: " . $path_chain . $this->confidence_error($subgroup[2], $subgroup[3], $tree) . "\n");
                }
- 
             }
 
 

@@ -1845,6 +1845,20 @@ class BigML {
       return $rest->getResponse();
    }
 
+   public static function delete_all_project_by_name($test_name) {
+     /*
+       Delete a list from projects by name
+     */
+     
+     $projects = self::list_projects("name=". $test_name);
+
+     if (!is_null($projects)) {
+       foreach ($projects->resources as $project) {
+          self::delete_project($project->resource);
+       }
+     }
+   }
+
    ##########################################################################
    #
    # Correlations 

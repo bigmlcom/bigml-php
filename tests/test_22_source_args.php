@@ -7,12 +7,19 @@ class BigMLTestSourceArgs extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
-
     protected static $api;
+    protected static $project;
 
     public static function setUpBeforeClass() {
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
+       $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
+       self::$api->delete_all_project_by_name($test_name);
+       self::$project=self::$api->create_project(array('name'=> $test_name));
+    }
+
+    public static function tearDownAfterClass() {
+       self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
     }
     /*
      Uploading source with structured args
@@ -20,10 +27,9 @@ class BigMLTestSourceArgs extends PHPUnit_Framework_TestCase
 
     public function test_scenario1() {
       $data = array(array('filename' => 'data/iris.csv',
-			  'args' =>  array("tags" => array("my tag", "my second tag"))),
+			  'args' =>  array("tags" => array("my tag", "my second tag"), 'project'=> self::$project->resource)),
 	           array('filename' => 'data/iris.csv',
-                          'args' =>  array("name" => "Testing unicode names: áé")));
-
+                          'args' =>  array("name" => "Testing unicode names: áé", 'project'=> self::$project->resource)));
 
       foreach($data as $item) {
           print "\nUploading source with structured args\n";
