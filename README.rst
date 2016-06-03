@@ -1762,7 +1762,7 @@ contents of a remote file is:
 The ``script`` can also use a ``library`` resource (please, see the
 ``Libraries`` section below for more details) by including its id in the
 ``imports`` attribute. Other attributes can be checked at the
-`API Developers documentation for Scripts<https://bigml.com/developers/scripts#ws_script_arguments>`_.
+`API Developers documentation for Scripts <https://bigml.com/developers/scripts#ws_script_arguments>`_ .
 
 Executions
 ----------
@@ -1790,8 +1790,9 @@ As you can see, the execution resource contains information about the result
 of the execution, the resources that have been generated while executing and
 users can define some variables in the code to be exported as outputs. Please
 refer to the
-`Developers documentation for Executions<https://bigml.com/developers/executions#we_execution_arguments>`_
+`Developers documentation for Executions <https://bigml.com/developers/executions#we_execution_arguments>`_ 
 for details on how to define execution outputs.
+the `developers section <https://bigml.com/developers/associations>`_ .
 
 Libraries
 ---------
@@ -1812,7 +1813,7 @@ the second one adds two variables and increments the result by one.
 Libraries can be imported in scripts. The ``imports`` attribute of a ``script``
 can contain a list of ``library`` IDs whose defined functions
 and constants will be ready to be used throughout the ``script``. Please,
-refer to the `API Developers documentation for Libraries<https://bigml.com/developers/libraries#wl_library_arguments>`_
+refer to the `API Developers documentation for Libraries <https://bigml.com/developers/libraries#wl_library_arguments>`_
 for more details.
 
 
