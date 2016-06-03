@@ -323,7 +323,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
 													       "use_stopwords"=>false, 
 													       "language"=> "en")))), 
                                "data_input" => array("Type" => "ham", "Message" => "Mobile call"),
-                               "centroid" => "Cluster 0",
+                               "centroid" => "Cluster 1",
                                "distance" => 0.5),
                     array("filename" => "data/spam.csv",
                                "options" => array("fields" => array("000001" => array("optype" => "text",
@@ -332,7 +332,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                                                                                                "use_stopwords"=>false
                                                                                                                )))),
                                "data_input" => array("Type" => "ham", "Message" => "A normal message"),
-                               "centroid" => "Cluster 0",
+                               "centroid" => "Cluster 1",
                                "distance" => 0.5),
                    array("filename" => "data/spam.csv",
                                "options" => array("fields" => array("000001" => array("optype" => "text",
@@ -362,8 +362,8 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                                                                                                "language"=>"en"
                                                                                                                )))),
                                "data_input" => array("Type" => "ham", "Message" => "Mobile call"),
-                               "centroid" => "Cluster 2",
-                               "distance" => 0.3933996418221948),
+                               "centroid" => "Cluster 5",
+                               "distance" => 0.41161165235168157),
                     array("filename" => "data/spam.csv",
                                "options" => array("fields" => array("000001" => array("optype" => "text",
                                                                                       "term_analysis" => array("case_sensitive" => false,
@@ -372,8 +372,8 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                                                                                                "language"=>"en"
                                                                                                                )))),
                                "data_input" => array("Type" => "ham", "Message" => "A normal message"),
-                               "centroid" => "Cluster 5",
-                               "distance" => 0.3979379273840342),
+                               "centroid" => "Cluster 1",
+                               "distance" => 0.35566243270259357),
                     array("filename" => "data/spam.csv",
                                "options" => array("fields" => array("000001" => array("optype" => "text",
                                                                                       "term_analysis" => array("token_mode" => "full_terms_only",
@@ -404,20 +404,20 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                "options" => array("fields" => new stdClass()), 
                                "data_input" => array("pregnancies" => 0, "plasma glucose" => 118, "blood pressure" => 84, 
                                                      "triceps skin thickness" => 47, "insulin"=> 230, "bmi" => 45.8, 
-                                                     "diabetes pedigree" => 0.551, "age" => 31, "diabetes" => true),
-                               "centroid" => "Cluster 7",
-                               "distance" => 0.4606892984894916),
+                                                     "diabetes pedigree" => 0.551, "age" => 31, "diabetes" => "true"),
+                               "centroid" => "Cluster 3",
+                               "distance" => 0.5033378686559257),
                      array("filename" => "data/iris_sp_chars.csv",
                                "options" => array("fields" => new stdClass()),
                                "data_input" => array("pétal.length" => 1, utf8_encode("p\xe9tal&width\x00") => 2, "sépal.length" => 1, 
                                                      "sépal&width" => 2, "spécies"=> "Iris-setosa"),
-                               "centroid" => "Cluster 0",
-                               "distance" => 0.870682622108004),
+                               "centroid" => "Cluster 7",
+                               "distance" => 0.8752380218327035),
 	             array("filename" => "data/movies.csv",
 		           "options" => array("fields" => array("000007" => array("optype" => "items", "item_analysis" => array("separator" => "\$")))),
 			   "data_input" => array("gender" => "Female", "age_range" => "18-24", "genres" => "Adventure\$Action", "timestamp" => 993906291, "occupation"=>"K-12 student", "zipcode" => 59583, "rating" => 3),
-			   "centroid" => "Cluster 3",
-			   "distance" => 0.7282376719225614)
+			   "centroid" => "Cluster 1",
+			   "distance" => 0.7294650227133437)
 		          );
 
       foreach($data as $item) {
@@ -474,7 +474,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
     public function test_scenario5() {
       $data = array(array("filename"=> "data/iris.csv", "options" =>  array("summary_fields" => array("sepal width"), 'seed'=>'BigML tests','cluster_seed'=> 'BigML', 'k' => 8), 
                     "data_input"=> array("petal length"=> 1, "petal width"=> 1, "sepal length" => 1, "species" => "Iris-setosa"), 
-                    "centroid" => "Cluster 3", "distance" => 0.7155571246307187));
+                    "centroid" => "Cluster 2", "distance" => 1.1643644909783857));
 
       foreach($data as $item) {
           print "Successfully comparing centroids with summary fields:\n";
@@ -509,7 +509,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
           print "When I create a centroid For ". json_encode($item["data_input"]) . "\n";
           $centroid = self::$api->create_centroid($cluster->resource, $item["data_input"]);
 
-          print  "Then the centroid is " . $item["centroid"] . "with distance " . $item["distance"] . "\n";
+          print  "Then the centroid is " . $item["centroid"] . " with distance " . $item["distance"] . "\n";
           $this->assertEquals(round($item["distance"], 6), round($centroid->object->distance, 6));
           print "And I create a local centroid for " . json_encode($item["data_input"]) . "\n";
           $local_centroid = $local_cluster->centroid($item["data_input"]);
@@ -650,7 +650,10 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                            'prediction' => 'Iris-virginica'),
                      array('filename' => 'data/iris_sp_chars.csv',
                            'data_input' => array("pétal.length" => 4, "pétal&width".json_decode('"'.'\u0000'.'"') => 1.5, "sépal&width" => 0.5, "sépal.length" => 0.5),
-                           'prediction' => 'Iris-virginica')
+                           'prediction' => 'Iris-virginica'),
+		     array('filename' => 'data/price.csv',
+		           'data_input' => array("Price" => 1200),
+			   'prediction' => 'Product2') 
    	             );
        foreach($data as $item) {
           print "\nSuccessfully comparing logistic regression predictions\n";

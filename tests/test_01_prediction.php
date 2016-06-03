@@ -150,7 +150,7 @@ class BigMLTestPredictions extends PHPUnit_Framework_TestCase
 						  "diabetes pedigree"=> 0.551, 
 						  "age"=> 31, 
 						  "diabetes"=> "true"),
-                            "centroid" => "Cluster 7"));
+                            "centroid" => "Cluster 3"));
 
         foreach($data as $item) {
 	    print "\nSuccessfully creating a centroid and the associated dataset\n";

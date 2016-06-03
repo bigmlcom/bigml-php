@@ -88,6 +88,7 @@ class LogisticRegression extends ModelFields {
    */
 
    public $resource_id = null;
+   public $input_fields;
    public $term_forms;
    public $tag_clouds;
    public $term_analysis;
@@ -105,6 +106,7 @@ class LogisticRegression extends ModelFields {
    public $numeric_fields;
 
    public function __construct($logistic_regression, $api=null, $storage="storage") {
+      $this->input_fields=array();
       $this->term_forms=array();
       $this->tag_clouds = array();
       $this->term_analysis= array();
@@ -148,11 +150,24 @@ class LogisticRegression extends ModelFields {
 
          if ($logistic_regression->status->code == BigMLRequest::FINISHED) {
 
+            $this->input_fields=property_exists($logistic_regression, "input_fields") ? $logistic_regression->input_fields : array();
             $this->dataset_field_types=property_exists($logistic_regression, "dataset_field_types") ? $logistic_regression->dataset_field_types : array();
             $objective_field = $logistic_regression->objective_fields;
 
             $logistic_regression_info= $logistic_regression->logistic_regression;
             $fields = property_exists($logistic_regression_info, "fields") ? $logistic_regression_info->fields : array();
+
+            if (is_null($this->input_fields) or empty($this->input_fields)) {
+	       $this->input_fields=array();
+	       $fields_sorted_by_column_number=array();
+	       foreach ($fields as $field_id => $field) {
+	         $a[$field_id]=$field->column_number;
+	       }
+	       asort($fields_sorted_by_column_number);
+	       foreach ($fields_sorted_by_column_number as $key => $value) {
+	          array_push($this->input_fields, $key);
+	       }
+	    }
 
             $this->coefficients=array();
 	    if (property_exists($logistic_regression_info, "coefficients")) {
@@ -230,8 +245,8 @@ class LogisticRegression extends ModelFields {
 
       $probablities=array();
       $total=0;
-
-      foreach ($this->categories[$this->objective_id] as $category) {
+      
+      foreach (array_keys($this->coefficients) as $category) {
          $coefficients = $this->coefficients[$category];
 	 $probabilities[$category] = $this->category_probability($input_data, $unique_terms, $coefficients);
 	 $total += $probabilities[$category];
@@ -405,15 +420,13 @@ class LogisticRegression extends ModelFields {
 
      $field_ids=array();
 
-     foreach ($this->fields as $field_id => $row) {
-        if ($field_id != $this->objective_id) 
-           $field_ids[$field_id] = $row->column_number;
-     } 
-
-     asort($field_ids);
+     foreach ($this->input_fields as $field_id) {
+        if ($field_id != $this->objective_id)
+           array_push($field_ids, $field_id);
+     }
      
      $shift = 0;
-     foreach ($field_ids as $field_id => $value) {
+     foreach ($field_ids as $field_id) {
         $optype = $this->fields->{$field_id}->optype;
 
         if (in_array($optype, array_keys(json_decode(EXPANSION_ATTRIBUTES, true)))) {

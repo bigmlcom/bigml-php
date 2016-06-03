@@ -84,6 +84,7 @@ class BigML {
 
       self::$devMode = $devMode;
       self::$domain = $domain;
+      self::$version= $version;
 
       if ($locale != null) {
          setlocale(LC_ALL, $$locale);
@@ -271,7 +272,7 @@ class BigML {
          $resource = $r->resource;
       }
 
-      if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid|anomaly|anomalyscore|sample|project|correlation|statisticaltest|association|logisticregression)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
+      if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid|anomaly|anomalyscore|sample|project|correlation|statisticaltest|association|logisticregression|library|execution|script)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
          $count = 0;
          $status = self::_check_resource_status($resource, $queryString); 
          while ($count<$retries && !$status["ready"]) {
@@ -2114,6 +2115,312 @@ class BigML {
       $rest->setHeader('Content-Type', 'multipart/form-data');
       return $rest->getResponse();
    }
+   ##########################################################################
+   #
+   # whizzml scripts REST calls 
+   # https://bigml.com/developers/scripts
+   #
+   ##########################################################################
+
+   public static function create_script($source_code, $args=array(), $waitTime=3000, $retries=10) {
+     /*
+       Creates a whizzml script from its source code. The `source_code`
+       parameter can be a:
+         {script ID}: the ID for an existing whizzml script
+         {string} : the string containing the source code for the script
+      */
+      $args = $args == null? array() : $args;
+      if (is_null($source_code)) {
+         throw new Exception('A valid code string or a script id must be provided.');
+      }
+
+      #$resource = self::_check_resource($source_code, null, $waitTime, $retries);
+      $resource = null;
+      if ($resource != null) {
+         if ($resource['type'] != "script") {
+            throw new Exception('A valid code string or a script id must be provided.');
+         }
+
+         if ($resource["status"] != BigMLRequest::FINISHED) {
+            throw new Exception($resource['message']);
+         }
+
+         $args["origin"] = $resource["id"];
+
+      } else if (is_string($source_code)) {
+         $args["source_code"] = $source_code;
+      } else {
+        throw new Exception('A valid code string or a script id must be provided.');
+      }
+
+      $rest = new BigMLRequest('CREATE', 'script');
+      $rest->setQueryString("full=false");
+      $rest->setData($args);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($args)));
+      return $rest->getResponse();
+
+   }
+
+   public static function get_script($script, $queryString=null)
+   {
+      /*
+       Retrieves a script.
+       The script parameter should be a string containing the
+       script id or the dict returned by create_script.
+       As script is an evolving object that is processed
+       until it reaches the FINISHED or FAULTY state, the function will
+       return a dict that encloses the script content and state info
+       available at the time it is called.
+      */
+      $rest = self::get_resource_request($script, "script", "GET", $queryString);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+
+   }
+
+   public static function list_scripts($queryString=null)
+   {
+      /*
+       Lists all your scripts
+      */
+      $rest = new BigMLRequest('LIST', 'script');
+
+      if ($queryString!=null) {
+         $rest->setQueryString($queryString);
+      }
+
+      return $rest->getResponse();
+   }
+
+   public static function update_script($script, $data, $waitTime=3000, $retries=10) {
+      /*
+       Updates a script 
+      */
+      $rest = self::get_resource_request($script, "script", "UPDATE", null, true,  $waitTime, $retries);
+      if ($rest == null) return null;
+
+      $rest->setData($data);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+   public static function delete_script($script) {
+      /*
+       Deletes a script
+      */
+      $rest = self::get_resource_request($script, "library", "DELETE", null);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
+
+   ##########################################################################
+   #
+   # whizzml execution REST calls 
+   # https://bigml.com/developers/executions
+   #
+   ##########################################################################
+
+   public static function create_execution($script, $args=array(), $waitTime=3000, $retries=10) {
+      /*
+        Creates a whizzml execution from a script or list of scripts 
+      */
+
+      $args = $args == null? array() : $args;
+      $scriptsIds = array();
+      if (is_array($script)) {
+        foreach ($script as $var => $scriptId) {
+          $resource = self::_check_resource($scriptId, null, $waitTime, $retries);
+          if ($resource == null || $resource['type'] != "script") {
+             throw new Exception('A script id is needed to create a script execution.');
+          } elseif ($resource["status"] != BigMLRequest::FINISHED) {
+             throw new Exception($resource['message']);
+          }
+          array_push($scriptsIds, $resource["id"]);
+        }
+      } else {
+        $resource = self::_check_resource($script, null, $waitTime, $retries);
+        if ($resource == null || $resource['type'] != "script") {
+          throw new Exception('A script id is needed to create a script execution.');
+        } elseif ($resource["status"] != BigMLRequest::FINISHED) {
+          throw new Exception($resource['message']);
+        }
+        array_push($scriptsIds, $resource["id"]);
+      }
+ 
+      if (sizeof($scriptsIds) > 1) {
+        $args["scripts"] = $scriptsIds;
+      } else {
+        $args["script"] = $scriptsIds[0];
+      }
+    
+      $rest = new BigMLRequest('CREATE', 'execution');
+
+      $rest->setQueryString("full=false");
+      $rest->setData($args);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($args)));
+      return $rest->getResponse();
+ 
+   }
+
+   public static function get_execution($execution, $queryString=null)
+   {
+      /*
+        Retrieves an execution
+        The execution parameter should be a string containing the
+        execution id or the dict returned by create_execution.
+        As execution is an evolving object that is processed
+        until it reaches the FINISHED or FAULTY state, the function will
+        return a dict that encloses the execution contents and state info
+        available at the time it is called.
+      */
+      $rest = self::get_resource_request($execution, "execution", "GET", $queryString);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+
+   }
+
+   public static function list_executions($queryString=null)
+   {
+      /*
+       Lists all your executions
+      */
+      $rest = new BigMLRequest('LIST', 'execution');
+
+      if ($queryString!=null) {
+         $rest->setQueryString($queryString);
+      }
+
+      return $rest->getResponse();
+   }
+
+   public static function update_execution($execution, $data, $waitTime=3000, $retries=10) {
+      /*
+         Updates a execution 
+      */
+      $rest = self::get_resource_request($execution, "execution", "UPDATE", null, true,  $waitTime, $retries);
+      if ($rest == null) return null;
+
+      $rest->setData($data);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+   public static function delete_execution($execution) {
+      /*
+        Deletes a execution 
+      */
+      $rest = self::get_resource_request($execution, "execution", "DELETE", null);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
+
+   ##########################################################################
+   #
+   # whizzml libraries REST calls 
+   # https://bigml.com/developers/libraries
+   #
+   ##########################################################################
+
+   public static function create_library($source_code, $args=array(), $waitTime=3000, $retries=10) {
+      /*
+        Creates a whizzml library from its source code. The `source_code`
+        parameter can be a:
+           {library ID}: the ID for an existing whizzml library
+           {string} : the string containing the source code for the library
+      */
+
+      $args = $args == null? array() : $args;
+
+      if (is_null($source_code)) {
+         throw new Exception('A valid code string or a library id must be provided.');
+         return null;
+      }
+ 
+
+      $resource = self::_check_resource($source_code, null, $waitTime, $retries);
+
+      if ($resource != null) { 
+         if ($resource['type'] != "library") {
+            throw new Exception('A valid code string or a library id must be provided.');
+         }
+
+         if ($resource["status"] != BigMLRequest::FINISHED) {
+            throw new Exception($resource['message']);
+         }
+ 
+         $args["origin"] = $resource["id"];
+
+      } else if (is_string($source_code)) {
+         $args["source_code"] = $source_code;
+      } else {
+        throw new Exception('A valid code string or a library id must be provided.');
+      }
+
+      $rest = new BigMLRequest('CREATE', 'library');
+      $rest->setQueryString("full=false");
+      $rest->setData($args);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($args)));
+      return $rest->getResponse();
+   }
+
+   public static function get_library($library, $queryString=null)
+   {
+      /*
+        Retrieves an library 
+        The library parameter should be a string containing the
+        library id or the dict returned by create_script.
+        As library is an evolving object that is processed
+        until it reaches the FINISHED or FAULTY state, the function will
+        return a dict that encloses the library content and state info
+        available at the time it is called.
+      */
+      $rest = self::get_resource_request($library, "library", "GET", $queryString);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+
+   }
+
+   public static function list_libraries($queryString=null)
+   {
+      /*
+       Lists all your libraries
+      */
+      $rest = new BigMLRequest('LIST', 'library');
+
+      if ($queryString!=null) {
+         $rest->setQueryString($queryString);
+      }
+
+      return $rest->getResponse();
+   }
+
+   public static function update_library($library, $data, $waitTime=3000, $retries=10) {
+      /*
+         Updates a library
+      */
+      $rest = self::get_resource_request($library, "library", "UPDATE", null, true,  $waitTime, $retries);
+      if ($rest == null) return null;
+
+      $rest->setData($data);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+   
+   public static function delete_library($library) {
+      /*
+        Deletes a library 
+      */
+      $rest = self::get_resource_request($library, "library", "DELETE", null);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }  
+
 
    private static function _create_remote_source($file_url, $options=array()) {
       $rest = new BigMLRequest('CREATE', 'source');
@@ -2461,7 +2768,7 @@ class BigML {
          $this->data = json_encode($data);
       } else { 
          $this->data = $data;
-      }	 
+      }	
    }
 
    public function download_url() {
@@ -2534,11 +2841,11 @@ class BigML {
          $query = substr($this->uri, -1) !== '?' ? '?' : '&';
          foreach ($this->parameters as $var => $value) {
             if ($value == null || $value == '') { 
-      $query .= $var.'&';
-   } else {
-      $query .= $var.'='.rawurlencode($value).'&';
-   }
-} 
+              $query .= $var.'&';
+            } else {
+              $query .= $var.'='.rawurlencode($value).'&';
+            }
+         } 
          $query = substr($query, 0, -1);
          $this->uri .= $query;
       }
@@ -2549,7 +2856,9 @@ class BigML {
       }
 
       // Set Url
-      $url = $this->endpoint.'/'.$this->version.'/'.$this->uri;
+      $url = $this->endpoint.'/'.$this->uri;
+      if (!is_null($this->version) && ($this->version != ""))
+          $url = $this->endpoint.'/'.$this->version.'/'.$this->uri;
 
       try {
 	 if (BigML::getDebug() != null && BigML::getDebug() == true)

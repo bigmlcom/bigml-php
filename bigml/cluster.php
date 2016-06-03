@@ -22,6 +22,7 @@ if (!class_exists('centroid')) {
 }
 
 define("OPTIONAL_FIELDS_CENTROID", json_encode(array('categorical', 'text','items','datetime')));
+define("GLOBAL_CLUSTER_LABEL", "Global");
 
 function parse_items($text, $regexp) {
   /*Returns the list of parsed items*/
@@ -106,6 +107,13 @@ class Cluster extends ModelFields {
    public $term_analysis;
    public $item_analysis;
    public $items;
+   public $cluster_global;
+   public $total_ss;
+   public $within_ss;
+   public $between_ss;
+   public $ratio_ss;
+   public $critical_value;
+   public $k;
 
    public function __construct($cluster, $api=null, $storage="storage") {
 
@@ -134,13 +142,36 @@ class Cluster extends ModelFields {
 
          if ($cluster->status->code == BigMLRequest::FINISHED) {
 
-            
-            $clusters = $cluster->clusters->clusters;
+	    $the_clusters = $cluster->clusters;
+	    $cluster_global = array_key_exists("global", $the_clusters) ? $the_clusters->global : null;
+	    $clusters = $the_clusters->clusters;
+
             $this->centroids = array();
 
             foreach($clusters as $centroid) {
                array_push($this->centroids, new Centroid($centroid));
             }
+            $this->cluster_global=$cluster_global;
+	    if (!is_null($cluster_global)) {
+	      $this->cluster_global=new Centroid($cluster_global);
+	      $this->cluster_global->name = GLOBAL_CLUSTER_LABEL;
+	      $this->cluster_global->count = $this->cluster_global->distance->population;
+	    }
+
+	    $this->total_ss = $the_clusters->total_ss;
+	    $this->within_ss = $the_clusters->within_ss;
+            
+	    if (!is_null($this->within_ss)) {
+	       $this->within_ss = 0;
+	       foreach($this->centroids as $centroid) {
+	          $this->within_ss+=$centroid->distance->sum_squares;
+	       }
+	    }
+
+	    $this->between_ss = $the_clusters->between_ss;
+	    $this->ratio_ss = $the_clusters->ratio_ss;
+	    $this->critical_value = array_key_exists("critical_value", $cluster) ? $cluster->critical_value : null;
+	    $this->k = $cluster->k;
 
             $this->scales = $cluster->scales;
             $this->term_forms = array(); 
@@ -217,9 +248,12 @@ class Cluster extends ModelFields {
                              'distance' => $distance2);   
          }
       }
-
       $nearest["distance"] = sqrt($nearest["distance"]);
       return $nearest;
+   }
+
+   function is_g_means() {
+      return !is_null($this->critical_value);
    }
 
    function get_unique_terms($input_data) {
