@@ -1720,6 +1720,102 @@ the ``associations`` attribute stores items, rules and metrics extracted
 from the datasets as well as the configuration parameters described in
 the `developers section <https://bigml.com/developers/associations>`_ .
 
+Whizzml Resources
+-----------------
+
+Whizzml is a Domain Specific Language that allows the definition and
+execution of ML-centric workflows. Its objective is allowing BigML
+users to define their own composite tasks, using as building blocks
+the basic resources provided by BigML itself. Using Whizzml they can be
+glued together using a higher order, functional, Turing-complete language.
+The Whizzml code can be stored and executed in BigML using three kinds of
+resources: ``Scripts``, ``Libraries`` and ``Executions``.
+
+Whizzml ``Scripts`` can be executed in BigML's servers, that is,
+in a controlled, fully-scalable environment which takes care of their
+parallelization and fail-safe operation. Each execution uses an ``Execution``
+resource to store the arguments and results of the process. Whizzml
+``Libraries`` store generic code to be shared of reused in other Whizzml
+``Scripts``.
+
+Scripts
+-------
+
+In BigML a ``Script`` resource stores Whizzml source code, and the results of
+its compilation. Once a Whizzml script is created, it's automatically compiled;
+if compilation succeeds, the script can be run, that is,
+used as the input for a Whizzml execution resource.
+
+An example of a ``script`` that would create a ``source`` in BigML using the
+contents of a remote file is:
+
+.. code-block:: php
+
+    include 'bigml/bigml.php';
+    $api =  new BigML();
+
+    # creating a script directly from the source code.
+ 
+    $api->create_script(array('source_code' => '(+ 1 1)'));
+    $api->create_script('/files/diabetes.csv');
+
+The ``script`` can also use a ``library`` resource (please, see the
+``Libraries`` section below for more details) by including its id in the
+``imports`` attribute. Other attributes can be checked at the
+`API Developers documentation for Scripts<https://bigml.com/developers/scripts#ws_script_arguments>`_.
+
+Executions
+----------
+
+To execute in BigML a compiled Whizzml ``script`` you need to create an
+``execution`` resource. It's also possible to execute a pipeline of
+many compiled scripts in one request.
+
+Each ``execution`` is run under its associated user credentials and its
+particular environment constaints. As ``scripts`` can be shared,
+you can execute the same ``script``
+several times under different
+usernames by creating different ``executions``.
+
+As an example of ``execution`` resource, let's create one for the script
+in the previous section:
+
+.. code-block:: php
+
+    $execution = $api->create_execution('script/573c9e2db85eee23cd000489')
+
+An ``execution`` receives inputs, the ones defined in the ``script`` chosen
+to be executed, and generates a result. It can also generate outputs.
+As you can see, the execution resource contains information about the result
+of the execution, the resources that have been generated while executing and
+users can define some variables in the code to be exported as outputs. Please
+refer to the
+`Developers documentation for Executions<https://bigml.com/developers/executions#we_execution_arguments>`_
+for details on how to define execution outputs.
+
+Libraries
+---------
+
+The ``library`` resource in BigML stores a special kind of compiled Whizzml
+source code that only defines functions and constants. The ``library`` is
+intended as an import for executable scripts.
+Thus, a compiled library cannot be executed, just used as an
+import in other ``libraries`` and ``scripts`` (which then have access
+to all identifiers defined in the ``library``).
+
+As an example, we build a ``library`` to store the definition of two functions:
+``mu`` and ``g``. The first one adds one to the value set as argument and
+the second one adds two variables and increments the result by one.
+
+    $library = $api->create_library("(define (mu x) (+ x 1)) (define (g z y) (mu (+ y z)))");
+
+Libraries can be imported in scripts. The ``imports`` attribute of a ``script``
+can contain a list of ``library`` IDs whose defined functions
+and constants will be ready to be used throughout the ``script``. Please,
+refer to the `API Developers documentation for Libraries<https://bigml.com/developers/libraries#wl_library_arguments>`_
+for more details.
+
+
 Statuses
 --------
 Please, bear in mind that resource creation is almost always asynchronous (predictions are the only exception). 
