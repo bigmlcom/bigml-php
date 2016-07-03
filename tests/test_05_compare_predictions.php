@@ -974,4 +974,93 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
        }
 
     }
+
+
+    public function test_scenario12() {
+       $data = array(array('filename' => 'data/iris.csv',
+                           'options' => array("fields" => array("000000" => array("optype" => "categorical"))),
+                           'data_input' => array("species" => "Iris-setosa"),
+                           'probability' => 0.02857,
+                           'prediction' => "5.0",
+                           'objective' => '000000',
+                           'params' => array("field_codings" => array(array("field" => "species", "coding" => "dummy", "dummy_class" => "Iris-setosa"))), 
+                          ),
+                       array('filename' => 'data/iris.csv',
+                           'options' => array("fields" => array("000000" => array("optype" => "categorical"))),
+                           'data_input' => array("species" => "Iris-setosa"),
+                           'probability' => 0.04293,
+                           'prediction' => "5.5",
+                           'objective' => '000000',
+                           'params' => array("field_codings" => array(array("field" => "species", "coding" => "contrast", "coefficients" => array(array(1,2,-1,-2)))))
+                          ),
+                       array('filename' => 'data/iris.csv',
+                           'options' => array("fields" => array("000000" => array("optype" => "categorical"))),
+                           'data_input' => array("species" => "Iris-setosa"),
+                           'probability' => 0.04293,
+                           'prediction' => "5.5",
+                           'objective' => '000000',
+                           'params' => array("field_codings" => array(array("field" => "species", "coding" => "other", "coefficients" => array(array(1,2,-1,-2))))),
+                          )
+                    );
+
+
+       foreach($data as $item) {
+           
+           print "Scenario: Successfully comparing predictions with text options\n";
+           print "Given I create a data source uploading a ". $item['filename'] . " file\n";
+           $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
+           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
+           $this->assertEquals(1, $source->object->status->code);
+           print "And I wait until the source is ready\n";
+           $resource = self::$api->_check_resource($source->resource, null, 30000, 30);  
+           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+           print "And I update the source with params ". json_encode($item['options']) . "\n";
+           $source = self::$api->update_source($source->resource, $item["options"]);
+  
+           print "And I create a dataset\n";
+           $dataset = self::$api->create_dataset($source->resource);
+           $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
+           $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
+
+           print "And I wait until the dataset is ready\n";
+           $resource = self::$api->_check_resource($dataset->resource, null, 30000, 30);
+           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+           print "And I create a logistic regression model with objective " . $item["objective"] . " and params " . json_encode($item["params"]) . "\n";
+           $logistic_regression = self::$api->create_logistic_regression($dataset->resource, 
+                                                                         array_merge($item["params"], 
+                                                                              array('objective_field' =>  $item["objective"])));
+           print "And I wait until the logistic regression model\n";
+           $resource = self::$api->_check_resource($logistic_regression->resource, null, 10000, 30);
+           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+           $logistic_regression = self::$api->get_logistic_regression($logistic_regression->resource);
+           print "And I create a local logistic regression model\n";
+           $localLogisticRegression = new LogisticRegression($logistic_regression);
+
+           print "When I create a logistic regression prediction for ". json_encode($item['data_input']) ."\n";
+           $prediction = self::$api->create_prediction($logistic_regression->resource, $item["data_input"]);
+           $this->assertEquals(BigMLRequest::HTTP_CREATED, $prediction->code);
+
+           print "Then the logistic regression prediction is ". $item["prediction"] . "\n";
+           $this->assertEquals($prediction->object->output, $item["prediction"]);
+
+           print "And the logistic regression probability for the prediction is " . $item["probability"] . "\n";
+           foreach ($prediction->object->probabilities as $key => $value) {
+             if ($value[0] == $prediction->object->output) {
+                $this->assertEquals(round($value[1],4), round($item["probability"], 4));
+                break;
+             }
+           }
+
+           print "And I create a local logistic regression prediction for " . json_encode($item["data_input"]) . "\n";
+           $local_prediction = $localLogisticRegression->predict($item["data_input"]);
+           print "Then the local logistic regression prediction is " . $item["prediction"] . "\n";
+           $this->assertEquals($item["prediction"],  $local_prediction["prediction"]);
+           print "And the local logistic regression probability for the prediction is " . $item["probability"] . "\n";
+           $this->assertEquals(round($local_prediction["probability"], 4), round($item["probability"], 4));
+
+       }
+    }
+
 }    

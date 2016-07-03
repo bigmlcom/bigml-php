@@ -123,4 +123,57 @@ class BigMLTestCreateDataset extends PHPUnit_Framework_TestCase
 
         }
     }
+
+
+    /* Successfully creating an evaluation for a logistic regression  */
+    public function test_scenario3() {
+        $data = array(array('filename' => 'data/iris.csv',
+                          'number_of_models' => 5,
+                          'measure' => 'average_phi',
+                          'value' => '0.94107',
+                          'tlp' => 1));
+
+       foreach($data as $item) {
+          print "\nSuccessfully creating an evaluation for a logistic regression\n";
+          print "Given I create a data source uploading a ". $item["filename"]. " file\n";
+          $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
+          $this->assertEquals(1, $source->object->status->code);
+
+          print "And I wait until the source is ready\n";
+          $resource = self::$api->_check_resource($source->resource, null, 20000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "And I create dataset with local source\n";
+          $dataset = self::$api->create_dataset($source->resource);
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
+          $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
+
+          print "And I wait until the dataset is ready " . $dataset->resource . " \n";
+          $resource = self::$api->_check_resource($dataset->resource, null, 20000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "And I create a logistic regression\n";
+          $logistic_regression = self::$api->create_logistic_regression($dataset->resource);
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $logistic_regression->code);
+
+          print "And I wait until the logistic regression is ready\n";
+          $resource = self::$api->_check_resource($logistic_regression->resource, null, 10000, 30);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "When I create an evaluation for the logistic regression with the dataset\n";
+          $evaluation = self::$api->create_evaluation($logistic_regression, $dataset);
+          $this->assertEquals(BigMLRequest::HTTP_CREATED, $evaluation->code);
+
+          print "And I wait until the evaluation is ready\n";
+          $resource = self::$api->_check_resource($evaluation->resource, null, 10000, 50);
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
+
+          print "Then the measured ". $item["measure"] ." is " . $item["value"] ."\n";
+          $evaluation = self::$api->get_evaluation($evaluation->resource);
+          $this->assertEquals(floatval($evaluation->object->result->model->{$item["measure"]}), floatval($item["value"]));
+
+       }
+
+    }
 }    

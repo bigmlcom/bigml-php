@@ -1020,8 +1020,8 @@ class BigML {
 
       $resource = self::_check_resource($modelId, null, $waitTime, $retries);
 
-      if ($resource == null || !in_array($resource['type'],array("model","ensemble"))) {
-         error_log("Wrong model or ensemble id. A model or ensemble id is needed to create a evaluation");
+      if ($resource == null || !in_array($resource['type'],array("model","ensemble", "logisticregression"))) {
+         error_log("Wrong model, ensemble or logistic_regression id. A model,  ensemble or logistic regression id is needed to create a evaluation");
          return null;
       } elseif ($resource["status"] != BigMLRequest::FINISHED) {
          error_log($resource['message']);

@@ -97,6 +97,7 @@ class LogisticRegression extends ModelFields {
    public $categories;
    public $coefficients;
    public $data_field_types;
+   public $field_codings;
    public $bias = null;
    public $missing_coefficients; 
    public $c = null;
@@ -115,6 +116,7 @@ class LogisticRegression extends ModelFields {
       $this->categories=array();
       $this->data_field_types=array();
       $this->numeric_fields = array(); 
+      $old_coefficients = false;
 
       if ($api == null) {
          $api = new BigML(null, null, null, $storage);
@@ -171,16 +173,22 @@ class LogisticRegression extends ModelFields {
 
             $this->coefficients=array();
 	    if (property_exists($logistic_regression_info, "coefficients")) {
+              $j=0;
 	      foreach ($logistic_regression_info->coefficients as $key => $coefficient) {
 	         $this->coefficients[$coefficient[0]] = $coefficient[1];
+                 if ($j == 0 and !is_array($coefficient[1])) {
+                    $old_coefficients=true;
+                 }
+                 $j+=1; 
 	      } 
 	    }
-
+ 
             $this->bias = property_exists($logistic_regression_info, "bias") ? $logistic_regression_info->bias : 0;
             $this->c = property_exists($logistic_regression_info, "c") ? $logistic_regression_info->c : null;
             $this->eps = property_exists($logistic_regression_info, "eps") ? $logistic_regression_info->eps : null; 
             $this->normalize = property_exists($logistic_regression_info, "normalize") ? $logistic_regression_info->normalize : null;
             $this->regularization = property_exists($logistic_regression_info, "regularization") ? $logistic_regression_info->regularization : null;
+            $this->field_codings = property_exists($logistic_regression_info, "field_codings") ? $logistic_regression_info->field_codings : array();
 	    $this->missing_numerics =  property_exists($logistic_regression_info, "missing_numerics") ? $logistic_regression_info->missing_numerics : false;
 
             $objective_id = extract_objective($objective_field);
@@ -216,8 +224,19 @@ class LogisticRegression extends ModelFields {
             }
 
             parent::__construct($fields, $objective_id);
+            $this->field_codings = property_exists($logistic_regression_info, "field_codings") ? $logistic_regression_info->field_codings : array();
+            $this->format_field_codings();
+
+            foreach ($this->field_codings as $field_id => $field_coding) {
+                if ( array_key_exists($field_id, $fields) && array_key_exists($field_id,$this->inverted_fields) ) {
+                   $this->field_codings[$this->inverted_fields[$field_id]] = $this->field_codings[$field_id];
+                   unset($this->field_codings[$field_id]);
+                }
+            }          
  
-            $this->map_coefficients();
+            if ($old_coefficients) {
+               $this->map_coefficients();
+            }
  
          } else {
             throw new Exception("The logistic regression isn't finished yet");
@@ -245,95 +264,147 @@ class LogisticRegression extends ModelFields {
 
       $probablities=array();
       $total=0;
-      
+     
       foreach (array_keys($this->coefficients) as $category) {
-         $coefficients = $this->coefficients[$category];
-	 $probabilities[$category] = $this->category_probability($input_data, $unique_terms, $coefficients);
-	 $total += $probabilities[$category];
+         $probability = $this->category_probability($input_data, $unique_terms, $category);
+         $order = array_search($category, $this->categories[$this->objective_id]);
+         $probabilities[$category] = array("category" => $category, 
+                                           "probability" => $probability, 
+                                           "order" => $order);
+
+         $total += $probabilities[$category]["probability"];
+
       }
-  
-      foreach ($probabilities as $key => $value) {
-         $probabilities[$key] =  $value/$total;
+      foreach ($probabilities as $category => $value) {
+         $probabilities[$category]["probability"] = $probabilities[$category]["probability"]/$total;
       }
 
-      arsort($probabilities);
+      uasort($probabilities, array($this, "sort_probabilities_items"));
+
+      foreach ($probabilities as $prediction => $probability) {
+        unset($probabilities[$prediction]['order']);
+      }
 
       reset($probabilities);
       $result=array('prediction'=> key($probabilities),
-                    'probability'=> $probabilities[key($probabilities)],
+                    'probability'=> $probabilities[key($probabilities)]["probability"],
 		    'distribution' => array());
-
       foreach ($probabilities as $category => $probability) {
-         array_push($result["distribution"], array("category"=> $category, "probability" => $probability));
+         array_push($result["distribution"], array("category"=> $category, "probability" => $probabilities[$category]["probability"]));
       }
 
       return $result;
    }
  
-   public function category_probability($input_data, $unique_terms, $coefficients) {
+   public function category_probability($input_data, $unique_terms, $category) {
      /* Computes the probability for a concrete category */
      $probability=0;
-
+     # the bias term is the last in the coefficients list
+     $bias = $this->coefficients[$category][count($this->coefficients[$category]) - 1][0];
+ 
      foreach ($input_data as $field_id => $value) {
-       $shift = $this->fields->{$field_id}->coefficients_shift;
-       $probability += $coefficients[$shift]* $input_data[$field_id];
+       $coefficients = $this->get_coefficients($category, $field_id);
+       $probability += $coefficients[0] * $input_data[$field_id];
      }
 
      foreach ($unique_terms as $field_id => $value) {
+       if ( in_array($field_id, $this->input_fields) ) {
+         $coefficients = $this->get_coefficients($category, $field_id);
+         foreach($unique_terms[$field_id] as $term_value) {
+            $term =  $term_value[0];
+            $occurrences=$term_value[1];
+            try {
+              $one_hot = true;
+              if ( array_key_exists($field_id, $this->tag_clouds) ) {
+                $index = array_search($term, $this->tag_clouds[$field_id]);
+              } else if (array_key_exists($field_id, $this->items)) {
+                $index = array_search($term, $this->items[$field_id]);
+              } else if (array_key_exists($field_id, $this->categories) and 
+                        (!array_key_exists($field_id, $this->field_codings) or array_keys($this->field_codings->{$field_id})[0] == "dummy" ) ) {
 
-       foreach($unique_terms[$field_id] as $term_value) {
+                $index = array_search($term, $this->categories[$field_id]);
+              } else if (array_key_exists($field_id, $this->categories) ) {
+                $one_hot = false;
+                $index = array_search($term, $this->categories[$field_id]);
+                $coeff_index = 0;
 
-          $shift = $this->fields->{$field_id}->coefficients_shift;
-          $term =  $term_value[0];
-          $occurrences=$term_value[1];
+                foreach($this->field_codings[$field_id] as $key => $value) {
+                   foreach ($value[0] as $contribution) {
+                      $probability += $coefficients[$coeff_index] * $contribution[$index] * $occurrences;
+                      $coeff_index+=1;
+                   }
+                   break; 
+                }
+                
+              } 
+ 
+              if ($one_hot) {
+                $probability += $coefficients[$index]*$occurrences;
+              }
 
-          try { 
-	    if ( array_key_exists($field_id, $this->tag_clouds) ) {
-	      $index = array_search($term, $this->tag_clouds[$field_id]);
-	    } else if (array_key_exists($field_id, $this->items)) {
-	      $index = array_search($term, $this->items[$field_id]); 
-	    } else if (array_key_exists($field_id, $this->categories)) {
-	      $index = array_search($term, $this->categories[$field_id]); 
-	    }
-	    $probability+=$coefficients[$shift+$index] * $occurrences;
+            } catch (Exception $e) {
+              continue;
+            }
+         }
 
-	  } catch (Exception $e) {
-	    continue;
-	  }   
-
-        }
+       }
      }
 
      foreach ($this->numeric_fields as $field_id => $value) {
-         if (!array_key_exists($field_id, $input_data)) {
-	    $shift = $this->fields->{$field_id}->coefficients_shift +1;
-	    $probability += $coefficients[$shift];
+         if (array_key_exists($field_id, $this->input_fields)) {
+            $coefficients = $this->get_coefficients($category, $field_id);
+            if (!array_key_exists($field_id, $input_data)) {
+              $probability += $coefficients[1];
+            }
 	 }
 
      }
 
      foreach ($this->tag_clouds as $field_id => $value) {
-          $shift = $this->fields->{$field_id}->coefficients_shift;
-          if (!array_key_exists($field_id, $unique_terms) or !$unique_terms[$field_id]) {
-	     $probability += $coefficients[$shift+ count($this->tag_clouds[$field_id])]; 
-	  } 
+         if (array_key_exists($field_id, $this->input_fields)) {
+             $coefficients = $this->get_coefficients($category, $field_id);
+             if (!array_key_exists($field_id, $unique_terms) or !$unique_terms[$field_id]) {
+               $probability += $coefficients[$shift+ count($this->tag_clouds[$field_id])];
+             }
+         }
      }
 
      foreach ($this->items as $field_id => $value) {
-	  $shift = $this->fields->{$field_id}->coefficients_shift;
-          if (!array_key_exists($field_id, $unique_terms) or !$unique_terms[$field_id]) {
-	    $probability += $coefficients[$shift+ count($this->items[$field_id])];
-	  }
+        if (array_key_exists($field_id, $this->input_fields)) {
+           $coefficients = $this->get_coefficients($category, $field_id);
+           if (!array_key_exists($field_id, $unique_terms) or !$unique_terms[$field_id]) {
+              $shift = $this->fields{$field_id}->coefficients_shift;
+              $probability += $coefficients[$shift+ count($this->items[$field_id])];
+           }
+        }
      }
 
      foreach ($this->categories as $field_id => $value) {
-	   if (($field_id != $this->objective_id) && !array_key_exists($field_id, $unique_terms)) {
-	      $shift = $this->fields->{$field_id}->coefficients_shift; 
-	      $probability += $coefficients[$shift+ count($value)];
-	   }
+        if (array_key_exists($field_id, $this->input_fields)) {
+           $coefficients = $this->get_coefficients($category, $field_id); 
+           if (!array_key_exists($field_id, $unique_terms) or !$unique_terms[$field_id]) {
+              if (!array_key_exists($field_id, $this->field_codings) or array_keys($this->field_codings->{$field_id})[0] == "dummy" )  {
+                $shift = $this->fields->{$field_id}->coefficients_shift;
+                $probability += $coefficients[$shift+ count($this->items[$field_id])];
+              } else {
+                # codings are given as arrays of coefficients. The
+                # last one is for missings and the previous ones are
+                # one per category as found in summary
+                $coeff_index = 0;
+                foreach($this->field_codings[$field_id] as $key => $value) {
+                   foreach ($value[0] as $contribution) {
+                      $probability += $coefficients[$coeff_index] * end($contribution);
+                      $coeff_index+=1;
+                   }
+                   break;
+                }
+
+              }
+           }
+        }
      }
 
-     $probability += end($coefficients);
+     $probability += $bias;
      $probability = 1 / (1 + exp(-$probability)); 
 
      return $probability;
@@ -430,19 +501,89 @@ class LogisticRegression extends ModelFields {
         $optype = $this->fields->{$field_id}->optype;
 
         if (in_array($optype, array_keys(json_decode(EXPANSION_ATTRIBUTES, true)))) {
-          # text, items and categorical fields have one coefficient per
-          # text/class plus a missing terms coefficient plus a bias
+          # text and items fields have one coefficient per
+          # text plus a missing terms coefficient plus a bias
           # coefficient
-          $length = count($this->fields->{$field_id}->summary->{json_decode(EXPANSION_ATTRIBUTES, true)[$optype]});
-          $length += 1;
+          # categorical fields too, unless they use a non-default
+          # field coding.
+
+          if ($optype != 'categorical' or 
+              !array_key_exists($field_id, $this->field_codings) or 
+              array_keys($this->field_codings->{$field_id})[0] == "dummy") {
+             $length = count($this->fields->{$field_id}->summary->{json_decode(EXPANSION_ATTRIBUTES, true)[$optype]});
+             $length += 1;
+          } else {
+             $length = count(array_values($this->field_codings->{$field_id})[0]);
+          }
+
         } else {
            # numeric fields have one coefficient and an additional one
            # if self.missing_numerics is True
            $length = ($this->missing_numerics) ? 2 : 1;
         }
-        $this->fields->{$field_id}->coefficients_shift = $shift;
+        $this->fields->{$field_id}->coefficients_length = $length;
         $shift += $length; 
      }
  
+     $this->group_coefficients();
+   }
+
+   public function get_coefficients($category, $field_id) {
+     /* Returns the set of coefficients for the given category and fieldIds */
+     $coeff_index = array_search($field_id, $this->input_fields);
+     return $this->coefficients[$category][$coeff_index];
+   } 
+
+   public function group_coefficients() {
+     /* Groups the coefficients of the flat array in old formats to the
+       grouped array, as used in the current notation
+     */
+     $coefficients = clone $this->coefficients;
+     $this->flat_coefficients = $coefficients;
+     foreach ($this->coefficients as $key => $category) {
+        $this->coefficients[$category] = array();
+        foreach ($this->input_fields as $field_id => $value) {
+           $shift = $this->fields->{$field_id}->coefficients_shift;
+           $length =  $this->fields->{$field_id}->coefficients_length;
+           $coefficients_group = array_slice($coefficients[$category], $shift, $length + $shift); 
+           array_push($this->coefficients[$category], 
+                      array($coefficients[$category][count($coefficients[$category]) -1]));
+        } 
+     } 
+
+   }
+
+   public function format_field_codings() {
+     /*  Changes the field codings format to the dict notation */
+     if (is_array($this->field_codings)) {
+        $this->field_codings_list = array_slice($this->field_codings, 0);
+        $field_codings = array_slice($this->field_codings, 0);
+        $this->field_codings=array();
+
+        foreach ($field_codings as $index => $element) {
+          $field_id = $element->field;
+          if ($element->coding == "dummy") {
+            $this->field_codings[$field_id] = array($element->coding => $element->dummy_class);
+          } else {
+            $this->field_codings[$field_id] = array($element->coding => $element->coefficients);
+          }
+        }
+     }
+
+   }
+
+   private function sort_probabilities_items($a, $b) {
+      if ($a["probability"] < $b["probability"]) {
+         return 1;
+      } else if ($a["probability"] > $b["probability"]) {
+         return -1;
+      } else {
+          if ($a["order"] < $b["order"]) {
+            return -1;
+          } else if ($a["order"] > $b["order"]) {
+	    return 1;
+	  }
+          return 0;
+      }
    }
 }

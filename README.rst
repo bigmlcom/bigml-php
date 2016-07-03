@@ -2102,6 +2102,36 @@ but you can also specify the number of models to be built and the parallelism le
     $ensemble = $api->create_ensemble($datasetid, $args);
 
 
+Creating logistic regressions
+-----------------------------
+
+For classification problems, you can choose also logistic regressions to model
+your data. Logistic regressions compute a probability associated to each class
+in the objective field. The probability is obtained using a logistic
+function, whose argument is a linear combination of the field values.
+
+As the rest of models, logistic regressions can be created from a dataset by
+calling the corresponding create method:
+
+.. code-block:: php
+
+    logistic_regression = $api->create_logistic_regression(
+        'dataset/5143a51a37203f2cf7000972',
+        array("name" => "my logistic regression",
+         "objective_field" => "my_objective_field"))
+
+In this example, we created a logistic regression named
+``my logistic regression`` and set the objective field to be
+``my_objective_field``. Other arguments, like ``bias``, ``missing_numerics``
+and ``c`` can also be specified as attributes in arguments dictionary at
+creation time.
+Particularly for categorical fields, there are four different available
+`field_codings`` options (``dummy``, ``contrast``, ``other`` or the ``one-hot``
+default coding). For a more detailed description of the
+``field_codings`` attribute and its syntax, please see the `Developers API
+Documentation
+<https://bigml.com/developers/logisticregressions#lr_logistic_regression_arguments>`_.
+
 Creating batch predictions
 --------------------------
 
