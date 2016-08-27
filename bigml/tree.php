@@ -187,6 +187,9 @@ class Tree {
    public $median;
    public $impurity;
    public $distribution_unit;
+   public $weighted;
+   public $weighted_distribution;
+   public $weighted_distribution_unit;
 
    public function __construct($tree, $fields, $objective_field=null, $root_distribution=null, $parent_id=null, $ids_map=null, $subtree=true, $tree_info=null) {
 
@@ -229,22 +232,40 @@ class Tree {
       $this->distribution = null;
       $this->max = null;
       $this->min = null;
+      $this->weighted = false;
       $summary = null;
 
       if (property_exists($tree, 'distribution') ) {
          $this->distribution = $tree->distribution;
       } elseif (property_exists($tree, 'objective_summary') ) {
          $summary = $tree->objective_summary;
+	 if (property_exists($tree, 'weighted_objective_summary')) {
+           $summary = $tree->weighted_objective_summary;
+
+           if (property_exists($summary, 'bins')) {
+             $this->weighted_distribution = $summary->bins;
+             $this->weighted_distribution_unit = 'bins';
+           } elseif (property_exists($summary, 'counts') ) {
+             $this->weighted_distribution = $summary->counts;
+             $this->weighted_distribution_unit = 'counts';
+           } elseif (property_exists($summary, 'categories') ) {
+             $this->weighted_distribution = $summary->categories;
+             $this->weighted_distribution_unit = 'categories';
+           }
+
+	   $this->weighted = true;
+	 }
          if (property_exists($summary, 'bins')) {
              $this->distribution = $summary->bins;
 	     $this->distribution_unit = 'bins';
          } elseif (property_exists($summary, 'counts') ) {
              $this->distribution = $summary->counts;
 	     $this->distribution_unit = 'counts';
-         }  elseif (property_exists($summary, 'categories') ) {
+         } elseif (property_exists($summary, 'categories') ) {
              $this->distribution = $summary->categories;
 	     $this->distribution_unit = 'categories';
          }
+
       } else {
          $summary = $root_distribution;
          if (property_exists($summary, 'bins')) {
@@ -374,9 +395,9 @@ class Tree {
          $d_min = $predict_pro[1];
          $d_max = $predict_pro[2];
          $last_node = $predict_pro[3];
+	 $population = $predict_pro[4];
  
          $distribution = array(); 
-
          if ($this->regression) {
           
             // singular case
@@ -425,11 +446,13 @@ class Tree {
             foreach ($final_distribution as $key => $val) {
                array_push($distribution, array($key, $val));
             }
-            return new Prediction($distribution[0][0], $path, ws_confidence($distribution[0][0], $final_distribution), $distribution, get_instances($distribution), 
-	                          'categorial', null, $last_node->children, null, null);
+
+            return new Prediction($distribution[0][0], $path, ws_confidence($distribution[0][0], $final_distribution, 1.96, $population), $distribution, 
+	                          $population, 'categorical', null, $last_node->children, null, null);
          }
  
       } else {
+
          if ($this->children != null) {  #&&  array_key_exists(splitChildren($this->children), $input_data) ) {
             foreach ($this->children as $child) {
                if ($child->predicate->apply($input_data, $this->fields)) {
@@ -463,12 +486,14 @@ class Tree {
       $final_distribution = array();
 
       if ($this->children == null) {
+         $distribution = !$this->weighted ? $this->distribution : $this->weighted_distribution; 
+
          $a = array(); 
-         foreach($this->distribution as $x) {
+         foreach($distribution as $x) {
             $a[strval($x[0])] = $x[1];
          }
 
-         return array(merge_distributions(array(), $a), $this->min, $this->max, $this);
+         return array(merge_distributions(array(), $a), $this->min, $this->max, $this, $this->count);
       }
 
       if ( one_branch($this->children, $input_data) || in_array($this->fields->{splitChildren($this->children)}->optype, array("text", "items")) ) {
@@ -488,12 +513,14 @@ class Tree {
          $missing_found = true;
          $minimus = array();
          $maximus = array();
+         $population = 0;
 
          foreach($this->children as $child) {
 	    $predict_pro = $child->predict_proportional($input_data, $path, $missing_found, $median);
             $subtree_distribution = $predict_pro[0];
 	    $subtree_min = $predict_pro[1];
 	    $subtree_max = $predict_pro[2];
+	    $subtree_pop = $predict_pro[4];
 
             if ($subtree_min != null) {
                array_push($minimus, $subtree_min); 
@@ -501,7 +528,8 @@ class Tree {
             if ($subtree_max != null) {
                array_push($maximus, $subtree_max); 
             }
-
+            
+	    $population += $subtree_pop;
             $final_distribution = merge_distributions($final_distribution, $subtree_distribution);
          }
          
@@ -515,7 +543,8 @@ class Tree {
          if (!empty($maximus)) {
             $max_value=max($maximus);
          }
-         return array($final_distribution, $min_value, $max_value, $this);
+
+         return array($final_distribution, $min_value, $max_value, $this, $population);
       }
 
    }

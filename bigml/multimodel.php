@@ -112,7 +112,7 @@ class MultiModel{
    public function predict($input_data, $by_name=true, $method=MultiVote::PLURALITY_CODE, 
                            $with_confidence=false, $options=null, $missing_strategy=Tree::LAST_PREDICTION,
 			   $add_confidence=false, $add_distribution=false, $add_count=false, 
-			   $add_median=false, $add_min=false, $add_max=false) {
+			   $add_median=false, $add_min=false, $add_max=false, $add_unused_fields=false) {
 
       /*
          Makes a prediction based on the prediction made by every model. The method parameter is a numeric key to the following combination methods in classifications/regressions:
@@ -122,10 +122,27 @@ class MultiModel{
          3 - threshold filtered vote / doesn't apply: THRESHOLD_COD
       */
 
-      $votes = self::generate_votes($input_data, $by_name, $missing_strategy, $add_median, $add_min, $add_max); 
+      $votes = self::generate_votes($input_data, $by_name, $missing_strategy, $add_median, $add_min, $add_max, $add_unused_fields); 
 
-      return $votes->combine($method, $with_confidence, $add_confidence, $add_distribution, 
+      $result = $votes->combine($method, $with_confidence, $add_confidence, $add_distribution, 
                              $add_count, $add_median, $add_min, $add_max, $options);
+
+      if ($add_unused_fields) {
+         $unused_fields = array_unique(array_keys($input_data));
+         foreach($votes->predictions as $index => $prediction) {
+            $unused_fields = array_intersect($unused_fields, array_unique($prediction->unused_fields));
+         }
+  
+         if (!is_array($result)) {          
+            $result = array("prediction" => $result);
+         }
+  
+         $result['unused_fields'] = $unused_fields;
+  
+      } 
+
+      return $result;
+
    }
 
    public function batch_predict($input_data_list, $output_file_path=null, $by_name=true, $reuse=false, 
@@ -232,7 +249,8 @@ class MultiModel{
       }
    }
 
-   function generate_votes($input_data, $by_name=true, $missing_strategy=Tree::LAST_PREDICTION, $add_median=false, $add_min=false, $add_max=false) {
+   function generate_votes($input_data, $by_name=true, $missing_strategy=Tree::LAST_PREDICTION, $add_median=false, 
+                           $add_min=false, $add_max=false, $add_unused_fields=false) {
       /*
          Generates a MultiVote object that contains the predictions
          made by each of the models.
@@ -245,7 +263,7 @@ class MultiModel{
       foreach ($this->models as $model) {
          $prediction_info = $model->predict($input_data, $by_name, false, STDOUT, false, 
                                             $missing_strategy, true, false, true, true, $add_median,
-                                            false, $add_min, $add_max, null);
+                                            false, $add_min, $add_max, $add_unused_fields, null);
          $votes->append($prediction_info);
       }
 

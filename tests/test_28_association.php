@@ -107,7 +107,6 @@ class BigMLTestAssociations extends PHPUnit_Framework_TestCase
           $resource = self::$api->_check_resource($association->resource, null, 10000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-          print $association->resource . "\n";
           $association = self::$api->get_association($association->resource);
           print "And I create a local association\n";
           $local_association = new Association($association);

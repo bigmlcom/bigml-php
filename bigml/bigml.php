@@ -3056,7 +3056,7 @@ class BigML {
             $error = $error . "\nCouldn\'t find a " . $resource_type . " matching the given id. The most probable causes are:\n\n" . $alternate_message . " A typo in the " . $resource_type . "'s id.\n The " . $resource_type . " id cannot be accessed with your credentials.\n \nDouble-check your " . $resource_type . " and credentials info and retry."; 
 
          } elseif ($code == BigMLRequest::HTTP_UNAUTHORIZED) {
-            $error = $error. '\nDouble-check your credentials, please.';
+            $error = $error. '\nDouble-check your credentials, and the general  domain your account is registered with (currently using '. BigML::getDomain() . '), please.';
          } elseif ($code == BigMLRequest::HTTP_BAD_REQUEST) { 
              $error = $error.'\nDouble-check the arguments for the call, please.';
          } elseif ($code == BigMLRequest::HTTP_TOO_MANY_REQUESTS) {

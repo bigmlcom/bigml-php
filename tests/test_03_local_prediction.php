@@ -62,7 +62,7 @@ class BigMLTestLocalPredictions extends PHPUnit_Framework_TestCase
 	   print "Given I create a local model from a " . $item["model"] . "\n";
 	   $model =  new Model($item["model"], self::$api);
 	   print "When I create a multiple local prediction for " . json_encode($item["data_input"]) . "\n";
-	   $prediction = $model->predict($item["data_input"], true, false, STDOUT, false, Tree::LAST_PREDICTION, false, false, false, false, false, false, false, false, 'all');
+	   $prediction = $model->predict($item["data_input"], true, false, STDOUT, false, Tree::LAST_PREDICTION, false, false, false, false, false, false, false, false, false, 'all');
 	   print " Then the multiple local prediction is " . json_encode($item["prediction"]) . "\n";
 	   $this->assertEquals($prediction, $item["prediction"]);
 	}

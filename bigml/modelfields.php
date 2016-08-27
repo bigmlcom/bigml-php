@@ -47,7 +47,27 @@ function cast($input_data, $fields) {
       Checks expected type in input data values, strips affixes and casts
    */
    foreach($input_data as $key => $value) {
-      if ( ($fields->{$key}->optype == 'numeric' && is_string($value)) || 
+      if ($fields->{$key}->optype == 'categorical' &&  
+         count($fields->{$key}->summary->categories) == 2 && (is_bool($value))) {# || in_array($value, array(0,1)))) {
+         try {
+	   $booleans = array();
+	   $categories = array();
+           foreach ($fields->{$key}->summary->categories as $index => $v) {
+	      array_push($categories, $v[0]);
+	   }
+           foreach ($categories as $category) {
+              $bool_key =  in_array(trim(strtolower($category)), array("true", "1")) ? '1' : '0'; 
+	      $booleans[$bool_key] = $category; 
+           }
+           # converting boolean to the corresponding string	   
+	   $input_data[$key] = $booleans[strval($value)];
+
+	 } catch  (Exception $e) {
+	   throw new Exception("Mismatch input data type in field \"". $fields->{$key}->name . 
+	                        "\" for value " . json_encode($value) . ". String expected");
+	 }
+
+      } else if ( ($fields->{$key}->optype == 'numeric' && is_string($value)) || 
           ($fields->{$key}->optype != 'numeric' && !is_string($value))) {
 
          if ($fields->{$key}->optype == 'numeric') {
@@ -58,6 +78,9 @@ function cast($input_data, $fields) {
                $input_data[$key] = utf8_encode($value);
             }
          } 
+      } else if ($fields->{$key}->optype == 'numeric' && is_bool($value) ) {
+          throw new Exception("Mismatch input data type in field \"". $fields->{$key}->name .
+	                       "\" for value " . json_encode($value) . ". Numeric expected");
       }
    }
    return $input_data;
@@ -200,11 +223,17 @@ class ModelFields {
       }
    }
 
-   public function filter_input_data($input_data, $by_name=true) 
+   public function filter_input_data($input_data, $by_name=true, $add_unused_fields=false) 
    {
       /*
          Filters the keys given in input_data checking against model fields
+	 If `add_unused_fields` is set to true, it also
+	 provides information about the ones that are not used.
+
       */
+      $unused_fields = array();
+      $new_input = array();
+
       if (is_array($input_data)) {
          foreach($input_data as $key => $value) {
              $value = $this->normalize($value);
@@ -226,23 +255,28 @@ class ModelFields {
 		}
                if (array_key_exists($key, $this->inverted_fields) && (is_null($this->objective_id) || $this->inverted_fields[$key] != $this->objective_id))
                {
-                  $new_input_data[$this->inverted_fields[$key]] = $value;
-               }
+                  $new_input[$this->inverted_fields[$key]] = $value;
+               } else {
+	          array_push($unused_fields, $key);
+	       }
             }
          } else {
             foreach($input_data as $key => $value) {
                if (array_key_exists($key, $this->fields) && (is_null($this->objective_id) || $key != $this->objective_id) ) {
-                  $new_input_data[$key] = $value;
-               }  else {
+                  $new_input[$key] = $value;
+               } else {
+	         array_push($unused_fields, $key);   
                } 
             }   
          }
 
-         return $new_input_data;
+         $result =  $add_unused_fields ? array($new_input, $unused_fields) : $new_input;
+
+         return $result;
 
       } else {
          error_log("Failed to read input data in the expected array {field=>value} format");
-         return array();
+	 return $add_unused_fields ? array(array(), array()) : array();
       }
 
    }

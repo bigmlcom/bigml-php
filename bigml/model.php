@@ -114,12 +114,55 @@ class Model extends BaseModel{
 
    public function predict($input_data, $by_name=true,$print_path=false, $out=STDOUT, $with_confidence=false, $missing_strategy=Tree::LAST_PREDICTION,
                            $add_confidence=false, $add_path=false,$add_distribution=false,$add_count=false, $add_median=false, $add_next=false,
-                           $add_min=false, $add_max=false, $multiple=null)
+                           $add_min=false, $add_max=false, $add_unused_fields=false, $multiple=null)
    {
       /*
          Makes a prediction based on a number of field values.
          By default the input fields must be keyed by field name but you can use
         `by_name` to input them directly keyed by id.
+
+         input_data: Input data to be predicted
+         by_name: Boolean, true if input_data is keyed by names
+        print_path: Boolean, if true the rules that lead to the prediction
+                    are printed
+        out: output handler
+        with_confidence: Boolean, if true, all the information in the node
+                         (prediction, confidence, distribution and count)
+                         is returned in a list format
+        missing_strategy: LAST_PREDICTION|PROPORTIONAL missing strategy for
+                          missing fields
+        add_confidence: Boolean, if true adds confidence to the dict output
+        add_path: Boolean, if true adds path to the dict output
+        add_distribution: Boolean, if true adds distribution info to the
+                          dict output
+        add_count: Boolean, if true adds the number of instances in the
+                       node to the dict output
+        add_median: Boolean, if true adds the median of the values in
+                    the distribution
+        add_next: Boolean, if true adds the field that determines next
+                  split in the tree
+        add_min: Boolean, if true adds the minimum value in the prediction's
+                 distribution (for regressions only)
+        add_max: Boolean, if true adds the maximum value in the prediction's
+                 distribution (for regressions only)
+        add_unused_fields: Boolean, if true adds the information about the
+                           fields in the input_data that are not being used
+                           in the model as predictors.
+        multiple: For categorical fields, it will return the categories
+                  in the distribution of the predicted node as a
+                  list of arrays:
+                    array(array('prediction' => 'Iris-setosa',
+                      'confidence'=> 0.9154
+                      'probability'=> 0.97
+                      'count'=> 97),
+                     array('prediction'=> 'Iris-virginica',
+                      'confidence'=> 0.0103
+                      'probability'=> 0.03,
+                      'count'=> 3))
+                  The value of this argument can either be an integer
+                  (maximum number of categories to be returned), or the
+                  literal 'all', that will cause the entire distribution
+                  in the node to be returned.
 
       */
 
@@ -133,7 +176,15 @@ class Model extends BaseModel{
       }
     
       # Checks and cleans input_data leaving the fields used in the model
-      $input_data = $this->filter_input_data($input_data, $by_name);
+      $new_data = $this->filter_input_data($input_data, $by_name, $add_unused_fields);
+
+      if ($add_unused_fields) {
+         $input_data = $new_data[0];
+         $unused_fields = $new_data[1];
+      } else {
+         $input_data = $new_data;
+      } 
+
 
       # Strips affixes for numeric values and casts to the final field type
       $input_data = cast($input_data, $this->fields);
@@ -178,7 +229,7 @@ class Model extends BaseModel{
       } else {
          
 	 if ($add_confidence || $add_path || $add_distribution || $add_count || 
-	     $add_median || $add_next || $add_min || $add_max) {
+	     $add_median || $add_next || $add_min || $add_max || $add_unused_fields) {
 
              $output = (object) array('prediction'=> $prediction->output);
 
@@ -221,6 +272,10 @@ class Model extends BaseModel{
              if ($tree->regression && $add_max) {
 	        $output->max = $prediction->max;
 	     }
+
+             if ($add_unused_fields) {
+                $output->unused_fields = $unused_fields;
+             }
 
 	 }
 

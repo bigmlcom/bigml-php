@@ -283,7 +283,7 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
                             "number_of_models" => 2,
                             "tlp" => 1,
                             "data_input" => array(),
-                            "prediction" => 67.8816)
+                            "prediction" => 67.5)
         );
 
         foreach($data as $item) {
@@ -319,7 +319,7 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
             $local_ensemble = new Ensemble($ensemble, self::$api);
 
             print "When I create a local ensemble prediction using median with confidence  for " . json_encode($item["data_input"]) ."\n";
-            $prediction = $local_ensemble->predict($item["data_input"], true, MultiVote::PLURALITY_CODE, true, false, false, false, false, false, false, null, Tree::LAST_PREDICTION, true);
+            $prediction = $local_ensemble->predict($item["data_input"], true, MultiVote::PLURALITY_CODE, true, false, false, false, false, false, false, false, null, Tree::LAST_PREDICTION, true);
 
             print "Then the local prediction is " . $item["prediction"] . "\n";
             $this->assertEquals($item["prediction"], round($prediction[0], 4));
