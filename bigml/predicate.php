@@ -116,7 +116,9 @@ function endsWith( $str, $sub ) {
 }
 
 function operatorFunction($operator) {
-   $OPERATOR = array("<" => create_function('$ls, $rs', 'return $ls < $rs;'),
+   static $OPERATOR;
+   if (!isset($OPERATOR)) {
+      $OPERATOR = array("<" => create_function('$ls, $rs', 'return $ls < $rs;'),
                             "<=" => create_function('$ls, $rs', 'return $ls <= $rs;'),
                             "=" => create_function('$ls, $rs', 'return $ls == $rs;'),
                             "!=" => create_function('$ls, $rs', 'return $ls != $rs;'),
@@ -124,7 +126,7 @@ function operatorFunction($operator) {
                             ">=" => create_function('$ls, $rs', 'return $ls >= $rs;'),
                             ">" =>  create_function('$ls, $rs', 'return $ls > $rs;'),
                             "in" => create_function('$ls, $rs', 'return in_array($rs,$ls);'));
-
+   }
    return $OPERATOR[$operator];
 }
 
