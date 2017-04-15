@@ -3,9 +3,9 @@ if (!class_exists('bigml')) {
   include '../bigml/bigml.php';
 }
 
-if (!class_exists('multimodel')) {        
-  include '../bigml/multimodel.php';      
-} 
+if (!class_exists('multimodel')) {
+  include '../bigml/multimodel.php';
+}
 
 class BigMLTestMultiModel extends PHPUnit_Framework_TestCase
 {
@@ -28,7 +28,7 @@ class BigMLTestMultiModel extends PHPUnit_Framework_TestCase
 
     /* Successfully creating a model from a dataset list */
     public function test_scenario1() {
-      $data = array(array('filename' => 'data/iris.csv')); 
+      $data = array(array('filename' => 'data/iris.csv'));
 
       foreach($data as $item) {
           print "\nSuccessfully creating a model from a dataset list\n";
@@ -69,12 +69,12 @@ class BigMLTestMultiModel extends PHPUnit_Framework_TestCase
           print "And I check the model stems from the original dataset list\n";
           $this->assertEquals((property_exists($model, 'object') && property_exists($model->object, 'datasets') && $model->object->datasets == array($dataset_1->resource, $dataset_2->resource)),true);
 
-      } 
+      }
     }
 
     /*Successfully creating a model from a dataset list and predicting with it using median */
     public function test_scenario2() {
-      $data = array(array('filename' => 'data/grades.csv', 'input_data' => array('Tutorial'=> 99.47, 'Midterm'=> 53.12, 'TakeHome'=> 87.96), 'prediction' => 50 ));
+      $data = array(array('filename' => 'data/grades.csv', 'input_data' => array('Tutorial'=> 99.47, 'Midterm'=> 53.12, 'TakeHome'=> 87.96), 'prediction' => 63.33 ));
 
       foreach($data as $item) {
           print "\nSuccessfully creating a model from a dataset list and predicting with it using median\n";
@@ -109,10 +109,10 @@ class BigMLTestMultiModel extends PHPUnit_Framework_TestCase
           print "When I create a local multimodel batch prediction using median for " . json_encode($item["input_data"]) . "\n";
           $batch_predict = $local_multimodel->batch_predict(array($item["input_data"]), null, true, false, Tree::LAST_PREDICTION, null, false, true);
 
-          print "Then the local prediction is " . $item["prediction"] . "\n"; 
-          $this->assertEquals(current($batch_predict)->predictions[0]["prediction"][0], $item["prediction"]); 
+          print "Then the local prediction is " . $item["prediction"] . "\n";
+          $this->assertEquals(current($batch_predict)->predictions[0]["prediction"][0], $item["prediction"]);
 
       }
     }
 
-}    
+}

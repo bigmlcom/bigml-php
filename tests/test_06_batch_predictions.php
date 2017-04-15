@@ -1,8 +1,8 @@
 <?php
 
-if (!class_exists('bigml')) {  
+if (!class_exists('bigml')) {
   include '../bigml/bigml.php';
-}   
+}
 
 class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
 {
@@ -22,7 +22,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
        $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
        self::$api->delete_all_project_by_name($test_name);
        self::$project=self::$api->create_project(array('name'=> $test_name));
- 
+
     }
 
     public static function tearDownAfterClass() {
@@ -32,7 +32,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
     /*  Successfully creating a batch prediction
     */
     public function test_scenario1() {
-      $data = array(array('filename' => 'data/iris.csv', 'local_file' => 'tmp/batch_predictions.csv', 'predictions_file' => 'data/batch_predictions.csv')); 
+      $data = array(array('filename' => 'data/iris.csv', 'local_file' => 'tmp/batch_predictions.csv', 'predictions_file' => 'data/batch_predictions.csv'));
 
 
       foreach($data as $item) {
@@ -58,7 +58,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
           print "And I create model\n";
           $model = self::$api->create_model($dataset->resource);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
- 
+
           print "And I wait until the model is ready\n";
           $resource = self::$api->_check_resource($model->resource, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
@@ -66,7 +66,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
           print "And I create a batch prediction\n";
           $batch_prediction=self::$api->create_batch_prediction($model,$dataset);
 	  $this->assertEquals(BigMLRequest::HTTP_CREATED, $batch_prediction->code);
-           
+
 	  print "And I wait until the batch_predicion is ready\n";
           $resource = self::$api->_check_resource($batch_prediction, null, 3000, 50);
 	  $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
@@ -78,7 +78,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
           print "Then the batch prediction file is like " . $item["predictions_file"]. "\n";
           $this->assertTrue(compareFiles($item["local_file"], $item["predictions_file"]));
 
-      } 
+      }
     }
 
     // Successfully creating a batch prediction for an ensemble
@@ -86,9 +86,9 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
     public function test_scenario2() {
       $data = array(array('filename' => 'data/iris.csv',
                           'number_of_models' => 5,
-                          'tlp' => 1, 
+                          'tlp' => 1,
                           'local_file' => 'tmp/batch_predictions.csv',
-                          'predictions_file' => 'data/batch_predictions_e.csv')); 
+                          'predictions_file' => 'data/batch_predictions_e.csv'));
 
 
       foreach($data as $item) {
@@ -112,17 +112,17 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
           print "And I create a ensemble from ";
-          $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "tlp"=> $item["tlp"],"seed" => 'BigML', 'sample_rate'=> 0.70));
+          $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "tlp"=> $item["tlp"], "ensemble_sample" => array("seed" => 'BigML', 'rate'=> 0.70)));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $ensemble->code);
-       
+
           print "And I wait until the ensemble is ready\n";
           $resource = self::$api->_check_resource($ensemble->resource, null, 3000, 50);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
- 
+
           print "And I create a batch prediction ensemble\n";
           $batch_prediction=self::$api->create_batch_prediction($ensemble, $dataset);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $batch_prediction->code);
-           
+
           print "And I wait until the batch_predicion is ready\n";
           $resource = self::$api->_check_resource($batch_prediction, null, 3000, 50);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
@@ -134,7 +134,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
           print "Then the batch prediction file is like " . $item["predictions_file"]. "\n";
           $this->assertTrue(compareFiles($item["local_file"], $item["predictions_file"]));
 
-      } 
+      }
     }
     /* Successfully creating a batch centroid from a cluster */
     public function test_scenario3() {
@@ -171,7 +171,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
           print "I wait until the cluster is ready  "  . $cluster->resource . "\n";
           $resource = self::$api->_check_resource($cluster->resource, null, 50000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
- 
+
           print "I create a batch prediction cluster\n";
           $batch_prediction=self::$api->create_batch_centroid($cluster, $dataset);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $batch_prediction->code);
@@ -189,8 +189,8 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
 
       }
     }
-    
-    // Successfully creating a source from a batch prediction 
+
+    // Successfully creating a source from a batch prediction
     public function test_scenario4() {
       $data = array(array('filename' => 'data/iris.csv'));
 
@@ -217,7 +217,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
           print "And I create model\n";
           $model = self::$api->create_model($dataset->resource);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
- 
+
           print "And I wait until the model is ready\n";
           $resource = self::$api->_check_resource($model->resource, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
@@ -225,27 +225,27 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
           print "And I create a batch prediction\n";
           $batch_prediction=self::$api->create_batch_prediction($model,$dataset);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $batch_prediction->code);
-           
+
           print "And I wait until the batch_predicion is ready\n";
           $resource = self::$api->_check_resource($batch_prediction, null, 3000, 50);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
- 
+
           print "Then I create a source from the batch prediction\n";
           $source = self::$api->source_from_batch_prediction($batch_prediction);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
           $this->assertEquals(1, $source->object->status->code);
-         
+
           print "And I wait until the source is ready\n";
           $resource = self::$api->_check_resource($source->resource, null, 20000, 30);
-          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]); 
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
       }
     }
-    // Successfully creating a batch anomaly score from an anomaly detector 
+    // Successfully creating a batch anomaly score from an anomaly detector
     public function test_scenario5() {
 
-      $data = array(array('filename' => 'data/tiny_kdd.csv', 
-                          'local_file' => 'tmp/batch_predictions.csv', 
+      $data = array(array('filename' => 'data/tiny_kdd.csv',
+                          'local_file' => 'tmp/batch_predictions.csv',
                           'predictions_file' => 'data/batch_predictions_a.csv'));
 
       foreach($data as $item) {
@@ -293,7 +293,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
       }
     }
 
-    // Successfully creating a batch prediction for a logistic regression 
+    // Successfully creating a batch prediction for a logistic regression
     public function test_scenario6() {
 
       $data = array(array('filename' => 'data/iris.csv',
@@ -342,10 +342,10 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
 
           print "Then the batch prediction file is like " . $item["predictions_file"]. "\n";
           $this->assertTrue(compareFiles($item["local_file"], $item["predictions_file"]));
-           
+
       }
 
     }
 
 
-}    
+}

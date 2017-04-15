@@ -2,7 +2,7 @@
 
 if (!class_exists('bigml')) {
   include '../bigml/bigml.php';
-} 
+}
 
 class BigMLTestEnsemble extends PHPUnit_Framework_TestCase
 {
@@ -21,7 +21,7 @@ class BigMLTestEnsemble extends PHPUnit_Framework_TestCase
 
     public static function tearDownAfterClass() {
        self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
-    } 
+    }
 
     /*
      Successfully creating a prediction from a local model
@@ -44,15 +44,15 @@ class BigMLTestEnsemble extends PHPUnit_Framework_TestCase
                             "tlp" => 1,
                             "data_input" => array("Assignment" => 81.22,  "Tutorial"=> 91.95, "Midterm"=> 79.38, "TakeHome"=> 105.93),
                             "objective" => "000005",
-                            "prediction" => "88.205575"),
+                            "prediction" => "84.556"),
                       array("filename" => 'data/grades.csv',
                             "number_of_models" => 10,
                             "tlp" => 1,
-                            "data_input" => array("Assignment" => 97.33,  "Tutorial"=> 106.74, "Midterm"=> 76.88, "TakeHome"=> 108.89), 
+                            "data_input" => array("Assignment" => 97.33,  "Tutorial"=> 106.74, "Midterm"=> 76.88, "TakeHome"=> 108.89),
                             "objective" => "000005",
-                            "prediction" => "84.29401")
+                            "prediction" => "73.13558")
                      );
-	
+
         foreach($data as $item) {
             print "I create a data source uploading a ". $item["filename"]. " file\n";
             $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
@@ -72,8 +72,8 @@ class BigMLTestEnsemble extends PHPUnit_Framework_TestCase
             $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "And I create an ensemble of " . json_encode($item["number_of_models"]) . " and " . $item["tlp"] . " tlp\n"; 
-            $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "tlp"=> $item["tlp"],"seed" => 'BigML', 'sample_rate'=> 0.70));
+            print "And I create an ensemble of " . json_encode($item["number_of_models"]) . " and " . $item["tlp"] . " tlp\n";
+            $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "tlp"=> $item["tlp"], "ensemble_sample" => array("seed" => 'BigML', 'rate'=> 0.70)));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $ensemble->code);
 
             print "And I wait until the ensemble is ready\n";
@@ -88,8 +88,8 @@ class BigMLTestEnsemble extends PHPUnit_Framework_TestCase
             $resource = self::$api->_check_resource($prediction, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "Then the prediction for ". $item["objective"] ." is " . $item["prediction"] . "\n"; 
-            $this->assertEquals($item["prediction"], $prediction->object->prediction->{$item["objective"]});
+            print "Then the prediction for ". $item["objective"] ." is " . $item["prediction"] . "\n";
+            $this->assertEquals(round($item["prediction"], 4), round($prediction->object->prediction->{$item["objective"]}, 4));
         }
     }
-}    
+}
