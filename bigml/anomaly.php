@@ -14,13 +14,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+
+if (!class_exists('bigml')) {
+   include('bigml.php');
+}
+
 if (!class_exists('modelfields')) {
-   include('modelfields.php'); 
+   include('modelfields.php');
 }
 
 if (!class_exists('anomalytree')) {
-   include('anomalytree.php'); 
-} 
+   include('anomalytree.php');
+}
 
 /*
 
@@ -40,7 +45,7 @@ class Anomaly extends ModelFields {
       A lightweight wrapper around an anomaly detector.
       Uses a BigML remote anomaly detector model to build a local version that
       can be used to generate anomaly scores locally.
-    */ 
+    */
     public $sample_size;
     public $mean_depth;
     public $expected_mean_depth;
@@ -69,7 +74,7 @@ class Anomaly extends ModelFields {
        if (property_exists($anomaly, "object") && property_exists($anomaly->object, "status") && $anomaly->object->status->code != BigMLRequest::FINISHED ) {
           throw new Exception("The model isn't finished yet");
        }
- 
+
        if (property_exists($anomaly, "object") && $anomaly->object instanceof STDClass)  {
           $anomaly = $anomaly->object;
           $this->sample_size = $anomaly->sample_size;
@@ -79,7 +84,7 @@ class Anomaly extends ModelFields {
 
        if (property_exists($anomaly, "model") && $anomaly->model instanceof STDClass) {
           parent::__construct($anomaly->model->fields);
-          
+
           if ( property_exists($anomaly->model, "top_anomalies") && is_array($anomaly->model->top_anomalies) ) {
              $this->mean_depth = $anomaly->model->mean_depth;
 
@@ -92,31 +97,31 @@ class Anomaly extends ModelFields {
                   $default_depth = 2*(0.5772156649 + log($this->sample_size - 1) - (floatval($this->sample_size-1)/$this->sample_size));
                   $this->expected_mean_depth = min(array($this->mean_depth, $default_depth));
                }
-                             
+
                $iflorest = property_exists($anomaly->model, "trees") ? $anomaly->model->trees: array();
                if ($iflorest != null && !empty($iflorest)) {
                   $this->iforest = array();
                   foreach ($iflorest as $anomaly_tree) {
                     array_push($this->iforest, new AnomalyTree($anomaly_tree->root, $this->fields));
                   }
-               } 
-               $this->top_anomalies = $anomaly->model->top_anomalies; 
+               }
+               $this->top_anomalies = $anomaly->model->top_anomalies;
 
 	     } else {
 	        error_log("The anomaly isn't finished yet");
 		throw new Exception("The anomaly isn't finished yet");
 	     }
-             
+
           } else {
              error_log("Cannot create the Anomaly instance. Could not find the 'top_anomalies' key in the resource");
              throw new Exception("Cannot create the Anomaly instance. Could not find the 'top_anomalies' key in the resource");
           }
- 
+
 
        }
 
     }
- 
+
     function anomaly_score($input_data, $by_name=true)
     {
       /*
@@ -160,25 +165,25 @@ class Anomaly extends ModelFields {
       top anomalies. When include is set to True, only the top
       anomalies are selected by the filter. If set to False, only the
       rest of the dataset is selected.
-     */  
+     */
         $anomaly_filters = array();
         foreach ($this->top_anomalies as $anomaly) {
            $filter_rules = array();
-	   $row =  property_exists($anomaly, "row") ? $anomaly->row : array(); 
+	   $row =  property_exists($anomaly, "row") ? $anomaly->row : array();
 	   if (count($row) > 1) {
               foreach (range(0, count($row)-1) as $index) {
 	         $field_id = $this->input_fields[$index];
 	         if (in_array($field_id, $this->id_fields)) {
-	            continue; 
+	            continue;
 	         }
                  $value = $row[$index];
 
 	         if ($value == null) {
-	           array_push($filter_rules, '(missing? "'. $field_id  . '")'); 
+	           array_push($filter_rules, '(missing? "'. $field_id  . '")');
 	         } else {
 	           if (in_array($this->fields->{$field_id}->optype, array("categorical","text"))) {
-                      $value = json_encode($value); 
-		   } 
+                      $value = json_encode($value);
+		   }
 
 		   array_push($filter_rules, '(= (f "' . $field_id .'") '. $value  . ')');
 	         }
@@ -200,7 +205,7 @@ class Anomaly extends ModelFields {
 	} else {
            return "(not (or ". $anomalies_filter ."))";
 	}
-     
+
     }
 
 }

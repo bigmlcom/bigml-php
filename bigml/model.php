@@ -13,15 +13,19 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+
+if (!class_exists('bigml')) {
+   include('bigml.php');
+}
 if (!class_exists('basemodel')) {
-  include('basemodel.php'); 
+  include('basemodel.php');
 }
 if (!class_exists('tree')) {
    include('tree.php');
 }
 if (!class_exists('path')) {
    include('path.php');
-}   
+}
 
 function _ditribution_sum($x, $y) {
     return $x+$y;
@@ -35,8 +39,8 @@ function print_distribution($distribution, $out=STDOUT) {
   }
   $total = array_reduce($a, "_ditribution_sum");
   foreach ($distribution as $group) {
-    fwrite($out, "    " . $group[0] . ": " . number_format(round(($group[1]*1.0)/$total, 4)*100, 2) . "% (". strval($group[1]) ." instance" . ($group[1] == 1 ? ")\n" : "s)\n"));  
-  } 
+    fwrite($out, "    " . $group[0] . ": " . number_format(round(($group[1]*1.0)/$total, 4)*100, 2) . "% (". strval($group[1]) ." instance" . ($group[1] == 1 ? ")\n" : "s)\n"));
+  }
 
 }
 
@@ -47,7 +51,7 @@ class Model extends BaseModel{
       to generate predictions locally.
    */
 
-   public $ids_map; 
+   public $ids_map;
    public $terms;
    public $tree;
    public $regression_ready=false;
@@ -73,7 +77,7 @@ class Model extends BaseModel{
          } else {
             $model = $api::retrieve_resource($model, $api::ONLY_MODEL);
 	 }
-      } 
+      }
 
       if ($model == null || !property_exists($model, 'resource') ) {
          error_log("Cannot create the Model instance. Could not find the 'model' key in the resource");
@@ -85,7 +89,7 @@ class Model extends BaseModel{
       }
 
       parent::__construct($model);
-         
+
       if (property_exists($model, "object") && $model->object instanceof STDClass) {
          $model=$model->object;
       }
@@ -98,7 +102,7 @@ class Model extends BaseModel{
 	    if ($this->tree->regression) {
 	       $this->_max_bins = $tree_info["max_bins"];
 	    }
-           
+
          } else {
             throw new Exception("The model isn't finished yet");
          }
@@ -171,10 +175,10 @@ class Model extends BaseModel{
       $tree = $this->tree;
 
       if ($tree != null && $tree->regression && $missing_strategy==Tree::PROPORTIONAL && !$this->regression_ready) {
-         throw new Exception("You needed to use proportional missing strategy, 
-                         for regressions. Please install them before, using local predictions for the model."); 
+         throw new Exception("You needed to use proportional missing strategy,
+                         for regressions. Please install them before, using local predictions for the model.");
       }
-    
+
       # Checks and cleans input_data leaving the fields used in the model
       $new_data = $this->filter_input_data($input_data, $by_name, $add_unused_fields);
 
@@ -183,7 +187,7 @@ class Model extends BaseModel{
          $unused_fields = $new_data[1];
       } else {
          $input_data = $new_data;
-      } 
+      }
 
 
       # Strips affixes for numeric values and casts to the final field type
@@ -191,11 +195,11 @@ class Model extends BaseModel{
 
       $prediction = $tree->predict($input_data, null, $missing_strategy);
 
-      # Prediction path   
+      # Prediction path
       if ($print_path == true) {
          fwrite($out, join(" AND ", $prediction->path) . ' => ' . $prediction->output . "\n");
          fclose($out);
-      }         
+      }
 
       $output = $prediction;
 
@@ -206,13 +210,13 @@ class Model extends BaseModel{
       if ($multiple != null && !$tree->regression) {
          $output = array();
          $total_instances = floatval($prediction->count);
-	 
+
 	 $index =0;
 	 foreach ($prediction->distribution as $index => $data) {
 	    $category = $data[0];
 	    $instances = $data[1];
 
-            if ((is_string($multiple) && $multiple == 'all') or 
+            if ((is_string($multiple) && $multiple == 'all') or
 	       ( is_int($multiple) && $index < $multiple  ) ) {
 
                $prediction_dict = array('prediction' => $category,
@@ -222,13 +226,13 @@ class Model extends BaseModel{
 
 	       array_push($output, $prediction_dict);
 
-	    } 
+	    }
 
 	 }
 
       } else {
-         
-	 if ($add_confidence || $add_path || $add_distribution || $add_count || 
+
+	 if ($add_confidence || $add_path || $add_distribution || $add_count ||
 	     $add_median || $add_next || $add_min || $add_max || $add_unused_fields) {
 
              $output = (object) array('prediction'=> $prediction->output);
@@ -240,7 +244,7 @@ class Model extends BaseModel{
 	     if ($add_path) {
 	        $output->path = $prediction->path;
 	     }
-             
+
 	     if ($add_distribution) {
 	        $output->distribution = $prediction->distribution;
 		$output->distribution_unit = $prediction->distribution_unit;
@@ -262,7 +266,7 @@ class Model extends BaseModel{
 		}
 
 		$output->next = $field;
-		
+
 	     }
 
 	     if ($tree->regression && $add_min) {
@@ -318,7 +322,7 @@ class Model extends BaseModel{
       try {
          setlocale(LC_ALL, $data_locale);
       } catch  (Exception $e) {
-         error_log("Error find Locale"); 
+         error_log("Error find Locale");
       }
    }
 
@@ -327,13 +331,13 @@ class Model extends BaseModel{
       /*
          Returns a IF-THEN rule set that implements the model.
          `out` is file descriptor to write the rules.
-      */ 
+      */
       $ids_path = $this->get_ids_path($filter_id);
       return $this->tree->rules($out, $ids_path, $subtree);
 
    }
 
-   function get_ids_path($filter_id) 
+   function get_ids_path($filter_id)
    {
       /*
        Builds the list of ids that go from a given id to the tree root
@@ -341,7 +345,7 @@ class Model extends BaseModel{
       $ids_path = null;
       if (!is_null($filter_id) && !is_null($this->tree->id)) {
          if (array_key_exists($filter_id, $this->ids_map)) {
-            throw new Exception("The given id does not exist."); 
+            throw new Exception("The given id does not exist.");
          } else {
             $ids_path = array($filter_id);
             $last_id = $filter_id;
@@ -350,7 +354,7 @@ class Model extends BaseModel{
                array_push($ids_path, $this->ids_map[$last_id]->parent_id);
                $last_id = $this->ids_map[$last_id]->parent_id;
             }
-         } 
+         }
       }
       return $ids_path;
    }
@@ -425,14 +429,14 @@ class Model extends BaseModel{
       $distribution = $tree->distribution;
 
       foreach ($distribution as $group) {
-         $groups[strval($group[0])] = array('total' => array(array(), $group[1], 0), 
+         $groups[strval($group[0])] = array('total' => array(array(), $group[1], 0),
                                     'details' => array());
       }
 
       $path = array();
 
       $result = $this->depth_first_search($tree, $path, $groups);
-      return $result[1]; 
+      return $result[1];
 
    }
 
@@ -456,7 +460,7 @@ class Model extends BaseModel{
 
    function get_prediction_distribution($groups=null) {
      /*Returns model predicted distribution*/
-     if ($groups == null) { 
+     if ($groups == null) {
         $groups = $this->group_prediction();
      }
      $predictions=array();
@@ -492,12 +496,12 @@ class Model extends BaseModel{
                  if ($subgroup[0][$i] != $test_common_path ) {
                      $i = $mcd_len;
                      break;
-                 }  
+                 }
               }
-              if ($i < $mcd_len) { 
+              if ($i < $mcd_len) {
                  array_push($common_path, $test_common_path);
-              } 
-           }     
+              }
+           }
         }
         $groups[$key]["total"][0] = $common_path;
         if (count($details) > 0 ) {
@@ -514,18 +518,18 @@ class Model extends BaseModel{
            $groups[$key]["details"]=$details;
         }
 
-      } 
+      }
       return $groups;
    }
 
    function confidence_error($value, $impurity=null, $tree) {
      /*Returns confidence for categoric objective fields
        and error for numeric objective fields*/
-     
+
      if (is_null($value)) {
         return "";
      }
-    
+
      $impurity_literal = "";
      if (!is_null($impurity) && $impurity > 0) {
         $impurity_literal = "; impurity: " . strval(round($impurity, 4));
@@ -537,8 +541,8 @@ class Model extends BaseModel{
      } else {
         return " [Confidence: " . number_format(round($value*100, 2, PHP_ROUND_HALF_DOWN), 2) . $impurity_literal . "%]";
      }
- 
- 
+
+
    }
 
    function summarize($out=STDOUT, $format=1) {
@@ -546,7 +550,7 @@ class Model extends BaseModel{
 
       $distribution = $this->get_data_distribution();
       fwrite($out, "Data distribution:\n");
-      print_distribution($distribution, $out); 
+      print_distribution($distribution, $out);
       fwrite($out, "\n\n");
 
       $groups = $this->group_prediction();
@@ -572,13 +576,13 @@ class Model extends BaseModel{
       foreach ($a_to_print as $x) {
             $group = $x[0];
             $details = $groups[$group]["details"];
- 
+
             $path = new Path($groups[$group]["total"][0]);
             $data_per_group = ($groups[$group]["total"][1] * 1.0) / $tree->count;
-            $pred_per_group = ($groups[$group]["total"][2] * 1.0) / $tree->count; 
- 
-            fwrite($out, "\n\n" . $group .  " : (data " . number_format(round($data_per_group, 4)*100, 2) . 
-                          "% / prediction " . number_format(round($pred_per_group, 4)*100, 2) . "%) " . 
+            $pred_per_group = ($groups[$group]["total"][2] * 1.0) / $tree->count;
+
+            fwrite($out, "\n\n" . $group .  " : (data " . number_format(round($data_per_group, 4)*100, 2) .
+                          "% / prediction " . number_format(round($pred_per_group, 4)*100, 2) . "%) " .
                           $path->to_rules($this->fields, "name", $format));
 
             if (count($details) == 0) {
@@ -588,7 +592,7 @@ class Model extends BaseModel{
                fwrite($out, $this->confidence_error($subgroup[2], $subgroup[3], $tree) . "\n");
             } else {
                fwrite($out, "\n");
-               foreach ($details as $key => $subgroup) { 
+               foreach ($details as $key => $subgroup) {
                   $pred_per_sgroup = $subgroup[1] * 1.0 / $groups[$group]["total"][2];
                   $path = new Path($subgroup[0]);
                   $path_chain = (!is_null($path->predicates) or $path->predicates == false) ? $path->to_rules($this->fields, 'name', $format) : "(root node)";
@@ -598,9 +602,9 @@ class Model extends BaseModel{
 
 
       }
- 
-      fclose($out);      
-   } 
+
+      fclose($out);
+   }
 }
 
 ?>

@@ -14,6 +14,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+if (!class_exists('bigml')) {
+   include('bigml.php');
+}
+
 if (!class_exists('model')) {
    include('model.php');
 }
@@ -25,7 +29,7 @@ function read_votes($votes_files, $model, $data_locale=null)
     Returns a list of MultiVote objects containing the list of predictions.
     votes_files parameter should contain the path to the files where votes are stored
     In to_prediction parameter we expect the method of a local model object
-    that casts the string prediction values read from the file to their real type. 
+    that casts the string prediction values read from the file to their real type.
    */
 
    $votes = array();
@@ -87,7 +91,7 @@ class MultiModel{
    */
    public $models;
 
-   public function __construct($models, $api=null, $storage="storage") { 
+   public function __construct($models, $api=null, $storage="storage") {
       #$this->models = array();
 
       if ($api == null) {
@@ -109,9 +113,9 @@ class MultiModel{
       }
    }
 
-   public function predict($input_data, $by_name=true, $method=MultiVote::PLURALITY_CODE, 
+   public function predict($input_data, $by_name=true, $method=MultiVote::PLURALITY_CODE,
                            $with_confidence=false, $options=null, $missing_strategy=Tree::LAST_PREDICTION,
-			   $add_confidence=false, $add_distribution=false, $add_count=false, 
+			   $add_confidence=false, $add_distribution=false, $add_count=false,
 			   $add_median=false, $add_min=false, $add_max=false, $add_unused_fields=false) {
 
       /*
@@ -122,9 +126,9 @@ class MultiModel{
          3 - threshold filtered vote / doesn't apply: THRESHOLD_COD
       */
 
-      $votes = self::generate_votes($input_data, $by_name, $missing_strategy, $add_median, $add_min, $add_max, $add_unused_fields); 
+      $votes = self::generate_votes($input_data, $by_name, $missing_strategy, $add_median, $add_min, $add_max, $add_unused_fields);
 
-      $result = $votes->combine($method, $with_confidence, $add_confidence, $add_distribution, 
+      $result = $votes->combine($method, $with_confidence, $add_confidence, $add_distribution,
                              $add_count, $add_median, $add_min, $add_max, $options);
 
       if ($add_unused_fields) {
@@ -132,20 +136,20 @@ class MultiModel{
          foreach($votes->predictions as $index => $prediction) {
             $unused_fields = array_intersect($unused_fields, array_unique($prediction->unused_fields));
          }
-  
-         if (!is_array($result)) {          
+
+         if (!is_array($result)) {
             $result = array("prediction" => $result);
          }
-  
+
          $result['unused_fields'] = $unused_fields;
-  
-      } 
+
+      }
 
       return $result;
 
    }
 
-   public function batch_predict($input_data_list, $output_file_path=null, $by_name=true, $reuse=false, 
+   public function batch_predict($input_data_list, $output_file_path=null, $by_name=true, $reuse=false,
                                  $missing_strategy=Tree::LAST_PREDICTION, $headers=null, $to_file=true, $use_median=false) {
       /*
          Makes predictions for a list of input data.
@@ -159,7 +163,7 @@ class MultiModel{
 
       */
       $add_headers = (is_array($input_data_list[0]) && $headers != null and count($headers)== $count($input_data_list[0]) );
-    
+
       if (!$add_headers && !(array_keys($input_data_list[0]) !== range(0, count($input_data_list[0]) - 1)) ) {
           error_log("Input data list is not a dictionary or the headers and input data information are not consistent");
           throw new Exception("Input data list is not a dictionary or the headers and input data information are not consistent");
@@ -182,8 +186,8 @@ class MultiModel{
 		  continue;
 		} catch  (Exception $e) {
 		}
-	     } 
-  
+	     }
+
              if (!file_exists($output_file_path)) {
 	        error_log("Cannot find " . $output_file_path . " directory.");
 		throw new Exception("Cannot find " . $output_file_path . " directory.");
@@ -196,14 +200,14 @@ class MultiModel{
 	   // TODO
 	   $fp = $out;
 	 }
-         $index = 0; 
+         $index = 0;
          foreach($input_data_list as $input_data) {
 	    if ($add_headers) {
 	       // TODO
 	    }
 
 	    $prediction = $model->predict($input_data, $by_name, false, STDOUT, true, $missing_strategy);
-           
+
 	    if ($use_median && $model->tree->regression) {
 	      $prediction[0] = array_slice($prediction, -1);
 	    }
@@ -218,7 +222,7 @@ class MultiModel{
 
                   array_push($res, $value);
               }
-	      fputcsv($fp, $res); 
+	      fputcsv($fp, $res);
 	    } else {
 	      $prediction_row = array_slice($prediction, 0, 2);
 	      array_push($prediction_row, $order);
@@ -231,7 +235,7 @@ class MultiModel{
 	      $votes[$index]->append_row($prediction_row);
 
 	    }
-            $index+=1; 
+            $index+=1;
 	 }
 
          if ($to_file) {
@@ -249,19 +253,19 @@ class MultiModel{
       }
    }
 
-   function generate_votes($input_data, $by_name=true, $missing_strategy=Tree::LAST_PREDICTION, $add_median=false, 
+   function generate_votes($input_data, $by_name=true, $missing_strategy=Tree::LAST_PREDICTION, $add_median=false,
                            $add_min=false, $add_max=false, $add_unused_fields=false) {
       /*
          Generates a MultiVote object that contains the predictions
          made by each of the models.
       */
-      
+
       $votes = new MultiVote(array());
       $order = 0;
 
-      
+
       foreach ($this->models as $model) {
-         $prediction_info = $model->predict($input_data, $by_name, false, STDOUT, false, 
+         $prediction_info = $model->predict($input_data, $by_name, false, STDOUT, false,
                                             $missing_strategy, true, false, true, true, $add_median,
                                             false, $add_min, $add_max, $add_unused_fields, null);
          $votes->append($prediction_info);
@@ -280,7 +284,7 @@ class MultiModel{
       foreach($this->models as $model) {
          array_push($votes_files, get_predictions_file_name($model->resource_id, $predictions_file_path));
       }
-      return read_votes($votes_files, $this->models[0], $data_locale); 
+      return read_votes($votes_files, $this->models[0], $data_locale);
    }
 }
 ?>

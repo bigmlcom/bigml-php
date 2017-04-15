@@ -14,19 +14,23 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+if (!class_exists('bigml')) {
+   include('bigml.php');
+}
+
 if (!class_exists('modelfields')) {
-  include('modelfields.php'); 
+  include('modelfields.php');
 }
 
 if (!class_exists('predicate')) {
-  include('predicate.php'); 
+  include('predicate.php');
 }
 
 if (!class_exists('cluster')) {
   include('cluster.php');
 }
 
-define("EXPANSION_ATTRIBUTES", json_encode(array("categorical" => "categories", 
+define("EXPANSION_ATTRIBUTES", json_encode(array("categorical" => "categories",
                                                  "text" => "tag_cloud",
                                                  "items" => "items")));
 
@@ -34,7 +38,7 @@ define("OPTIONAL_FIELDS", json_encode(array('categorical', 'text', 'items')));
 
 
 function logistic_get_unique_terms($terms, $term_forms, $tag_cloud) {
-  /* 
+  /*
      Extracts the unique terms that occur in one of the alternative forms in
      term_forms or in the tag cloud.
    */
@@ -71,7 +75,7 @@ function logistic_get_unique_terms($terms, $term_forms, $tag_cloud) {
   $result = array();
 
   foreach ($terms_set as $key => $value) {
-    array_push($result, array($key, $value)); 
+    array_push($result, array($key, $value));
   }
 
   return $result;
@@ -99,7 +103,7 @@ class LogisticRegression extends ModelFields {
    public $data_field_types;
    public $field_codings;
    public $bias = null;
-   public $missing_coefficients; 
+   public $missing_coefficients;
    public $c = null;
    public $eps = null;
    public $lr_normalize = null;
@@ -116,7 +120,7 @@ class LogisticRegression extends ModelFields {
       $this->item_analysis=array();
       $this->categories=array();
       $this->data_field_types=array();
-      $this->numeric_fields = array(); 
+      $this->numeric_fields = array();
       $old_coefficients = false;
 
       if ($api == null) {
@@ -180,13 +184,13 @@ class LogisticRegression extends ModelFields {
                  if ($j == 0 and !is_array($coefficient[1])) {
                     $old_coefficients=true;
                  }
-                 $j+=1; 
-	      } 
+                 $j+=1;
+	      }
 	    }
- 
+
             $this->bias = property_exists($logistic_regression_info, "bias") ? $logistic_regression_info->bias : 0;
             $this->c = property_exists($logistic_regression_info, "c") ? $logistic_regression_info->c : null;
-            $this->eps = property_exists($logistic_regression_info, "eps") ? $logistic_regression_info->eps : null; 
+            $this->eps = property_exists($logistic_regression_info, "eps") ? $logistic_regression_info->eps : null;
             $this->lr_normalize = property_exists($logistic_regression_info, "normalize") ? $logistic_regression_info->normalize : null;
 	    $this->balance_fields = property_exists($logistic_regression_info, "balance_fields") ? $logistic_regression_info->balance_fields : null;
             $this->regularization = property_exists($logistic_regression_info, "regularization") ? $logistic_regression_info->regularization : null;
@@ -197,13 +201,13 @@ class LogisticRegression extends ModelFields {
             foreach ($fields as $field_id => $field) {
                if ($field->optype == 'text') {
                   $this->term_forms[$field_id] = $field->summary->term_forms;
-                  
+
                   $this->tag_clouds[$field_id] = array();
                   # TODO revisar
                   foreach ($field->summary->tag_cloud as $tag => $value) {
                     array_push($this->tag_clouds[$field_id], $value[0]);
                   }
-       
+
                   $this->term_analysis[$field_id] = $field->term_analysis;
 
                } else if ($field->optype == 'items') {
@@ -211,17 +215,17 @@ class LogisticRegression extends ModelFields {
                   foreach ($field->summary->items as $item => $value) {
                      array_push( $this->items[$field_id], $value[0]);
                   }
-                  $this->item_analysis[$field_id] = $field->item_analysis; 
+                  $this->item_analysis[$field_id] = $field->item_analysis;
 
                } else if ($field->optype == 'categorical') {
 	          $this->categories[$field_id] = array();
                   foreach($field->summary->categories as $key => $value) {
                      array_push($this->categories[$field_id], $value[0]);
-                  }  
+                  }
                }
-  
+
                if ($this->missing_numerics && $field->optype == "numeric") {
-	           $this->numeric_fields[$field_id] = true; 
+	           $this->numeric_fields[$field_id] = true;
 	       }
             }
 
@@ -234,12 +238,12 @@ class LogisticRegression extends ModelFields {
                    $this->field_codings[$this->inverted_fields[$field_id]] = $this->field_codings[$field_id];
                    unset($this->field_codings[$field_id]);
                 }
-            }          
- 
+            }
+
             if ($old_coefficients) {
                $this->map_coefficients();
             }
- 
+
          } else {
             throw new Exception("The logistic regression isn't finished yet");
          }
@@ -267,17 +271,17 @@ class LogisticRegression extends ModelFields {
          $input_data = $new_data[0];
 	 $unused_fields = $new_data[1];
       } else {
-         $input_data = $new_data; 
-      }    
- 
+         $input_data = $new_data;
+      }
+
       # In case that missing_numerics is False, checks that all numeric
       # fields are present in input data.
       if ($this->missing_numerics == false) {
 
          foreach ($fields as $field_id => $field) {
-           if (!in_array($field->optype, json_decode(OPTIONAL_FIELDS, true)) and 
+           if (!in_array($field->optype, json_decode(OPTIONAL_FIELDS, true)) and
                !array_key_exists($field_id, $input_data) ) {
-               throw new Exception("Failed to predict. Input data must contain values for all numeric fields to get a logistic regression prediction."); 
+               throw new Exception("Failed to predict. Input data must contain values for all numeric fields to get a logistic regression prediction.");
            }
          }
 
@@ -287,13 +291,13 @@ class LogisticRegression extends ModelFields {
       cast($input_data, $this->fields);
 
       if (!is_null($this->balance_fields) && $this->balance_fields) {
-      
+
          foreach ($input_data as $field => $value) {
             if ($this->fields->{$field}->optype == 'numeric'){
 	       $mean = $this->fields->{$field}->summary->mean;
 	       $stddev = $this->fields->{$field}->summary->standard_deviation;
 	       $input_data[$field] = ($input_data[$field] - $mean) / $stddev;
-	    }	
+	    }
 	 }
 
       }
@@ -305,12 +309,12 @@ class LogisticRegression extends ModelFields {
 
       $probablities=array();
       $total=0;
-     
+
       foreach (array_keys($this->coefficients) as $category) {
          $probability = $this->category_probability($input_data, $unique_terms, $category);
          $order = array_search($category, $this->categories[$this->objective_id]);
-         $probabilities[$category] = array("category" => $category, 
-                                           "probability" => $probability, 
+         $probabilities[$category] = array("category" => $category,
+                                           "probability" => $probability,
                                            "order" => $order);
 
          $total += $probabilities[$category]["probability"];
@@ -340,7 +344,7 @@ class LogisticRegression extends ModelFields {
 
       return $result;
    }
- 
+
    public function category_probability($input_data, $unique_terms, $category) {
      /* Computes the probability for a concrete category */
      $probability=0;
@@ -366,7 +370,7 @@ class LogisticRegression extends ModelFields {
                 $index = array_search($term, $this->tag_clouds[$field_id]);
               } else if (array_key_exists($field_id, $this->items)) {
                 $index = array_search($term, $this->items[$field_id]);
-              } else if (array_key_exists($field_id, $this->categories) and 
+              } else if (array_key_exists($field_id, $this->categories) and
                         (!array_key_exists($field_id, $this->field_codings) or array_keys($this->field_codings->{$field_id})[0] == "dummy" ) ) {
 
                 $index = array_search($term, $this->categories[$field_id]);
@@ -380,11 +384,11 @@ class LogisticRegression extends ModelFields {
                       $probability += $coefficients[$coeff_index] * $contribution[$index] * $occurrences;
                       $coeff_index+=1;
                    }
-                   break; 
+                   break;
                 }
-                
-              } 
- 
+
+              }
+
               if ($one_hot) {
                 $probability += $coefficients[$index]*$occurrences;
               }
@@ -431,7 +435,7 @@ class LogisticRegression extends ModelFields {
 
      foreach ($this->categories as $field_id => $value) {
         if ( in_array($field_id, $this->input_fields) ) {
-           $coefficients = $this->get_coefficients($category, $field_id); 
+           $coefficients = $this->get_coefficients($category, $field_id);
            if (!array_key_exists($field_id, $unique_terms) or !$unique_terms[$field_id]) {
 	      $norm2 += 1;
               if (!array_key_exists($field_id, $this->field_codings) or array_keys($this->field_codings->{$field_id})[0] == "dummy" )  {
@@ -461,16 +465,16 @@ class LogisticRegression extends ModelFields {
 
      if (!is_null($this->lr_normalize) and $this->lr_normalize) {
        try {
-         $probability /= sqrt($norm2); 
+         $probability /= sqrt($norm2);
        } catch (Exception $e) {
-         $probability = INF;  
-       }       
+         $probability = INF;
+       }
      }
 
      try {
        $probability = 1 / (1+ exp(-$probability));
      } catch (Exception $e) {
-       $probability = ($probability < 0) ? 0 : 1; 
+       $probability = ($probability < 0) ? 0 : 1;
      }
 
      return $probability;
@@ -510,7 +514,7 @@ class LogisticRegression extends ModelFields {
             unset($input_data[$field_id]);
 
          }
-      } 
+      }
 
       # the same for items fields
       foreach($this->item_analysis as $field_id => $value){
@@ -542,7 +546,7 @@ class LogisticRegression extends ModelFields {
 	     $input_data_field = (array_key_exists($field_id, $input_data)) ?  $input_data[$field_id] : '';
 	     $unique_terms[$field_id]=array(array($input_data_field, 1));
 	     unset($input_data[$field_id]);
-	 }    
+	 }
       }
 
       return array($unique_terms, $input_data);
@@ -560,7 +564,7 @@ class LogisticRegression extends ModelFields {
         if ($field_id != $this->objective_id)
            array_push($field_ids, $field_id);
      }
-     
+
      $shift = 0;
      foreach ($field_ids as $field_id) {
         $optype = $this->fields->{$field_id}->optype;
@@ -572,8 +576,8 @@ class LogisticRegression extends ModelFields {
           # categorical fields too, unless they use a non-default
           # field coding.
 
-          if ($optype != 'categorical' or 
-              !array_key_exists($field_id, $this->field_codings) or 
+          if ($optype != 'categorical' or
+              !array_key_exists($field_id, $this->field_codings) or
               array_keys($this->field_codings->{$field_id})[0] == "dummy") {
              $length = count($this->fields->{$field_id}->summary->{json_decode(EXPANSION_ATTRIBUTES, true)[$optype]});
              $length += 1;
@@ -587,9 +591,9 @@ class LogisticRegression extends ModelFields {
            $length = ($this->missing_numerics) ? 2 : 1;
         }
         $this->fields->{$field_id}->coefficients_length = $length;
-        $shift += $length; 
+        $shift += $length;
      }
- 
+
      $this->group_coefficients();
    }
 
@@ -597,7 +601,7 @@ class LogisticRegression extends ModelFields {
      /* Returns the set of coefficients for the given category and fieldIds */
      $coeff_index = array_search($field_id, $this->input_fields);
      return $this->coefficients[$category][$coeff_index];
-   } 
+   }
 
    public function group_coefficients() {
      /* Groups the coefficients of the flat array in old formats to the
@@ -610,11 +614,11 @@ class LogisticRegression extends ModelFields {
         foreach ($this->input_fields as $field_id => $value) {
            $shift = $this->fields->{$field_id}->coefficients_shift;
            $length =  $this->fields->{$field_id}->coefficients_length;
-           $coefficients_group = array_slice($coefficients[$category], $shift, $length + $shift); 
-           array_push($this->coefficients[$category], 
+           $coefficients_group = array_slice($coefficients[$category], $shift, $length + $shift);
+           array_push($this->coefficients[$category],
                       array($coefficients[$category][count($coefficients[$category]) -1]));
-        } 
-     } 
+        }
+     }
 
    }
 

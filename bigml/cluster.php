@@ -14,11 +14,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+if (!class_exists('bigml')) {
+   include('bigml.php');
+}
+
 if (!class_exists('modelfields')) {
    include('modelfields.php');
 }
 if (!class_exists('centroid')) {
-   include('centroid.php'); 
+   include('centroid.php');
 }
 
 define("OPTIONAL_FIELDS_CENTROID", json_encode(array('categorical', 'text','items','datetime')));
@@ -29,10 +33,10 @@ function parse_items($text, $regexp) {
   if (is_null($text)) {
     return array();
   }
-  
+
   $regex_string = "/". $regexp . "/";
   return preg_split($regex_string, $text);
-  
+
 }
 
 function parse_terms($text, $case_sensitive=true) {
@@ -50,8 +54,8 @@ function parse_terms($text, $case_sensitive=true) {
 
    if (!empty($matches[0])) {
 
-      foreach ($matches[0] as $valor) { 
-        array_push($results, ($case_sensitive) ? $valor : strtolower($valor)); 
+      foreach ($matches[0] as $valor) {
+        array_push($results, ($case_sensitive) ? $valor : strtolower($valor));
       }
 
    }
@@ -59,18 +63,18 @@ function parse_terms($text, $case_sensitive=true) {
 }
 
 function get_unique_terms($terms, $term_forms, $tag_cloud) {
-  /* 
+  /*
      Extracts the unique terms that occur in one of the alternative forms in
      term_forms or in the tag cloud.
    */
 
   $extend_forms = array();
 
-  $tag_keys=array();  
+  $tag_keys=array();
   foreach ($tag_cloud as $key => $value) {
        array_push($tag_keys, $value[0]);
   }
- 
+
   foreach ($term_forms as $term => $forms) {
 
      foreach ($forms as $form) {
@@ -82,14 +86,14 @@ function get_unique_terms($terms, $term_forms, $tag_cloud) {
 
   foreach ($terms as $term) {
       if (in_array($term, $tag_keys)) {
-        array_push($terms_set, $term); 
+        array_push($terms_set, $term);
       } else if (array_key_exists($term, $extend_forms)) {
-        array_push($terms_set, $extend_forms[$term]); 
+        array_push($terms_set, $extend_forms[$term]);
       }
   }
-   
-  return array_unique($terms_set); 
- 
+
+  return array_unique($terms_set);
+
 }
 
 class Cluster extends ModelFields {
@@ -123,13 +127,13 @@ class Cluster extends ModelFields {
 
       if (is_string($cluster)) {
          if (!($api::_checkClusterId($cluster)) ) {
-            error_log("Wrong cluster id"); 
+            error_log("Wrong cluster id");
             return null;
          }
 
          $cluster = $api::retrieve_resource($cluster, $api::ONLY_MODEL);
-      } 
-      
+      }
+
       if (property_exists($cluster, "object") && property_exists($cluster->object, "status") && $cluster->object->status->code != BigMLRequest::FINISHED ) {
          throw new Exception("The cluster isn't finished yet");
       }
@@ -160,7 +164,7 @@ class Cluster extends ModelFields {
 
 	    $this->total_ss = $the_clusters->total_ss;
 	    $this->within_ss = $the_clusters->within_ss;
-            
+
 	    if (!is_null($this->within_ss)) {
 	       $this->within_ss = 0;
 	       foreach($this->centroids as $centroid) {
@@ -174,7 +178,7 @@ class Cluster extends ModelFields {
 	    $this->k = $cluster->k;
 
             $this->scales = $cluster->scales;
-            $this->term_forms = array(); 
+            $this->term_forms = array();
             $this->tag_clouds = array();
             $this->term_analysis = array();
 	    $this->item_analysis = array();
@@ -203,9 +207,9 @@ class Cluster extends ModelFields {
             parent::__construct($fields);
 
             foreach($this->scales as $field_id=>$field) {
-            
+
                if (!property_exists($this->fields, $field_id) )  {
-                  throw new Exception("Some fields are missing  to generate a local cluster. Please, provide a cluster with the complete list of fields.");   
+                  throw new Exception("Some fields are missing  to generate a local cluster. Please, provide a cluster with the complete list of fields.");
                }
             }
 
@@ -229,7 +233,7 @@ class Cluster extends ModelFields {
       foreach($this->fields as $field_id=>$field) {
          if (!in_array($field->optype, json_decode(OPTIONAL_FIELDS_CENTROID)) && !array_key_exists($field_id, $input_data) ) {
             throw new Exception("Failed to predict a centroid. Input data must contain values for all numeric fields to find a centroid.");
-         } 
+         }
       }
       #Strips affixes for numeric values and casts to the final field type
       $input_data = cast($input_data, $this->fields);
@@ -239,13 +243,13 @@ class Cluster extends ModelFields {
       $input_data =  $get_unique[1];
 
       $nearest = array('centroid_id'=> null, 'centroid_name'=> null, 'distance' => INF);
-    
+
       foreach($this->centroids as $centroid) {
          $distance2 = $centroid->distance2($input_data, $unique_terms, $this->scales, $nearest["distance"]);
          if ($distance2 != null) {
             $nearest = array('centroid_id' => $centroid->centroid_id,
                              'centroid_name' => $centroid->name,
-                             'distance' => $distance2);   
+                             'distance' => $distance2);
          }
       }
       $nearest["distance"] = sqrt($nearest["distance"]);
@@ -265,13 +269,13 @@ class Cluster extends ModelFields {
             if (is_string($input_data_field)) {
                $case_sensitive = (array_key_exists('case_sensitive', $this->term_analysis[$field_id])) ? $this->term_analysis[$field_id]->case_sensitive : true;
                $token_mode = (array_key_exists('token_mode', $this->term_analysis[$field_id])) ? $this->term_analysis[$field_id]->token_mode : 'all';
-               
+
                if ($token_mode != Predicate::TM_FULL_TERM) {
                   $terms = parse_terms($input_data_field, $case_sensitive);
                } else {
                   $terms = array();
                }
-            
+
                if ($token_mode != Predicate::TM_TOKENS) {
                   array_push($terms, ($case_sensitive) ? $input_data_field : strtolower($input_data_field) );
                }
@@ -283,9 +287,9 @@ class Cluster extends ModelFields {
 
             } else {
               $unique_terms[$field_id] = $input_data_field;
-            }  
-            unset($input_data[$field_id]); 
-  
+            }
+            unset($input_data[$field_id]);
+
          }
       }
 
@@ -293,9 +297,9 @@ class Cluster extends ModelFields {
       foreach($this->item_analysis as $field_id => $field){
 
          if ( array_key_exists($field_id, $input_data) ) {
-	    $input_data_field = (array_key_exists($field_id, $input_data)) ?  $input_data[$field_id] : ''; 
+	    $input_data_field = (array_key_exists($field_id, $input_data)) ?  $input_data[$field_id] : '';
 	 }
-       
+
          if (is_string($input_data_field)) {
            $separator = (array_key_exists('separator', $this->item_analysis[$field_id])) ? $this->item_analysis[$field_id]->separator : ' ';
 	   $regexp = (array_key_exists('separator_regexp', $this->item_analysis[$field_id])) ? $this->item_analysis[$field_id]->separator_regexp : null;
@@ -309,16 +313,16 @@ class Cluster extends ModelFields {
 	                                               array(),
 						       array_key_exists($field_id, $this->items) ? $this->items[$field_id] : array());
 	 } else {
-	   $unique_terms[$field_id] = $input_data_field; 
+	   $unique_terms[$field_id] = $input_data_field;
 	 }
 
 	 unset($input_data[$field_id]);
-  
+
       }
 
       return array($unique_terms,$input_data);
    }
 
-} 
+}
 
 ?>
