@@ -121,6 +121,14 @@ class LogisticRegression extends ModelFields {
       $this->categories=array();
       $this->data_field_types=array();
       $this->numeric_fields = array();
+      $this->field_codings = array();
+      $this->bias = null;
+      $this->missing_numerics = null;
+      $this->c = null;
+      $this->eps = null;
+      $this->lr_normalize = null;
+      $this->balance_fields = null;
+      $this->regularization = null;
       $old_coefficients = false;
 
       if ($api == null) {
@@ -203,7 +211,6 @@ class LogisticRegression extends ModelFields {
                   $this->term_forms[$field_id] = $field->summary->term_forms;
 
                   $this->tag_clouds[$field_id] = array();
-                  # TODO revisar
                   foreach ($field->summary->tag_cloud as $tag => $value) {
                     array_push($this->tag_clouds[$field_id], $value[0]);
                   }
@@ -296,7 +303,12 @@ class LogisticRegression extends ModelFields {
             if ($this->fields->{$field}->optype == 'numeric'){
 	       $mean = $this->fields->{$field}->summary->mean;
 	       $stddev = $this->fields->{$field}->summary->standard_deviation;
-	       $input_data[$field] = ($input_data[$field] - $mean) / $stddev;
+           # if stddev is not positive, we only substract the mean
+           if ($stddev > 0) {
+	           $input_data[$field] = ($input_data[$field] - $mean) / $stddev;
+           } else {
+               $input_data[$field] = $input_data[$field] - $mean;
+           }
 	    }
 	 }
 
@@ -341,7 +353,6 @@ class LogisticRegression extends ModelFields {
       if ($add_unused_fields) {
          $result["unused_fields"]=$unused_fields;
       }
-
       return $result;
    }
 
@@ -371,20 +382,16 @@ class LogisticRegression extends ModelFields {
               } else if (array_key_exists($field_id, $this->items)) {
                 $index = array_search($term, $this->items[$field_id]);
               } else if (array_key_exists($field_id, $this->categories) and
-                        (!array_key_exists($field_id, $this->field_codings) or array_keys($this->field_codings->{$field_id})[0] == "dummy" ) ) {
+                        (!array_key_exists($field_id, $this->field_codings) or array_keys($this->field_codings[$field_id])[0] == "dummy" ) ) {
 
                 $index = array_search($term, $this->categories[$field_id]);
               } else if (array_key_exists($field_id, $this->categories) ) {
                 $one_hot = false;
                 $index = array_search($term, $this->categories[$field_id]);
                 $coeff_index = 0;
-
-                foreach($this->field_codings[$field_id] as $key => $value) {
-                   foreach ($value[0] as $contribution) {
+                foreach(array_values($this->field_codings[$field_id])[0] as $contribution) {
                       $probability += $coefficients[$coeff_index] * $contribution[$index] * $occurrences;
                       $coeff_index+=1;
-                   }
-                   break;
                 }
 
               }

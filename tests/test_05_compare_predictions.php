@@ -1158,10 +1158,10 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                                    "000009"=> array("name"=> "rating", "optype"=> "categorical")),
                                                   "source_parser"=> array("separator" => ";")),
                             'data_input' => array("timestamp" => "999999999"),
-                            'prediction' => "5",
+                            'prediction' => "4",
                             'probability' => 0.3231,
                             'objective' => "000009",
-                            'parms' => array("balance_fields" => true)
+                            'parms' => array("balance_fields" => false)
                           ),
                       array('filename' => 'data/movies.csv',
                             'options' => array("fields"=> array("000000"=> array("name"=> "user_id", "optype"=> "numeric"),
