@@ -56,6 +56,7 @@ class Model extends BaseModel{
    public $tree;
    public $regression_ready=false;
    public $_max_bins;
+   public $class_names;
 
    public function __construct($model, $api=null, $storage="storage") {
 
@@ -112,9 +113,20 @@ class Model extends BaseModel{
 
       if ($this->tree->regression) {
          $this->regression_ready = true;
+      } else {
+          $tree = $this->tree;
+          $root_dist = $tree->distribution;
+
+          $class_names = [];
+          foreach ($root_dist as $category) {
+              $class_names[] = $category[0];
+          }
+
+          $this->class_names = $class_names;
+          $foo = $this->class_names;
+
       }
    }
-
 
    public function predict($input_data, $by_name=true,$print_path=false, $out=STDOUT, $with_confidence=false, $missing_strategy=Tree::LAST_PREDICTION,
                            $add_confidence=false, $add_path=false,$add_distribution=false,$add_count=false, $add_median=false, $add_next=false,
@@ -287,6 +299,93 @@ class Model extends BaseModel{
       return $output;
 
    }
+
+
+   public function predict_probability($input_data, $by_name=true, 
+                                       $missing_strategy=Tree::LAST_PREDICTION, 
+                                       $compact=false) {
+   
+       $instances = 1.0;
+       $tree = $this->tree;
+       $root_dist = $tree->distribution;
+       $func = function($pair) {
+           return $pair[1];
+       };
+       $total = array_sum(array_map($func, $root_dist));
+       $category_map = [];
+       foreach ($root_dist as $pair) {
+           $category_map[$pair[0]] = $pair[1] / $total;
+       }
+
+       $prediction = $this->predict($input_data, $by_name, false, STDOUT, false,
+                                    $missing_strategy, false, false,
+                                    $add_distribution=true, false, false, false,
+                                    false, false, false, null);
+
+       $distribution = $prediction->distribution;
+
+       foreach ($distribution as $class_info) {
+           $category_map[$class_info[0]] += $class_info[1];
+           $instances += $class_info[1];
+       }
+
+       foreach (array_keys($category_map) as $k) {
+         $category_map[$k] = $category_map[$k] / $instances;
+       }
+
+       $output = $this->to_output($category_map, $compact=true, "probability");
+
+       return $output;
+   }   
+
+  public function predict_confidence($input_data, $by_name=true, 
+                                     $missing_strategy=Tree::LAST_PREDICTION, 
+                                     $compact=false) {
+  
+      $root_dist = $this->tree->distribution;
+      $category_map = [];
+      foreach ($root_dist as $category) {
+          $category_map[$category[0]] = 0.0;
+      }
+      $prediction = $this->predict($input_data, $by_name, $missing_strategy, $add_distribution=true);
+      $distribution = $prediction->distribution;
+
+      foreach ($distribution as $class_info) {
+          $name = $class_info[0];
+          $category_map[$name] = ws_confidence($name, $distribution);
+      }
+
+      return $this->to_output($category_map, $compact, "confidence");
+
+  }
+
+  function to_output($output_map, $compact, $value_key) {
+      if ($compact == true) {
+          $class_names = $this->class_names;
+          $output = [];
+          foreach ($class_names as $name) {
+              if (isset($output_map[$name])) {
+                  $output[] = $output_map[$name];
+              } else {
+                  $output[] = 0.0;
+              }
+          }
+          return $output;
+      } 
+      else 
+      {
+          $output = [];
+          $class_names = $this->class_names;
+          foreach ($class_names as $name) {
+              if (isset($output_map[$name])) {
+                  $output[] = array('prediction'=>$name, $value_key=>$output_map[$name]);
+              } else {
+                  $output[] = array('prediction'=>$name, $value_key=>0.0);
+              }
+          }
+          return $output;
+      }
+  }
 
    function to_prediction($value_as_string, $data_locale="UTF-8") {
       /*

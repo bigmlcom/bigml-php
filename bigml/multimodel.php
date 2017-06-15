@@ -91,8 +91,9 @@ class MultiModel{
    */
    public $models;
 
-   public function __construct($models, $api=null, $storage="storage") {
+   public function __construct($models, $api=null, $storage="storage", $class_names=null) {
       #$this->models = array();
+       $this->class_names = $class_names;
 
       if ($api == null) {
          $api = new BigML(null, null, null, $storage);
@@ -123,7 +124,7 @@ class MultiModel{
          0 - majority vote (plurality)/ average: PLURALITY_CODE
          1 - confidence weighted majority vote / error weighted: CONFIDENCE_CODE
          2 - probability weighted majority vote / average: PROBABILITY_CODE
-         3 - threshold filtered vote / doesn't apply: THRESHOLD_COD
+         3 - threshold filtered vote / doesn't apply: THRESHOLD_CODE
       */
 
       $votes = self::generate_votes($input_data, $by_name, $missing_strategy, $add_median, $add_min, $add_max, $add_unused_fields);
@@ -252,6 +253,47 @@ class MultiModel{
          return $votes;
       }
    }
+
+    function generate_probability_votes($input_data, $by_name=true, $missing_strategy=Tree::LAST_PREDITION, $method=MultiVote::PROBABILITY_CODE) {
+        $votes = new MultiVote(array());
+        $models = $this->models;
+        foreach (range(0, sizeof($models) - 1) as $order) {
+            $model = $models[$order];
+            $model->class_names = $this->class_names;
+            $votes->probabilities = true;
+
+            try {
+                if ($method == MultiVote::PROBABILITY_CODE) {
+                    $prediction_info = $model->predict_probability($input_data, $by_name, $missing_strategy, $compact=true);
+                } elseif ($method == MultiVote::CONFIDENCE_CODE) {
+                    $prediction_info = $model->predict_confidence($input_data, $by_name, $missing_strategy, $compact=true);
+                } elseif ($method == MultiVote::PLURALITY_CODE) {
+                    $prediction_info = array_fill(0, sizeof($this->class_names), 0.0);
+                    $prediction = $model->predict($input_data, $by_name, $missing_strategy);
+                    $prediction_index = array_search('prediction',$this->class_names);
+                    $prediction_info[$prediction_index] = 1.0;
+                } else {
+                    error_log('This is not a valid "method"');
+                }
+            } catch (TypeError $t) {
+                if ($method == MultiVote::PLURALITY_CODE) {
+                    $prediction_info = array_fill(0, sizeof($this->class_names), 0.0);
+                    $prediction = $model->predict($input_data, $by_name, $missing_strategy);
+                    $prediction_index = array_search('prediction',$this->class_names);
+                    $prediction_info[$prediction_index] = 1.0;
+                } else {
+                    $prediction_info= $model->predict_probability($input_data, $by_name, $compact=true);
+                }
+            }
+
+            $votes->append($prediction_info);
+        }
+
+        return $votes;
+
+    }
+
+
 
    function generate_votes($input_data, $by_name=true, $missing_strategy=Tree::LAST_PREDICTION, $add_median=false,
                            $add_min=false, $add_max=false, $add_unused_fields=false) {

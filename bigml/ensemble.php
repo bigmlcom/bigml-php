@@ -98,6 +98,7 @@ class Ensemble {
             $this->ensemble_id =$ensemble->resource;
             $this->resource_id = $ensemble->resource;
             $this->distributions = (property_exists($ensemble->object, "distributions") ) ? $ensemble->object->distributions : null;
+            $this->objective_id = $ensemble->object->objective_field;
          } else {
             error_log("Cannot find ensemble object");
             return null;
@@ -106,8 +107,15 @@ class Ensemble {
 
       $this->model_ids = $models;
       $this->fields = $this->all_model_fields();
+      $this->class_names = null;
       $number_of_models = count($models);
       $this->models_splits = array();
+      
+      if ($this->fields[$this->objective_id]->optype == 'numeric') {
+          $this->regression = true;
+      } else {
+          $this->regression = false;
+      }
 
       if ($max_models == null) {
          $this->models_splits = array($models);
@@ -130,6 +138,50 @@ class Ensemble {
             $models[] = clone $mo;
          }
          $this->multi_model = new MultiModel($models, $this->api);
+      }
+
+      if ($this->distributions == null) {
+          try {
+              $this->distributions = array();
+              foreach ($models as $model) {
+                  $distributions = $this->distributions;
+                  $distributions[] = array('training'=>array('categories'=> $model->tree->distribution));
+              }
+          }
+          catch(Exception $e) {
+              $this->distributions = array();
+              foreach ($models as $model) {
+                  $distributions = $this->distributions;
+                  $distributions[] = $model->object->model->distribution;
+              }
+          }
+      }
+
+      if (!$this->regression) {
+          try {
+              $objective_field = $this->fields[$this->objective_id];
+              $categories = $objective_field->summary->categories;
+              $classes = [];
+              foreach ($categories as $category) {
+                  $classes[] = $category[0];
+              }
+          }
+          catch (Exception $e) {
+              $classes = [];
+              foreach ($this->distributions as $distribution) {
+                  $categories = $distribution->training->categories;
+                  foreach ($categories as $category) {
+                      $classes[] = $category[0];
+                  }
+              }
+          }
+
+          sort($classes);
+          $this->class_names = $classes;
+      }
+
+      if ( sizeof($this->models_splits) == 1) {
+          $this->multi_model = new MultiModel($models, $this->api, $fields=$this->fields, $class_names=$this->class_names);
       }
 
    }
@@ -214,7 +266,8 @@ class Ensemble {
       } else {
          # When only one group of models is found you use the
          # corresponding multimodel to predict
-         $votes_split = $this->multi_model->generate_votes($input_data, $by_name, $missing_strategy, ($add_median || $median),$add_min, $add_max, $add_unused_fields);
+         $multi_model = $this->multi_model;
+         $votes_split = $multi_model->generate_votes($input_data, $by_name, $missing_strategy, ($add_median || $median),$add_min, $add_max, $add_unused_fields);
 
          $votes = new MultiVote($votes_split->predictions);
          if ($median) {
@@ -246,6 +299,56 @@ class Ensemble {
       }
 
       return $result;
+   }
+
+   function predict_probability($input_data, $by_name=true, $method=MultiVote::PROBABILITY_CODE, 
+                    $missing_strategy=Tree::LAST_PREDICION, $compact=false) {
+
+      if ($this->regression) {
+          $prediction = $this->predict($input_data, $by_name, $method, $missing_strategy);
+
+          if ($compact) {
+              $output = array($prediction);
+          } else {
+              $output = array( "prediction" => $prediction);
+          }
+      } else {
+          if (count($this->models_splits) > 1) {
+              $votes = new MultiVote(array(), $probabilities=true);
+              $models = array();
+              $api = $this->api;
+              $order = 0;
+
+              foreach($this->models_splits as $model_split) {
+                  $models = array();
+                  foreach($model_split as $model_id) {
+                      array_push($models, $api::retrieve_resource($model_id, $api::ONLY_MODEL));
+                  }
+
+                  $multi_model = new MultiModel($models, $this->api, $this->fields, $this->class_names);
+                  $votes_split = $multi_model->generate_probability_votes($input_data, $by_name, $missing_strategy, $method);
+
+                  $votes->extend($votes_split->predictions);
+              }
+          } else {
+              # When only one group of models is found you use the
+              # corresponding multimodel to predict
+              $multi_model = $this->multi_model;
+              $votes_split = $multi_model->generate_probability_votes($input_data, $by_name, $missing_strategy, $method);
+
+              $votes = new MultiVote($votes_split->predictions, $probabilities=true);
+          }
+
+          // print_r("AKA preditions");
+          // print_r($votes_split->predictions);
+
+      $output = $votes->combine($method, $with_confidence, $add_confidence,
+	                        $add_distribution, $add_count, $add_median,
+                            $add_min, $add_max, $options);
+
+      }
+
+      return $output;
    }
 
    function all_model_fields() {

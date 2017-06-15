@@ -37,7 +37,8 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
                             "tlp" => 1,
                             "data_input" => array("petal width" => 0.5),
                             "prediction" => "Iris-versicolor",
-			    "confidence" => 0.3687)
+    		                "confidence" => 0.3687,
+                            "probabilities" => array(0.3403, 0.4150, 0.2447))
                      );
 
         foreach($data as $item) {
@@ -81,6 +82,11 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
             print "And the local prediction's confidence is " . $item["confidence"] . "\n";
             $this->assertEquals($item["confidence"], round($prediction[1], 4));
 
+            print "And the local probabilities are "; 
+            print_r($item["probabilities"]);
+            print "\n";
+            $predict_probability = $local_ensemble->predict_probability($item["data_input"], true, MultiVote::PROBABILITY_CODE, true);
+            print_r($predict_probability);
         }
     }
 
@@ -259,12 +265,12 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
             $model_1 = self::$api->get_model($model_1->resource);
-	    $model_2 = self::$api->get_model($model_2->resource);
-	    $model_3 = self::$api->get_model($model_3->resource);
+        $model_2 = self::$api->get_model($model_2->resource);
+        $model_3 = self::$api->get_model($model_3->resource);
 
             $local_model_1 = new Model($model_1);
             $local_model_2 = new Model($model_2);
-	    $local_model_3 = new Model($model_3);
+        $local_model_3 = new Model($model_3);
 
             print "When I create a local Ensemble with the last " . $item["number_of_models"] ." local models\n";
             $local_ensemble = new Ensemble(array($local_model_1, $local_model_2, $local_model_3), self::$api);
@@ -326,4 +332,5 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
 
         }
    }
+
 }

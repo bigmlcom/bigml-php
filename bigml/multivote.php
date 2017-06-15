@@ -142,8 +142,9 @@ class MultiVote {
    public $WEIGHT_KEYS = array(MultiVote::PLURALITY => null, MultiVote::CONFIDENCE=> array('confidence'), MultiVote::PROBABILITY=>array('distribution', 'count'), MultiVote::THRESHOLD=> null);
 
    public $predictions; 
+   public $probabilities;
 
-   public function __construct($predictions) {
+   public function __construct($predictions, $probabilities=false) {
       /*
          Init method, builds a MultiVote with a list of predictions
          The constuctor expects a list of well formed predictions like:
@@ -151,7 +152,10 @@ class MultiVote {
          Each prediction can also contain an 'order' key that is used
          to break even in votations. The list order is used by default.
       */
+
       $this->predictions = array();
+      $this->probabilities = $probabilities;
+
 
       if (is_array($predictions) ) {
          $this->predictions = $predictions;
@@ -169,7 +173,7 @@ class MultiVote {
          }
          }   
 
-      if (!$has_order) {
+      if ((!$has_order) && (!$probabilities)) {
          $new_predictions = array();
          $i = 0;
          foreach($this->predictions as $prediction) {
@@ -193,7 +197,7 @@ class MultiVote {
          }
       }
       return true;
-   }
+  }
    
    private function sort_joined_distribution_items($a, $b) {
       if ($a[0] < $b[0]) {
@@ -518,7 +522,9 @@ class MultiVote {
       $method = (array_key_exists(strval($method),  $this->COMBINER_MAP)) ? $this->COMBINER_MAP[strval($method)] : $this->COMBINER_MAP[MultiVote::DEFAULT_METHOD];
 
       $keys = array_key_exists($method, $this->WEIGHT_KEYS) ? $this->WEIGHT_KEYS[$method] : null;
-      if ($keys != null ) {
+      $probabilities = $this->probabilities;
+
+      if ($keys != null && (!$probabilities)) {
          foreach($keys as $key) {
             foreach($this->predictions as $prediction) {
                if (!array_key_exists($key, $prediction)) {
@@ -545,7 +551,24 @@ class MultiVote {
             return $this->avg($this, $with_confidence, $add_confidence,
                               $add_distribution, $add_count, $add_median, $add_min, $add_max); 
          }
+      } elseif ($this -> probabilities) {
+          $predictions = $this->predictions;
+          $total = 0.0;
+          $output = array_fill(0, sizeof($predictions[0]), 0.0);
+          
+          foreach ($predictions as $distribution) {
+              foreach (range(0, count($distribution) - 1) as $i) {
+                  $output[$i] += $distribution[$i];
+                  $total += $distribution[$i];
+              }
+          }
 
+          foreach (range(0, count($output) - 1) as $i) {
+              $output[$i] = $output[$i] / $total;
+          }
+
+          return $output;
+      
       } else {
          $predictions = $this;
          if ($method == MultiVote::THRESHOLD) {
@@ -582,11 +605,20 @@ class MultiVote {
            - count: the total number of instances of the training set in the
                     node
        */
-       if ($prediction_info != null) {
-          $order = $this->next_order();
-          $prediction_info->order = $order;
-          array_push($this->predictions, $prediction_info);
-       }  
+
+       if (isset($prediction_info->prediction)) {
+           if ($prediction_info != null) {
+               $order = $this->next_order();
+               $prediction_info->order = $order;
+               array_push($this->predictions, $prediction_info);
+           } else {
+               error_log("WARNING: failed to add the prediction.\n The minimal key for the prediction is 'prediction'.\n");
+           }
+       } else {
+           if ($this->probabilities) {
+               array_push($this->predictions, $prediction_info);
+           }
+       }
    }
 
    function single_out_category($options) {
@@ -872,7 +904,7 @@ class MultiVote {
 	      $prediction['order'] = $order+$i;
 	      array_push($this->predictions, $prediction);
 	    } else {
-	       error_log("WARNING: failed to add the prediction.\n Only dict like predictions are expected\n");
+            error_log("WARNING: failed to add the prediction.\n Only dict like predictions are expected\n");
 	    }
             $i+=1;
          } 
