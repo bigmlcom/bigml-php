@@ -122,6 +122,7 @@ class Model extends BaseModel{
               $class_names[] = $category[0];
           }
 
+          sort($class_names);
           $this->class_names = $class_names;
           $foo = $this->class_names;
 
@@ -308,6 +309,11 @@ class Model extends BaseModel{
        $instances = 1.0;
        $tree = $this->tree;
        $root_dist = $tree->distribution;
+       print_r("AKA: distribution");
+       print_r($root_dist);
+
+
+
        $func = function($pair) {
            return $pair[1];
        };

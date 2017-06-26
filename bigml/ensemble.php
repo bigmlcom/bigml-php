@@ -302,7 +302,7 @@ class Ensemble {
    }
 
    function predict_probability($input_data, $by_name=true, $method=MultiVote::PROBABILITY_CODE, 
-                    $missing_strategy=Tree::LAST_PREDICION, $compact=false) {
+                    $missing_strategy=Tree::LAST_PREDICTION, $compact=false) {
 
       if ($this->regression) {
           $prediction = $this->predict($input_data, $by_name, $method, $missing_strategy);

@@ -82,11 +82,13 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
             print "And the local prediction's confidence is " . $item["confidence"] . "\n";
             $this->assertEquals($item["confidence"], round($prediction[1], 4));
 
-            print "And the local probabilities are "; 
-            print_r($item["probabilities"]);
-            print "\n";
-            $predict_probability = $local_ensemble->predict_probability($item["data_input"], true, MultiVote::PROBABILITY_CODE, true);
-            print_r($predict_probability);
+            print "And the local probabilities are " . json_encode($item["probabilities"]) . "\n";
+            $predict_probability = $local_ensemble->predict_probability($item["data_input"], true, MultiVote::PROBABILITY_CODE, Tree::LAST_PREDICTION, true);
+            foreach (range(0, count($predict_probability) - 1) as $index) {
+                $predict_probability[$index] = round($predict_probability[$index], 4);
+            }
+            $this->assertEquals($item["probabilities"], $predict_probability);
+
         }
     }
 
