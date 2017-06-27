@@ -462,8 +462,19 @@ class Tree {
                }
             }
          }
-         return new Prediction($this->output, $path, $this->confidence, $this->distribution, get_instances($this->distribution), 
-	                       $this->distribution_unit, ($this->regression == null ? null : $this->median), $this->children, 
+
+         if ($this->weighted) {
+             $output_distribution = $this->weighted_distribution;
+             $output_unit = $this->weighted_distribution_unit;
+         } else {
+             $output_distribution = $this->distribution;
+             $output_unit = $this->distribution_unit;
+         }
+
+         return new Prediction($this->output, $path, $this->confidence, 
+                               $output_distribution, 
+                               get_instances($output_distribution), 
+                               $output_unit, ($this->regression == null ? null : $this->median), $this->children, 
 			       ($this->regression == null ? null : $this->min),($this->regression == null ? null : $this->max));
       }
 

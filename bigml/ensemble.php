@@ -337,10 +337,12 @@ class Ensemble {
               $votes_split = $multi_model->generate_probability_votes($input_data, $by_name, $missing_strategy, $method);
 
               $votes = new MultiVote($votes_split->predictions, $probabilities=true);
-          }
+              print_r("AKA votes");
+              print_r($votes);
 
-          // print_r("AKA preditions");
-          // print_r($votes_split->predictions);
+
+
+          }
 
       $output = $votes->combine($method, $with_confidence, $add_confidence,
 	                        $add_distribution, $add_count, $add_median,

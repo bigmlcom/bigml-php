@@ -305,42 +305,61 @@ class Model extends BaseModel{
    public function predict_probability($input_data, $by_name=true, 
                                        $missing_strategy=Tree::LAST_PREDICTION, 
                                        $compact=false) {
-   
-       $instances = 1.0;
-       $tree = $this->tree;
-       $root_dist = $tree->distribution;
-       print_r("AKA: distribution");
-       print_r($root_dist);
 
+       if ($this->regression) {
+           $prediction = $this->predict($input_data, $by_name, $missing_strategy);
 
-
-       $func = function($pair) {
-           return $pair[1];
-       };
-       $total = array_sum(array_map($func, $root_dist));
-       $category_map = [];
-       foreach ($root_dist as $pair) {
-           $category_map[$pair[0]] = $pair[1] / $total;
+           if ($compact) {
+               $output = $prediction;
+           } else {
+               $output = array("prediction"=>$prediction);
+           }
        }
 
-       $prediction = $this->predict($input_data, $by_name, false, STDOUT, false,
-                                    $missing_strategy, false, false,
-                                    $add_distribution=true, false, false, false,
-                                    false, false, false, null);
+       else {
 
-       $distribution = $prediction->distribution;
+           $tree = $this->tree;
+           $root_dist = $tree->distribution;
 
-       foreach ($distribution as $class_info) {
-           $category_map[$class_info[0]] += $class_info[1];
-           $instances += $class_info[1];
+           if ($this->tree->weighted) {
+               $category_map = [];
+               foreach ($root_dist as $pair) {
+                   $category_map[$pair[0]] = 0.0;
+               }
+               $instances = 0.0;
+              
+           } else {
+               
+               $func = function($pair) {
+                   return $pair[1];
+               };
+
+               $total = array_sum(array_map($func, $root_dist));
+               $category_map = [];
+               foreach ($root_dist as $pair) {
+                   $category_map[$pair[0]] = $pair[1] / $total;
+               }
+               $instances = 1.0;
+           }
+
+           $prediction = $this->predict($input_data, $by_name, false, STDOUT, false,
+                                        $missing_strategy, false, false,
+                                        $add_distribution=true, false, false, false,
+                                        false, false, false, null);
+
+           $distribution = $prediction->distribution;
+
+           foreach ($distribution as $class_info) {
+               $category_map[$class_info[0]] += $class_info[1];
+               $instances += $class_info[1];
+           }
+
+           foreach (array_keys($category_map) as $k) {
+               $category_map[$k] = $category_map[$k] / $instances;
+           }
+
+           $output = $this->to_output($category_map, $compact=true, "probability");
        }
-
-       foreach (array_keys($category_map) as $k) {
-         $category_map[$k] = $category_map[$k] / $instances;
-       }
-
-       $output = $this->to_output($category_map, $compact=true, "probability");
-
        return $output;
    }   
 
