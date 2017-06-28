@@ -259,6 +259,40 @@ class LogisticRegression extends ModelFields {
       }
 
    }
+    
+   public function predict_probability($input_data, $by_name=true, $compact=false) {
+         // Predicts a probability for each possible output class,
+         // based on input values.  The input fields must be a dictionary
+         // keyed by field name or field ID.
+ 
+         // :param input_data: Input data to be predicted
+         // :param by_name: Boolean that is set to True if field_names (as
+         //                 alternative to field ids) are used in the
+         //                 input_data dict
+         // :param compact: If False, prediction is returned as a list of maps, one
+         //                 per class, with the keys "prediction" and "probability"
+         //                 mapped to the name of the class and it's probability,
+         //                 respectively.  If True, returns a list of probabilities
+         //                 ordered by the sorted order of the class names.
+
+       $distribution = $this->predict($input_data, $by_name)['distribution'];
+       
+       $cmp = function($a, $b) {
+           return strcmp($a["category"], $b["category"]);
+       };
+
+       usort($distribution, $cmp);
+
+       if ($compact) {
+           $output = [];
+           foreach ($distribution as $category) {
+               $output[] = $category["probability"];
+           } 
+           return $output;
+      } else {
+               return $distribution;
+           }
+   }
 
    public function predict($input_data, $by_name=true, $add_unused_fields=false) {
       /* "Returns the class prediction and the probability distribution */

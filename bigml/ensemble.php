@@ -303,7 +303,37 @@ class Ensemble {
 
    function predict_probability($input_data, $by_name=true, $method=MultiVote::PROBABILITY_CODE, 
                     $missing_strategy=Tree::LAST_PREDICTION, $compact=false) {
-
+ 
+         // For classification models, predicts a probability for
+         // each possible output class, based on input values.  The input
+         // fields must be a dictionary keyed by field name or field ID.
+ 
+         // For regressions, the output is a single element list
+         // containing the prediction.
+ 
+         // :param input_data: Input data to be predicted
+         // :param by_name: Boolean that is set to True if field_names (as
+         //                 alternative to field ids) are used in the
+         //                 input_data dict
+         // :param method: numeric key code indicating how the scores
+         //                should be produced:
+         //       0 - majority vote - The sum of models predicting a given class
+         //           divided by the total number of models
+         //           PLURALITY_CODE
+         //       1 - Scores estimated from the class confidence at the leaves
+         //           of each of the constituient models.
+         //           CONFIDENCE_CODE
+         //       2 - Average Lapalace-smoothed probabilitiy of all models'
+         //           leaf node distributions:
+         //           PROBABILITY_CODE
+         // :param missing_strategy: LAST_PREDICTION|PROPORTIONAL missing strategy for
+         //                          missing fields
+         // :param compact: If False, prediction is returned as a list of maps, one
+         //                 per class, with the keys "prediction" and "probability"
+         //                 mapped to the name of the class and it's probability,
+         //                 respectively.  If True, returns a list of probabilities
+         //                 ordered by the sorted order of the class names.
+ 
       if ($this->regression) {
           $prediction = $this->predict($input_data, $by_name, $method, $missing_strategy);
 
@@ -337,11 +367,6 @@ class Ensemble {
               $votes_split = $multi_model->generate_probability_votes($input_data, $by_name, $missing_strategy, $method);
 
               $votes = new MultiVote($votes_split->predictions, $probabilities=true);
-              print_r("AKA votes");
-              print_r($votes);
-
-
-
           }
 
       $output = $votes->combine($method, $with_confidence, $add_confidence,

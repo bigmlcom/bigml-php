@@ -306,6 +306,25 @@ class Model extends BaseModel{
                                        $missing_strategy=Tree::LAST_PREDICTION, 
                                        $compact=false) {
 
+         // For classification models, Predicts a probability for
+         // each possible output class, based on input values.  The input
+         // fields must be a dictionary keyed by field name for field ID.
+ 
+         // For regressions, the output is a single element list
+         // containing the prediction.
+ 
+         // :param input_data: Input data to be predicted
+         // :param by_name: Boolean that is set to True if field_names (as
+         //                 alternative to field ids) are used in the
+         //                 input_data dict
+         // :param missing_strategy: LAST_PREDICTION|PROPORTIONAL missing strategy
+         //                          for missing fields
+         // :param compact: If False, prediction is returned as a list of maps, one
+         //                 per class, with the keys "prediction" and "probability"
+         //                  mapped to the name of the class and it's probability,
+         //                 respectively.  If True, returns a list of probabilities
+         //                 ordered by the sorted order of the class names.
+
        if ($this->regression) {
            $prediction = $this->predict($input_data, $by_name, $missing_strategy);
 
@@ -366,7 +385,28 @@ class Model extends BaseModel{
   public function predict_confidence($input_data, $by_name=true, 
                                      $missing_strategy=Tree::LAST_PREDICTION, 
                                      $compact=false) {
-  
+
+        //  For classification models, Predicts a one-vs.-rest confidence value
+        //  for each possible output class, based on input values.  This
+        //  confidence value is a lower confidence bound on the predicted
+        //  probability of the given class.  The input fields must be a
+        //  dictionary keyed by field name for field ID.
+ 
+        //  For regressions, the output is a single element list
+        // containing the prediction.
+ 
+        //  :param input_data: Input data to be predicted
+        //  :param by_name: Boolean that is set to True if field_names (as
+        //                  alternative to field ids) are used in the
+        //                  input_data dict
+        //  :param missing_strategy: LAST_PREDICTION|PROPORTIONAL missing strategy
+        //                           for missing fields
+        //  :param compact: If False, prediction is returned as a list of maps, one
+        //                  per class, with the keys "prediction" and "confidence"
+        //                  mapped to the name of the class and its confidence,
+        //                  respectively.  If True, returns a list of confidences
+        //                 ordered by the sorted order of the class names.
+
       $root_dist = $this->tree->distribution;
       $category_map = [];
       foreach ($root_dist as $category) {
