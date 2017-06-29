@@ -95,8 +95,7 @@ class Ensemble {
          if ($ensemble instanceof STDClass && property_exists($ensemble, "resource") && $api::_checkEnsembleId($ensemble->resource) && $ensemble->object->status->code == 5) {
 
             if (isset($ensemble->object->boosting)) {
-                error_log("Boosting ensembles cannot be used locally yet.");
-                return null;
+                throw new Exception("Boosting ensembles cannot be used locally yet.");
             }
 
             $models = $ensemble->object->models;
