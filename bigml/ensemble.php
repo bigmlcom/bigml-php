@@ -157,7 +157,7 @@ class Ensemble {
           }
       }
 
-      if (!$this->regression) {
+      if (!$this->regression && $this->boosting != null) {
           try {
               $objective_field = $this->fields[$this->objective_id];
               $categories = $objective_field->summary->categories;
@@ -340,7 +340,7 @@ class Ensemble {
           if ($compact) {
               $output = array($prediction);
           } else {
-              $output = array( "prediction" => $prediction);
+              $output = array("prediction" => $prediction);
           }
       } else {
           if (count($this->models_splits) > 1) {

@@ -124,7 +124,6 @@ class Model extends BaseModel{
 
           sort($class_names);
           $this->class_names = $class_names;
-          $foo = $this->class_names;
 
       }
    }

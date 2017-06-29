@@ -289,9 +289,9 @@ class LogisticRegression extends ModelFields {
                $output[] = $category["probability"];
            } 
            return $output;
-      } else {
-               return $distribution;
-           }
+       } else {
+           return $distribution;
+       }
    }
 
    public function predict($input_data, $by_name=true, $add_unused_fields=false) {

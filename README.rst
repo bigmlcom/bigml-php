@@ -2349,6 +2349,10 @@ Once you have a local model you can use to generate predictions locally::
 
     $prediction = $local_model->predict(array("petal length"=> 3, "petal width"=> 1));
 
+You can also use the `predict_probability` function to obtain a probability prediction for each possible class of the objective field::
+
+    $predict_probability = $local_model->predict_probability(array("petal width"=> 0.5));
+
 Local predictions have three clear advantages:
     
 - Removing the dependency from BigML to make new predictions.
@@ -2356,6 +2360,8 @@ Local predictions have three clear advantages:
 - No cost (i.e., you do not spend BigML credits).
 
 - Extremely low latency to generate predictions for huge volumes of data.
+
+
 
 Local Clusters
 --------------
@@ -2551,6 +2557,10 @@ Similarly, local ensembles can also be created by giving a list of models to be 
     $ensemble = new Ensemble(array('model/50c0de043b563519830001c2','model/50c0de043b5635198300031b'));
 
     $ensemble->predict(array("petal length": 3, "petal width": 1));
+
+You can also use the `predict_probability` function to obtain a probability prediction for each possible class of the objective field::
+
+    $ensemble->predict_probability(array("petal width"=> 0.5));
 
 Rule Generation
 ---------------
