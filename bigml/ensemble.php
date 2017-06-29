@@ -50,7 +50,6 @@ class Ensemble {
    public $objective_id;
 
    public function __construct($ensemble, $api=null, $max_models=null, $storage="storage") {
-
       /*
          array from models
          ensemble object
@@ -94,6 +93,12 @@ class Ensemble {
          }
 
          if ($ensemble instanceof STDClass && property_exists($ensemble, "resource") && $api::_checkEnsembleId($ensemble->resource) && $ensemble->object->status->code == 5) {
+
+            if (isset($ensemble->object->boosting)) {
+                error_log("Boosting ensembles cannot be used locally yet.");
+                return null;
+            }
+
             $models = $ensemble->object->models;
             $this->ensemble_id =$ensemble->resource;
             $this->resource_id = $ensemble->resource;
@@ -157,7 +162,7 @@ class Ensemble {
           }
       }
 
-      if (!$this->regression && $this->boosting != null) {
+      if (!$this->regression && !isset($this->boosting)) {
           try {
               $objective_field = $this->fields[$this->objective_id];
               $categories = $objective_field->summary->categories;
