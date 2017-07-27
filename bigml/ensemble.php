@@ -26,6 +26,10 @@ if (!class_exists('multivote')) {
   include('multivote.php');
 }
 
+if (!class_exists('BoostedEnsemble')) {
+  include('boostedensemble.php');
+}
+
 if (!class_exists('model')) {
   include('model.php');
 }
@@ -94,8 +98,11 @@ class Ensemble {
 
          if ($ensemble instanceof STDClass && property_exists($ensemble, "resource") && $api::_checkEnsembleId($ensemble->resource) && $ensemble->object->status->code == 5) {
 
-            if (isset($ensemble->object->boosting)) {
-                throw new Exception("Boosting ensembles cannot be used locally yet.");
+            $this->boosting = isset($ensemble->object->boosting);
+
+            if ($this->boosting) {
+                $this->boostedensemble = new BoostedEnsemble($ensemble, $api=null, $max_models=null, $storage="storage");
+                return;
             }
 
             $models = $ensemble->object->models;
@@ -161,7 +168,7 @@ class Ensemble {
           }
       }
 
-      if (!$this->regression && !isset($this->boosting)) {
+      if (!$this->regression) {
           try {
               $objective_field = $this->fields[$this->objective_id];
               $categories = $objective_field->summary->categories;
@@ -185,7 +192,7 @@ class Ensemble {
       }
 
       if ( sizeof($this->models_splits) == 1) {
-          $this->multi_model = new MultiModel($models, $this->api, $fields=$this->fields, $class_names=$this->class_names);
+          $this->multi_model = new MultiModel($models, $this->api, $storage, $this->class_names);
       }
 
    }
@@ -194,6 +201,9 @@ class Ensemble {
       /*
          Lists all the model/ids that compound the ensemble.
       */
+       if ($this->boosting) {
+           return $this->boostedensemble->model_ids;
+      }
       return $this->model_ids;
    }
 
@@ -240,6 +250,10 @@ class Ensemble {
                        node as individual prediction for the specified
                        combination method.
       */
+
+      if ($this->boosting) {
+           return $this->boostedensemble->predict($input_data, $by_name=true, $missing_strategy=Tree::LAST_PREDICTION);
+      }
 
       if (count($this->models_splits) > 1) {
          $votes = new MultiVote(array());
@@ -337,7 +351,10 @@ class Ensemble {
          //                 mapped to the name of the class and it's probability,
          //                 respectively.  If True, returns a list of probabilities
          //                 ordered by the sorted order of the class names.
- 
+      if ($this->boosting) {
+          throw new Exception("This function is not implemented for boosting yet.");
+      }
+
       if ($this->regression) {
           $prediction = $this->predict($input_data, $by_name, $method, $missing_strategy);
 
@@ -390,6 +407,10 @@ class Ensemble {
       $fields = array();
       $models= array();
 
+      if ($this->boosting) {
+          throw new Exception("This function is not implemented for boosting yet.");
+      }
+
       foreach($this->model_ids as $model_id) {
          if (!is_string($model_id) && is_a($model_id, "Model") ) {
            $local_model = $model_id;
@@ -416,6 +437,10 @@ class Ensemble {
       $field_importance = array();
       $field_names = array();
       $check_importance = false;
+
+      if ($this->boosting) {
+          throw new Exception("This function is not implemented for boosting yet.");
+      }
 
       if ($this->distributions != null && is_array($this->distributions))
       {
