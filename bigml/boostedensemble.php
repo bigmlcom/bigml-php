@@ -22,6 +22,10 @@ if (!class_exists('model')) {
    include('model.php');
 }
 
+if (!class_exists('BoostedTree')) {
+    include('boostedtree.php');
+}
+
 class BoostedEnsemble extends ModelFields{
    /*
       A local boosted Ensemble.
