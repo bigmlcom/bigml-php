@@ -457,7 +457,7 @@ class Model extends BaseModel{
       */
 
       if (!mb_check_encoding($value_as_string, 'UTF-8')) {
-         $value_as_sring = utf8_encode($value_as_string);
+         $value_as_string = utf8_encode($value_as_string);
       }
 
       $tree = $this->tree;

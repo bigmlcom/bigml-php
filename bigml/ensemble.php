@@ -101,7 +101,7 @@ class Ensemble {
             $this->boosting = isset($ensemble->object->boosting);
 
             if ($this->boosting) {
-                $this->boostedensemble = new BoostedEnsemble($ensemble, $api=null, $max_models=null, $storage="storage");
+                $this->boostedensemble = new BoostedEnsemble($ensemble, $this->api, $max_models, $storage);
                 return;
             }
 
