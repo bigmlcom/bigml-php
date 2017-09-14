@@ -324,7 +324,7 @@ class Model extends BaseModel{
          //                 respectively.  If True, returns a list of probabilities
          //                 ordered by the sorted order of the class names.
 
-       if ($this->regression) {
+       if ($this->regression_ready) {
            $prediction = $this->predict($input_data, $by_name, $missing_strategy);
 
            if ($compact) {

@@ -42,7 +42,9 @@ class BoostedTree {
         public $output;
         public $predicate;
         public $weight;
-        
+        public $lambda;
+        public $objective_class;
+
         public function __construct($tree, $fields, $boosting_info) {
                         
             $this->fields = $fields;
@@ -50,7 +52,10 @@ class BoostedTree {
 
             $this->weight = $boosting_info->weight;
             $this->lambda = $boosting_info->lambda;
-            $this->objective_class = $boosting_info->objective_class;
+
+            if (isset($boosting_info->objective_class)) {
+                $this->objective_class = $boosting_info->objective_class;
+            }
 
             if ($tree->predicate === true) {
                 $this->predicate = true;
@@ -72,7 +77,7 @@ class BoostedTree {
             $children = [];
             if (isset($tree->children)) {
                     foreach ($tree->children as $child) {
-                        array_push($children, new BoostedTree($child, $this->fields, $objective_field = $objective_field));
+                        array_push($children, new BoostedTree($child, $fields, $boosting_info));
                     }
             }
             $this->children = $children;

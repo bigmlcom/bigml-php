@@ -193,7 +193,7 @@ class MultiVote {
          if (is_object($prediction)) {
            if (!is_numeric($prediction->prediction)) return false;
          } else {
-           if (!is_numeric($prediction["prediction"])) return false;
+           if (!isset($prediction["prediction"]) OR !is_numeric($prediction["prediction"])) return false;
          }
       }
       return true;

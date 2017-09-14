@@ -52,6 +52,7 @@ class Ensemble {
    public $multi_model;
    public $fields;
    public $objective_id;
+   public $boosting;
 
    public function __construct($ensemble, $api=null, $max_models=null, $storage="storage") {
       /*
@@ -72,12 +73,15 @@ class Ensemble {
 
             if (!is_string($model_id) && is_a($model_id, "Model") ) {
                array_push($models, $model_id);
+               $this->objective_id = $model_id->tree->objective_field;
             } else if ($model_id instanceof STDClass) {
                array_push($models, $model_id);
+               $this->objective_id = $model_id->object->objective_field;
             } else if ($api != null && $api::_checkModelId($model_id)) {
                $m = $api::get_model($model_id);
                if ($m != null) {
                  array_push($models, $m);
+                 $this->objective_id = $m->object->objective_field;
                } else {
                   error_log("Failed to verify the list of models. Check your model id values");
                   return null;
@@ -101,7 +105,7 @@ class Ensemble {
             $this->boosting = isset($ensemble->object->boosting);
 
             if ($this->boosting) {
-                $this->boostedensemble = new BoostedEnsemble($ensemble, $this->api, $max_models, $storage);
+                $this->boostedensemble = new BoostedEnsemble($ensemble, $api=null, $max_models=null, $storage="storage");
                 return;
             }
 
@@ -252,7 +256,7 @@ class Ensemble {
       */
 
       if ($this->boosting) {
-           return $this->boostedensemble->predict($input_data, $by_name=true, $missing_strategy=Tree::LAST_PREDICTION);
+           return $this->boostedensemble->predict($input_data, $by_name, $missing_strategy);
       }
 
       if (count($this->models_splits) > 1) {
@@ -390,9 +394,7 @@ class Ensemble {
               $votes = new MultiVote($votes_split->predictions, $probabilities=true);
           }
 
-      $output = $votes->combine($method, $with_confidence, $add_confidence,
-	                        $add_distribution, $add_count, $add_median,
-                            $add_min, $add_max, $options);
+      $output = $votes->combine($method);
 
       }
 

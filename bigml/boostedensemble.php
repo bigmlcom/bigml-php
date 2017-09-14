@@ -41,6 +41,7 @@ class BoostedEnsemble extends ModelFields{
       }
 
       $this->api = $api;
+
       $this->ensemble_id = null;
       $models = array();
 
@@ -62,11 +63,11 @@ class BoostedEnsemble extends ModelFields{
       }
 
       $this->model_ids = $models;
-      $this->fields = (array) $ensemble->object->ensemble->fields;
+      $this->fields = $ensemble->object->ensemble->fields;
       $this->class_names = null;
       $number_of_models = count($models);
 
-      if ($this->fields[$this->objective_id]->optype == 'numeric') {
+      if ($this->fields->{$this->objective_id}->optype == 'numeric') {
           $this->regression = true;
       } else {
           $this->regression = false;
@@ -78,7 +79,7 @@ class BoostedEnsemble extends ModelFields{
           $this->initial_offsets = $ensemble->object->initial_offsets;
       }
 
-         foreach($models as $mo) {
+         foreach($models as $key => $mo) {
             if (!is_string($mo) && is_a($mo, "BoostedTree") ) {
                $m = $mo;
             } else {
