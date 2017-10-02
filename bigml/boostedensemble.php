@@ -109,7 +109,24 @@ class BoostedEnsemble extends ModelFields{
         return $predictions;
     }
 
-    function predict($input_data, $by_name=true, $missing_strategy=Tree::LAST_PREDICTION) {
+    function predict($input_data, $by_name=true, $missing_strategy=Tree::LAST_PREDICTION, $compact=null) {
+      /*
+         Makes a prediction based on the prediction made by every model.
+
+         :param input_data: Test data to be used as input
+	     :param by_name: Boolean that is set to true if field_names (as
+	                     alternative to field ids) are used in the
+			             input_data dict
+         :param missing_strategy: numeric key for the individual model's
+                                 prediction method. See the model predict
+                                 method.
+         :param compact: If Null (as is the default), returns the just the prediction. 
+                         If False, prediction is returned as a list of maps, one
+                         per class, with the keys "prediction" and "probability"
+                         mapped to the name of the class and it's probability,
+                         respectively.  If True, returns a list of probabilities
+                         ordered by the sorted order of the class names. 
+      */                    
 
         //Checks and cleans input_data leaving the fields used in the model
         $filtered_data = $this->filter_input_data($input_data, $by_name);
@@ -121,12 +138,21 @@ class BoostedEnsemble extends ModelFields{
 
             // for regression: add all the trees' predict() results. then add the initial offset
             $total_prediction = $this->initial_offset;
+
             foreach( $this->models as $tree ) {
                 $this_prediction = $tree->predict($new_data, null, $missing_strategy);
                 $weight = $tree->weight;
                 $total_prediction += $weight*($this_prediction->prediction);
             }
-            return $total_prediction;
+
+            if (is_null($compact)) {
+                return $total_prediction;
+            } elseif ($compact) {
+                return array($total_prediction);
+            } else {
+                return array("prediction" => $total_prediction);
+            }
+
         } else {
 
         // for classification: each tree has objective class, initial offsets
@@ -138,6 +164,7 @@ class BoostedEnsemble extends ModelFields{
 
             foreach ( $this->models as $tree) {
                 $this_prediction = $tree->predict($new_data, null, $missing_strategy);
+
                 $objective_class = $tree->objective_class;
                 $weight = $tree->weight;
 
@@ -145,8 +172,19 @@ class BoostedEnsemble extends ModelFields{
             }
 
             $softmax=$this->softmax($total_prediction);
-            $max = max( array_values($softmax));
-            return array_search($max, $softmax);
+
+            if (is_null($compact)) {
+                $max = max( array_values($softmax));
+                return array_search($max, $softmax);
+            } elseif ($compact) {
+                return array_values($softmax);
+            } else {
+                $output = array();
+                foreach ($softmax as $key => $value) {
+                    $output[] = array("prediction"=>$key, "probability"=>$value);
+                }
+                return $output;
+            }
         }
     }
 }

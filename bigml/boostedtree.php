@@ -103,7 +103,7 @@ class BoostedTree {
                 $path = [];
             }
             if ($missing_strategy == Tree::PROPORTIONAL) {
-                return $this->predict_proportional($input_data, $path=$path);
+                return $this->predict_proportional($input_data, $path);
             } else {
                 if ($this->children) {
                     foreach ($this->children as $child) {
@@ -118,13 +118,13 @@ class BoostedTree {
                 return new Prediction($this->output, 
                                       $path, 
                                       null, 
-                                      $distribution=null, 
-                                      $count=$this->count,
-                                      $median=null,
-                                      $distribution_unit=null,
-                                      $children=$this->children,
-                                      $d_min=null,
-                                      $d_max=null);
+                                      null, 
+                                      $this->count,
+                                      null,
+                                      null,
+                                      $this->children,
+                                      null,
+                                      null);
             }
         }
 

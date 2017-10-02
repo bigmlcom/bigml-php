@@ -36,11 +36,13 @@ class BigMLTestBoostedEnsemble extends PHPUnit_Framework_TestCase
         $data = array(array("filename" => 'data/iris.csv',
                             "number_of_iterations" => 5,
                             "data_input" => array("petal width" => 1.5),
-                            "prediction" => "Iris-versicolor"),
+                            "prediction" => "Iris-versicolor",
+                            "probabilities" => array(0.3041, 0.4243, 0.2715)),
                       array("filename" => 'data/grades.csv',
                             "number_of_iterations" => 5,
                             "data_input" => array("Midterm" => 95.4),
-                            "prediction" => 75.604)
+                            "prediction" => 77.85,
+                            "probabilities" => array(77.8462))
                      );
 
         foreach($data as $item) {
@@ -64,7 +66,7 @@ class BigMLTestBoostedEnsemble extends PHPUnit_Framework_TestCase
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
             print "And create a ensemble of ". $item["number_of_iterations"] . " iterations\n";
-            $ensemble = self::$api->create_ensemble($dataset->resource, array("boosting" => array("iterations"=> $item["number_of_iterations"]), "ensemble_sample" => array("seed" => 'BigML')));
+            $ensemble = self::$api->create_ensemble($dataset->resource, array("boosting" => array("iterations"=> $item["number_of_iterations"]), "ensemble_sample" => array("seed" => 'c71814f0fb38391a53976be721e8c5e2')));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $ensemble->code);
 
             print "And I wait until the ensemble is ready\n";
@@ -75,24 +77,22 @@ class BigMLTestBoostedEnsemble extends PHPUnit_Framework_TestCase
             $ensemble = self::$api->get_ensemble($ensemble->resource);
             $local_ensemble = new Ensemble($ensemble, self::$api);
 
-            print "When I create prediction for local ensemble with confidence for " . json_encode($item["data_input"]) . " \n";
+            print "When I create prediction for local ensemble for " . json_encode($item["data_input"]) . " \n";
             $prediction = $local_ensemble->predict($item["data_input"]);
-            if (is_double($prediction)) {
-                $prediction = round( $prediction, 3);
-            }
 
             print "Then the prediction for local ensemble is equals " . $item["prediction"] . "\n";
-            $this->assertEquals($item["prediction"], $prediction);
+            if(is_numeric($prediction)) {
+                $this->assertEquals($item["prediction"], round($prediction, 2));
+            } else {
+                $this->assertEquals($item["prediction"], $prediction);
+            }
 
-            // print "And the local prediction's confidence is " . $item["confidence"] . "\n";
-            // $this->assertEquals($item["confidence"], round($prediction[1], 4));
-
-            // print "And the local probabilities are " . json_encode($item["probabilities"]) . "\n";
-            // $predict_probability = $local_ensemble->predict_probability($item["data_input"], true, MultiVote::PROBABILITY_CODE, Tree::LAST_PREDICTION, true);
-            // foreach (range(0, count($predict_probability) - 1) as $index) {
-            //     $predict_probability[$index] = round($predict_probability[$index], 4);
-            // }
-            // $this->assertEquals($item["probabilities"], $predict_probability);
+            print "And the local probabilities are " . json_encode($item["probabilities"]) . "\n";
+            $predict_probability = $local_ensemble->predict_probability($item["data_input"], true, MultiVote::PROBABILITY_CODE, Tree::LAST_PREDICTION, true);
+            foreach (range(0, count($predict_probability) - 1) as $index) {
+                $predict_probability[$index] = round($predict_probability[$index], 4);
+            }
+            $this->assertEquals($item["probabilities"], $predict_probability);
 
         }
     }

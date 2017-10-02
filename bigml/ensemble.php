@@ -59,6 +59,7 @@ class Ensemble {
          array from models
          ensemble object
       */
+
       if ($api == null) {
          $api = new BigML(null, null, null, $storage);
       }
@@ -356,7 +357,7 @@ class Ensemble {
          //                 respectively.  If True, returns a list of probabilities
          //                 ordered by the sorted order of the class names.
       if ($this->boosting) {
-          throw new Exception("This function is not implemented for boosting yet.");
+          return $this->boostedensemble->predict($input_data, $by_name, $missing_strategy, $compact);
       }
 
       if ($this->regression) {
@@ -394,8 +395,17 @@ class Ensemble {
               $votes = new MultiVote($votes_split->predictions, $probabilities=true);
           }
 
-      $output = $votes->combine($method);
+      if ($compact) {
+           $output = $votes->combine($method);
+      } else {
+          $class_names = $this->class_names;
+          $predictions = $votes->combine($method);
 
+          $output = array();
+          foreach(range(0, count($class_names)-1) as $n) {
+              $output[] = array("prediction"=>$class_names[$n], "probability"=>$predictions[$n]);
+          }
+      }
       }
 
       return $output;
