@@ -357,7 +357,7 @@ class Ensemble {
          //                 respectively.  If True, returns a list of probabilities
          //                 ordered by the sorted order of the class names.
       if ($this->boosting) {
-          return $this->boostedensemble->predict($input_data, $by_name, $missing_strategy, $compact);
+          return $this->boostedensemble->predict_probability($input_data, $by_name, $missing_strategy, $compact);
       }
 
       if ($this->regression) {
