@@ -234,7 +234,7 @@ class ModelFields {
       $unused_fields = array();
       $new_input = array();
 
-      if (is_array($input_data)) {
+      if (array_keys($input_data) !== range(0, count($input_data) -1)) {
          foreach($input_data as $key => $value) {
              $value = $this->normalize($value);
              if (is_null($value)) {
@@ -248,18 +248,18 @@ class ModelFields {
             # the dataset fields. We only remove the keys that are not
             # used as predictors in the model
 
-
             foreach($input_data as $key => $value) { 
                 if (!mb_detect_encoding($key, 'UTF-8', true)) {
-		   $key = utf8_encode($key);
-		}
-               if (array_key_exists($key, $this->inverted_fields) && (is_null($this->objective_id) || $this->inverted_fields[$key] != $this->objective_id))
-               {
-                  $new_input[$this->inverted_fields[$key]] = $value;
+                    $key = utf8_encode($key);
+                }
+
+                if (array_key_exists($key, $this->inverted_fields) && (is_null($this->objective_id) || $this->inverted_fields[$key] != $this->objective_id)) {
+                    $new_input[$this->inverted_fields[$key]] = $value;
                } else {
-	          array_push($unused_fields, $key);
-	       }
+                    array_push($unused_fields, $key);
+                }
             }
+
          } else {
             foreach($input_data as $key => $value) {
                if (array_key_exists($key, $this->fields) && (is_null($this->objective_id) || $key != $this->objective_id) ) {
@@ -275,8 +275,8 @@ class ModelFields {
          return $result;
 
       } else {
-         error_log("Failed to read input data in the expected array {field=>value} format");
-	 return $add_unused_fields ? array(array(), array()) : array();
+          error_log("Failed to read input data in the expected array {field=>value} format");
+          return $add_unused_fields ? array(array(), array()) : array();
       }
 
    }

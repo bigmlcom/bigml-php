@@ -27,7 +27,9 @@ if (!class_exists('path')) {
    include('path.php');
 }
 
-function _ditribution_sum($x, $y) {
+if(!defined('STDOUT')) define('STDOUT', fopen('php://stdout', 'w'));
+
+function _distribution_sum($x, $y) {
     return $x+$y;
 }
 
@@ -37,7 +39,7 @@ function print_distribution($distribution, $out=STDOUT) {
   foreach ($distribution as $group) {
      array_push($a, $group[1]);
   }
-  $total = array_reduce($a, "_ditribution_sum");
+  $total = array_reduce($a, "_distribution_sum");
   foreach ($distribution as $group) {
     fwrite($out, "    " . $group[0] . ": " . number_format(round(($group[1]*1.0)/$total, 4)*100, 2) . "% (". strval($group[1]) ." instance" . ($group[1] == 1 ? ")\n" : "s)\n"));
   }
@@ -97,16 +99,17 @@ class Model extends BaseModel{
 
       if (property_exists($model, "model") && $model->model instanceof STDClass) {
 
-         if ($model->status->code == BigMLRequest::FINISHED) {
-	    $tree_info = array('max_bins' => 0);
-            $this->tree = new Tree($model->model->root, $this->fields, $this->objective_id, $model->model->distribution->training, null, $this->ids_map, true, $tree_info);
-	    if ($this->tree->regression) {
-	       $this->_max_bins = $tree_info["max_bins"];
-	    }
+          if ($model->status->code == BigMLRequest::FINISHED) {
+              $tree_info = array('max_bins' => 0);
 
-         } else {
-            throw new Exception("The model isn't finished yet");
-         }
+              $this->tree = new Tree($model->model->root, $this->fields, $this->objective_id, $model->model->distribution->training, null, $this->ids_map, true, $tree_info);
+              if ($this->tree->regression) {
+                  $this->_max_bins = $tree_info["max_bins"];
+              }
+
+          } else {
+              throw new Exception("The model isn't finished yet");
+          }
       } else {
          throw new Exception("Cannot create the Model instance. Could not find the 'model' key in the resource:\n\n" . $model);
       }

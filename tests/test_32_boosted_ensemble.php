@@ -1,5 +1,7 @@
 <?php
 
+include 'test_utils.php';
+
 //importing
 if (!class_exists('bigml')) {
   include '../bigml/bigml.php';

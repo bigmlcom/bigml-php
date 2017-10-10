@@ -1,4 +1,7 @@
 <?php
+
+include 'test_utils.php';
+
 if (!class_exists('bigml')) {
    include '../bigml/bigml.php';
 }   
