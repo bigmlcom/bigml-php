@@ -272,7 +272,7 @@ class BigML {
          $resource = $r->resource;
       }
 
-      if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid|anomaly|anomalyscore|sample|project|correlation|statisticaltest|association|logisticregression|library|execution|script)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
+      if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid|anomaly|anomalyscore|sample|project|correlation|statisticaltest|association|logisticregression|library|execution|script|topicmodel)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
          $count = 0;
          $status = self::_check_resource_status($resource, $queryString); 
          while ($count<$retries && !$status["ready"]) {
@@ -2421,6 +2421,104 @@ class BigML {
       return $rest->getResponse();
    }  
 
+   ##########################################################################
+   #
+   # Topic Models 
+   # https://bigml.com/developers/topicmodels
+   #
+   ##########################################################################
+   public static function create_topicmodel($datasetIds, $data=array(), $waitTime=3000, $retries=10) {
+      /*
+         Creates a topic model from a `dataset` or a list of `datasets`
+      */
+
+      $datasets= array();
+
+      if (!is_array($datasetIds)) {
+         $datasetIds=array($datasetIds);
+      }
+
+      foreach ($datasetIds as $var => $datasetId) {
+         $resource = self::_check_resource($datasetId, null, $waitTime, $retries);
+         if ($resource == null || $resource['type'] != "dataset") {
+            error_log("Wrong dataset id");
+            return null;
+         } elseif ($resource["status"] != BigMLRequest::FINISHED) {
+            error_log($resource['message']);
+            return null;
+         }
+         array_push($datasets, $resource["id"]);
+      }
+
+      $rest = new BigMLRequest('CREATE', 'topicmodel');
+
+      if (sizeof($datasets) > 1) {
+         $data["datasets"] = $datasets;
+      } else {
+         $data["dataset"] = $datasets[0];
+      }
+
+      $rest->setData($data);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }
+
+    public static function get_topicmodel($topicmodelId, $queryString=null, $shared_username=null, $shared_api_key=null)
+    {
+      /*
+         Retrieves a topic model.
+
+         The model parameter should be a string containing the
+         topic model id or the dict returned by create_topicmodel.
+         As topic model is an evolving object that is processed
+         until it reaches the FINISHED or FAULTY state, the function will
+         return a dict that encloses the topic model values and state info
+         available at the time it is called.
+
+         If this is a shared topic model, the username and sharing api key must
+         also be provided.
+      */
+      $rest = self::get_resource_request($topicmodelId, "topicmodel", "GET", $queryString, true, 3000, 0, $shared_username, $shared_api_key);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
+
+   public static function list_topicmodels($queryString=null)
+   {
+      /*
+         List all your topic models
+      */
+      $rest = new BigMLRequest('LIST', 'topicmodel');
+
+      if ($queryString!=null) {
+         $rest->setQueryString($queryString);
+      }
+
+      return $rest->getResponse();
+   }
+
+   public static function update_topicmodel($topicmodelId, $data, $waitTime=3000, $retries=10) {
+      /*
+         Updates a topic model
+      */
+      $rest = self::get_resource_request($topicmodelId, "topicmodel", "UPDATE", null, true,  $waitTime, $retries);
+      if ($rest == null) return null;
+
+      $rest->setData($data);
+      $rest->setHeader('Content-Type', 'application/json');
+      $rest->setHeader('Content-Length', strlen(json_encode($data)));
+      return $rest->getResponse();
+   }      
+
+   public static function delete_topicmodel($topicmodelId) {
+   	  /*
+        Deletes a topic model
+      */
+      $rest = self::get_resource_request($topicmodelId, "topicmodel", "DELETE", null);
+      if ($rest == null) return null;
+      return $rest->getResponse();
+   }
 
    private static function _create_remote_source($file_url, $options=array()) {
       $rest = new BigMLRequest('CREATE', 'source');
@@ -2486,6 +2584,10 @@ class BigML {
    
    public static function _checkAssociationId($stringID) {
       return preg_match("/^association\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
+   }
+
+   public static function _checkTopicmodelId($stringID) {
+      return preg_match("/^topicmodel\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
 
    public static function get_fields($resource) {

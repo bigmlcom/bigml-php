@@ -1,0 +1,9 @@
+{
+  "name": "bigml/bigml-php",
+  "type": "library",
+  "description": "API bindings for BigML",
+  "license": "Apache-2.0",
+  "require": {
+    "wamania/php-stemmer": "dev-master"
+  }
+}

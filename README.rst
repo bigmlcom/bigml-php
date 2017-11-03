@@ -5,6 +5,8 @@ In this repository you'll find an open source PHP client that gives you a simple
 This module is licensed under the `Apache License, Version
 2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>`_.
 
+.. contents:: Table of Contents 
+
 Requirements
 ------------
 
@@ -16,17 +18,38 @@ And Https Module Support for Curl.
 Importing the module
 --------------------
 
-To import the module::
+This module is imported with Composer. If you are not currently using
+Composer, first you must `install <https://getcomposer.org/download/>`_ 
+it.
 
-    include 'bigml.php';
+Create a json file named `composer.json` with the contents::
 
-Autoload Class in PHP 5::
-
-    function __autoload($class_name) {
-        if (!class_exists($class_name, false)){
-            include $class_name . '.php';
+    {
+        "repositories": [
+            {
+                "type": "vcs",
+                "url": "https://github.com/bigmlcom/bigml-php/"
+            }
+        ],
+        "require": {
+            "bigml/bigml-php": "dev-master",
+            "wamania/php-stemmer": "@dev"
+        },
+        "autoload":{
+            "classmap": ["vendor/bigml/bigml-php/bigml/"]
+        }
     }
 
+At the command line, run the command::
+
+    composer install
+
+This will install this module and all required dependencies.
+
+In your code, at the beginning of your file include the line::
+
+    <? php
+    require 'vendor/autoload.php';
 
 Authentication
 --------------
@@ -1720,6 +1743,484 @@ the ``associations`` attribute stores items, rules and metrics extracted
 from the datasets as well as the configuration parameters described in
 the `developers section <https://bigml.com/developers/associations>`_ .
 
+Topic Models
+------------
+
+A topic model is an unsupervised machine learning method for unveiling
+all the different topics underlying a collection of documents. BigML
+uses Latent Dirichlet Allocation (LDA), one of the most popular
+probabilistic methods for topic modeling. In BigML, each instance
+(i.e. each row in your dataset) will be considered a document and the
+contents of all the text fields given as inputs will be automatically
+concatenated and considered the document bag of words.
+
+Topic model is based on the assumption that any document exhibits a
+mixture of topics. Each topic is composed of a set of words which are
+thematically related. The words from a given topic have different
+probabilities for that topic. At the same time, each word can be
+attributable to one or several topics. So for example the word “sea”
+may be found in a topic related with sea transport but also in a topic
+related to holidays. Topic model automatically discards stop words and
+high frequency words.
+
+Topic model’s main applications include browsing, organizing and
+understanding large archives of documents. It can been applied for
+information retrieval, collaborative filtering, assessing document
+similarity among others. The topics found in the dataset can also be
+very useful new features before applying other models like
+classification, clustering, or anomaly detection.
+
+The JSON structure for a topic model is::
+
+{
+  "category": 0,
+  "clones": 0,
+  "code": 200,
+  "columns": 1,
+  "configuration": null,
+  "configuration_status": false,
+  "created": "2017-10-23T18:27:46.118000",
+  "credits": 0.0,
+  "credits_per_prediction": 0.0,
+  "dataset": "dataset/59ee239eaf447f0b0b0001ff",
+  "dataset_field_types": {
+    "categorical": 1,
+    "datetime": 0,
+    "effective_fields": 672,
+    "items": 0,
+    "numeric": 0,
+    "preferred": 2,
+    "text": 1,
+    "total": 2
+  },
+  "dataset_status": true,
+  "dataset_type": 0,
+  "description": "",
+  "excluded_fields": [
+    
+  ],
+  "fields_meta": {
+    "count": 1,
+    "limit": 1000,
+    "offset": 0,
+    "query_total": 1,
+    "total": 1
+  },
+  "input_fields": [
+    "000001"
+  ],
+  "locale": "en-us",
+  "max_columns": 2,
+  "max_rows": 656,
+  "name": "spam_ topics",
+  "name_options": "number of topics=12, top-n terms=10, term limit=4096",
+  "number_of_batchtopicdistributions": 0,
+  "number_of_public_topicdistributions": 0,
+  "number_of_topicdistributions": 0,
+  "ordering": 0,
+  "out_of_bag": false,
+  "price": 0.0,
+  "private": true,
+  "project": null,
+  "range": [
+    1,
+    656
+  ],
+  "replacement": false,
+  "resource": "topicmodel/59ee34a23645274acf003cab",
+  "rows": 656,
+  "sample_rate": 1.0,
+  "shared": false,
+  "short_url": "",
+  "size": 54739,
+  "source": "source/59ee23257811dd79430001d9",
+  "source_status": true,
+  "status": {
+    "code": 5,
+    "elapsed": 4992,
+    "message": "The topic model has been created",
+    "progress": 1.0
+  },
+  "subscription": true,
+  "tags": [
+    
+  ],
+  "topic_model": {
+    "alpha": 4.166666666666667,
+    "beta": 0.1,
+    "bigrams": false,
+    "case_sensitive": false,
+    "fields": {
+      "000001": {
+        "column_number": 1,
+        "datatype": "string",
+        "name": "Message",
+        "optype": "text",
+        "order": 0,
+        "preferred": true,
+        "summary": {
+          "average_length": 78.14787,
+          "missing_count": 0,
+          "tag_cloud": [
+            [
+              "call",
+              72
+            ],
+            [
+              "ok",
+              36
+            ],
+            [
+              "gt",
+              34
+            ],
+            [
+              "lt",
+              31
+            ],
+            [
+              "free",
+              30
+            ],
+            [
+              "time",
+              27
+            ],
+            [
+              "ur",
+              27
+            ],
+            [
+              "lor",
+              23
+            ],
+            [
+              "send",
+              23
+            ],
+            [
+              "dont",
+              22
+            ],
+            [
+              "tell",
+              20
+            ],
+            [
+              "text",
+              20
+            ]
+          ],
+          "term_forms": {
+            
+          }
+        },
+        "term_analysis": {
+          "case_sensitive": false,
+          "enabled": true,
+          "language": "en",
+          "stem_words": false,
+          "token_mode": "all",
+          "use_stopwords": false
+        }
+      }
+    },
+    "hashed_seed": 62146850,
+    "language": "en",
+    "number_of_topics": 12,
+    "term_limit": 4096,
+    "term_topic_assignments": [
+      [
+        0,
+        5,
+        0,
+        1,
+        0,
+        19,
+        0,
+        0,
+        19,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        13,
+        0,
+        0,
+        0,
+        0,
+        5,
+        0,
+        0,
+        0
+      ],
+      [
+        5,
+        0,
+        0,
+        0,
+        0,
+        17,
+        0,
+        0,
+        0,
+        5,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        5,
+        0,
+        1,
+        8,
+        12,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        16
+      ],
+      [
+        3,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        0,
+        0,
+        0,
+        12,
+        0
+      ],
+    ],
+    "termset": [
+      "000",
+      "03",
+      "04",
+      "06",
+      "08000839402",
+      "08712460324",
+      "able",
+      "acc",
+      "account",
+      "actually",
+      "address",
+      "afternoon",
+      "aftr",
+      "age",
+      "ah",
+      "aight",
+      "album",
+      "amp",
+      "b'day",
+      "babe",
+      "baby",
+      "babysit",
+      "bad",
+      "bags",
+      "bank",
+      "basic",
+      "bathe",
+      "battery",
+      "claim",
+      "class",
+      "close",
+      "co",
+      "code",
+      "colleagues",
+      "collection",
+      "college",
+      "colour",
+    ],
+    "top_n_terms": 10,
+    "topicmodel_seed": "26c386d781963ca1ea5c90dab8a6b023b5e1d180",
+    "topics": [
+      {
+        "id": "000000",
+        "name": "Topic 00",
+        "probability": 0.09375,
+        "top_terms": [
+          [
+            "im",
+            0.04849
+          ],
+          [
+            "hi",
+            0.04717
+          ],
+          [
+            "love",
+            0.04585
+          ],
+          [
+            "please",
+            0.02867
+          ],
+          [
+            "tomorrow",
+            0.02867
+          ],
+          [
+            "cos",
+            0.02823
+          ],
+          [
+            "sent",
+            0.02647
+          ],
+          [
+            "da",
+            0.02383
+          ],
+          [
+            "meet",
+            0.02207
+          ],
+          [
+            "dinner",
+            0.01898
+          ]
+        ]
+      },
+      {
+        "id": "000001",
+        "name": "Topic 01",
+        "probability": 0.08215,
+        "top_terms": [
+          [
+            "lt",
+            0.1015
+          ],
+          [
+            "gt",
+            0.1007
+          ],
+          [
+            "wish",
+            0.03958
+          ],
+          [
+            "feel",
+            0.0272
+          ],
+          [
+            "shit",
+            0.02361
+          ],
+          [
+            "waiting",
+            0.02281
+          ],
+          [
+            "stuff",
+            0.02001
+          ],
+          [
+            "name",
+            0.01921
+          ],
+          [
+            "comp",
+            0.01522
+          ],
+          [
+            "forgot",
+            0.01482
+          ]
+        ]
+      },
+      {
+        "id": "000002",
+        "name": "Topic 02",
+        "probability": 0.08771,
+        "top_terms": [
+          [
+            "ok",
+            0.15142
+          ],
+          [
+            "pls",
+            0.03938
+          ],
+          [
+            "hey",
+            0.03083
+          ],
+          [
+            "send",
+            0.02998
+          ],
+          [
+            "drive",
+            0.02955
+          ],
+          [
+            "msg",
+            0.02827
+          ],
+          [
+            "min",
+            0.01758
+          ],
+          [
+            "joking",
+            0.01672
+          ],
+          [
+            "changed",
+            0.01544
+          ],
+          [
+            "mom",
+            0.01415
+          ]
+        ]
+      }
+    ],
+    "use_stopwords": false
+  },
+  "type": 0,
+  "updated": "2017-10-23T18:31:59.793000",
+  "white_box": false
+}
+
+Note that the output in the snippet above has been abbreviated.
+
+The topic model returns a list of top terms for each topic found in
+the data. Note that topics are not labeled, so you have to infer their
+meaning according to the words they are composed of.
+
+Once you build the topic model you can calculate each topic
+probability for a given document by using Topic Distribution. This
+information can be useful to find documents similarities based on
+their thematic.
+
+As you see, the ``topic_model`` attribute stores the topics and termset
+and term to topic assignment, as well as the configuration parameters
+described in the `developers section <https://bigml.com/api/topicmodels>`_ .
+
 Whizzml Resources
 -----------------
 
@@ -1751,7 +2252,7 @@ contents of a remote file is:
 
 .. code-block:: php
 
-    include 'bigml/bigml.php';
+    require 'vendor/autoload.php';
     $api =  new BigML();
 
     # creating a script directly from the source code.
@@ -1980,7 +2481,7 @@ Let’s create an anomaly detector from a given dataset::
     $anomaly = $api->create_anomaly($dataset, array("name"=>"my anomaly"})
 
 Creating associations
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 To find relations between the field values you can create an association
 discovery resource. The only required argument to create an association
@@ -2006,6 +2507,29 @@ list of ids as the first argument in the api call::
                                       array("name" => "my association",
                                             "input_fields" => array("000000", "000001"),
                                             "range" => array(1,10)));
+
+Creating topic models
+---------------------
+
+To find which topics your documents refer to you can create a topic
+model. The only required argument to create a topic model is a
+dataset id. You can also include in the request all the additional
+arguments accepted by BigML and documented in the `Topic Model section
+of the Developer’s documentation <https://bigml.com/api/topicmodels>`_ .
+
+For example, to create a topic model including exactly 32 topics you
+can use the following invocation::
+
+    $topic_model = $api->create_topicmodel($dataset, 
+                                            array("name" => "my topics", 
+                                                  "number_of_topics" => 32));
+
+Topic models can also be created from lists of datasets. Just use the
+list of ids as the first argument in the api call::
+
+    $topic_model = $api->create_topic_model([$dataset1, $dataset2], 
+                                            array("name" => "my topics", 
+                                                  "number_of_topics" => 32));
 
 
 Creating predictions
@@ -2318,13 +2842,8 @@ error If the request does not succeed, it will contain a dictionary with an erro
 
 Local Models
 ------------
-You can instantiate a local version of a remote model::
-
-    include 'model.php';
-
-This will retrieve the remote model information, using an implicitly built BigML() connection object 
-(see the Authentication section for more details on how to set your credentials) and return a Model object that you can use to make local predictions. 
 If you want to use a specfic connection object for the remote retrieval, you can set it as second parameter::
+    require 'vendor/autoload.php';
 
     $api = new BigML("username", "api_key", false, 'storage');
 
@@ -2368,7 +2887,7 @@ Local Clusters
 
 You can also instantiate a local version of a remote cluster::
 
-    include 'cluster.php';
+    require 'vendor/autoload.php';
 
     $cluster = $api->get_cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18");
     $local_cluster = new Cluster($cluster);
@@ -2439,12 +2958,48 @@ Using the local anomaly detector object, you can predict the anomaly score assoc
 
 As in the local model predictions, producing local anomaly scores can be done independently of BigML servers, so no cost or connection latencies are involved.
 
+Local Topic Model
+-----------------
+
+You can also instantiate a local version of a remote topic model.::
+
+    require 'vendor/autoload.php';
+
+    $local_topic_model = new TopicModel('topicmodel/502fdbcf15526876210042435');
+
+This will retrieve the remote topic model information, using an
+implicitly built ``BigML()`` connection object (see the ``Authentication``
+section for more details on how to set your credentials) and return a
+``TopicModel`` object that you can use to obtain local topic
+distributions. If you want to use a specfic connection object for the
+remote retrieval, you can set it as second parameter::
+
+    require 'vendor/autoload.php';
+
+    $api = new BigML(my_username, my_api_key);
+    $local_topic_model = new TopicModel('topicmodel/502fdbcf15526876210042435', $api);
+
+You can also reuse a remote topic model JSON structure as previously
+retrieved to build the local topic model object::
+
+    require 'vendor/autoload.php';
+
+    $api = new BigML();
+    $topic_model = $api->get_topicmodel('topicmodel/502fdbcf15526876210042435', 'limit=-1');
+
+    $local_topic_model = new TopicModel($topic_model);
+
+Note that in this example we used a ``limit=-1`` query string for the
+topic model retrieval. This ensures that all fields are retrieved by
+the get method in the same call (unlike in the standard calls where
+the number of fields returned is limited).
+
 Multi Models
 ------------
 
 Multi Models use a numbers of BigML remote models to build a local version that can be used to generate predictions locally. Predictions are generated combining the outputs of each model::
 
-    include 'multimodel.php';
+    require 'vendor/autoload.php';
 
     $multimodel = new MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"));
 
@@ -2526,12 +3081,12 @@ node to build a probability distribution and combining them. The confidence is t
 In regression, all the models predictions’ confidences contribute to the weighted average confidence.
 
 
-Ensembles
----------
+Local Ensembles
+---------------
 
 Remote ensembles can also be used locally through the Ensemble class. The simplest way to access an existing ensemble and using it to predict locally is::
 
-    include 'ensemble.php';
+    require 'vendor/autoload.php';
 
     $ensemble = new Ensemble("ensemble/53dxxxxxxxxxxxxxxxxxxafa");
 
@@ -2613,6 +3168,3 @@ To run all tests::
 To Run a specific test::
 
      phpunit.phar test_01_prediction.php
-
-
-
