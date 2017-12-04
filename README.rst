@@ -2656,6 +2656,44 @@ default coding). For a more detailed description of the
 Documentation
 <https://bigml.com/developers/logisticregressions#lr_logistic_regression_arguments>`_.
 
+Creating deepnets
+-----------------
+
+
+Deepnets can also solve classification and regression
+problems. Deepnets are an optimized version of Deep Neural Networks, a
+class of machine-learned models inspired by the neural circuitry of
+the human brain. In these classifiers, the input features are fed to a
+group of “nodes” called a “layer”. Each node is essentially a function
+on the input that transforms the input features into another value or
+collection of values. Then the entire layer transforms an input vector
+into a new “intermediate” feature vector. This new vector is fed as
+input to another layer of nodes. This process continues layer by
+layer, until we reach the final “output” layer of nodes, where the
+output is the network’s prediction: an array of per-class
+probabilities for classification problems or a single, real value for
+regression problems.
+
+Deepnets predictions compute a probability associated to each class in
+the objective field for classification problems. As the rest of
+models, deepnets can be created from a dataset by calling the
+corresponding create method::
+
+  $deepnet = $api->create_deepnet('dataset/5143a51a37203f2cf7000972',
+                                  array("name" => "my deepnet",
+                                        "objective_field" => "my_objective_field"));
+
+In this example, we created a deepnet named ``my deepnet`` and set the
+objective field to be ``my_objective_field``. Other arguments, like
+``number_of_hidden_layers``, ``learning_rate`` and ``missing_numerics`` can also
+be specified as attributes in an arguments dictionary at creation
+time. For a more detailed description of the available attributes and
+its syntax, please see the `Developers API
+Documentation
+<https://bigml.com/api/deepnets#dn_deepnet_arguments>`_.
+
+
+
 Creating batch predictions
 --------------------------
 
@@ -2726,6 +2764,7 @@ You can list resources with the appropriate api method::
     $api->list_anomalies()
     $api->list_anomaly_scores()
     $api->list_batch_anomaly_scores()
+    $api->list_deepnets()
 
 you will receive a dictionary with the following keys:
 
@@ -2804,8 +2843,7 @@ However the status code will be bigml.api.HTTP_ACCEPTED if the resource can be u
     $api->update_anomaly($anomaly, array("name"=> "new name"));
     $api->update_anomaly_score($anomaly_score, array("name": "new name"));
     $api->update_batch_anomaly_score($batch_anomaly_score, array("name": "new name"));
-
-
+    $api->update_deepnet($deepnet, array("name": "new name"));
 
 Updates can change resource general properties, such as the name or description attributes of a dataset, or specific properties. 
 As an example, let’s say that your source has a certain field whose contents are numeric integers. 
@@ -2830,9 +2868,10 @@ Resources can be deleted individually using the corresponding method for each ty
     $api->delete_cluster($cluster);
     $api->delete_centroid($centroid);
     $api->delete_batch_centroid($batch_centroid);
-    $api->delete_anomaly(anomaly);
-    $api->delete_anomaly_score(anomaly_score);
-    $api->delete_batch_anomaly_score(batch_anomaly_score);
+    $api->delete_anomaly($anomaly);
+    $api->delete_anomaly_score($anomaly_score);
+    $api->delete_batch_anomaly_score($batch_anomaly_score);
+    $api->delete_deepnet($deepnet);
 
 Each of the calls above will return a dictionary with the following keys:
 
@@ -2957,6 +2996,84 @@ Using the local anomaly detector object, you can predict the anomaly score assoc
     0.9268527808726705
 
 As in the local model predictions, producing local anomaly scores can be done independently of BigML servers, so no cost or connection latencies are involved.
+
+Local Deepnet
+-------------
+
+You can also instantiate a local version of a remote Deepnet.::
+
+    require 'vendor/autoload.php';
+
+    $local_deepnet = new Deepnet('deepnet/502fdbff15526876610022435');
+
+This will retrieve the remote deepnet information, using an implicitly
+built ``BigML()`` connection object (see the ``Authentication`` section for
+more details on how to set your credentials) and return a ``Deepnet``
+object that you can use to make local predictions. If you want to use
+a specfic connection object for the remote retrieval, you can set it
+as second parameter::
+
+     require 'vendor/autoload.php';
+     $api = new BigML(my_username, my_api_key);
+
+     $local_deepnet = new Deepnet('topicmodel/502fdbcf15526876210042435', $api);
+
+You can also reuse a remote Deepnet JSON structure as previously
+retrieved to build the local Deepnet object::
+
+    require 'vendor/autoload.php';
+
+    $api = new BigML();
+    $deepnet = $api->get_deepnet('deepnet/502fdbcf15526876210042435', 'limit=-1');
+
+    $local_deepnet = new Deepnet($deepnet);
+
+Note that in this example we used a ``limit=-1`` query string for the
+deepnet retrieval. This ensures that all fields are retrieved by the
+get method in the same call (unlike in the standard calls where the
+number of fields returned is limited).
+
+Local Deepnet Predictions
+-------------------------
+
+Using the local deepnet object, you can predict the prediction for an
+input data set::
+
+  $local_deepnet->predict(array("petal length" => 2, "sepal length" => 1.5,
+                                "petal width" => 0.5, "sepal width" => 0.7));
+
+  array('distribution' => array( array('category' => 'Iris-virginica', 
+                                       'probability' => 0.5041444478857267),
+                                 array('category' => 'Iris-versicolor', 
+                                       'probability' => 0.46926542042788333),
+                                 array('category' => 'Iris-setosa', 
+                                       'probability' => 0.02659013168639014)),
+        'prediction' => 'Iris-virginica', 
+        'probability' => 0.5041444478857267)
+
+As you can see, the prediction contains the predicted category and the
+associated probability. It also shows the distribution of
+probabilities for all the possible categories in the objective field.
+
+To be consistent with the ``Model`` class interface, deepnets have also a
+``predict_probability`` method, which takes two of the same arguments as
+``Model->predict``: ``by_name`` and ``compact``.
+
+As with local Models, if ``compact`` is ``False`` (the default), the output is
+a list of maps, each with the keys ``prediction`` and ``probability`` mapped
+to the class name and its associated probability.
+
+So, for example::
+
+  $local_deepnet->predict_probability(array("petal length" => 2, "sepal length" => 1.5,
+                                            "petal width" => 0.5, "sepal width" => 0.7));
+
+  array( array('prediction' => 'Iris-setosa', 'probability' => 0.02659013168639014),
+         array('prediction' => 'Iris-versicolor', 'probability' => 0.46926542042788333),
+         array('prediction' => 'Iris-virginica', 'probability' => 0.5041444478857267))
+
+If ``compact`` is ``True``, only the probabilities themselves are returned, as
+a list in class name order, again, as is the case with local Models.
 
 Local Topic Model
 -----------------

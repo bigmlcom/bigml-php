@@ -21,6 +21,8 @@
    is used for local predictions.
 */
 
+include "predicate.php";
+
 function strip_affixes($value, $field) 
 {
    /*
@@ -97,6 +99,30 @@ function extract_objective($objective_field) {
 
  }
 
+function parse_terms($text, $case_sensitive=true) {
+    //Returns the list of parsed terms
+
+    if (is_null($text)) {
+        return [];
+    }
+    $expression = '/\b([^\b_\s]+?)\b/u';
+    preg_match_all( $expression, $text, $matches);
+    if ($case_sensitive) {
+        return $matches[0];
+    } else {
+        return array_map('strtolower', $matches[0]);
+    }
+}
+
+function parse_items($text, $regexp) {
+    //Returns the list of parsed items
+
+    if (is_null($text)) {
+        return [];
+    }
+    return mb_split($regexp, $text);
+}
+
 function check_model_structure($model) {
      /*
        Checks the model structure to see if it contains all the needed keys
@@ -107,6 +133,38 @@ function check_model_structure($model) {
              ((property_exists($model, "object") && property_exists($model->object, "model")) ||
              property_exists($model, "model")));
 
+}
+
+function get_unique_terms($terms, $term_forms, $tag_cloud) {
+    //Extracts the unique terms that occur in one of the alternatie
+    //forms in term_forms or in the tag cloud.
+
+    $extend_forms = [];
+    foreach ($term_forms as $term => $forms) {
+        foreach ($forms as $form) {
+            $extend_forms[$form] = $term;
+        }
+        $extend_forms[$term] = $term;
+    }
+    $terms_set = [];
+
+    
+    foreach ($terms as $term) {
+
+        if (in_array($term, $tag_cloud)) {
+            if (!array_key_exists($term, $terms_set)) {
+                $terms_set[$term] = 0;
+            }
+            $terms_set[$term] += 1;
+        } elseif (array_key_exists($term, $extend_forms)) {
+            $term = $extend_forms[$term];
+            if (!array_key_exists($term, $terms_set)) {
+                $terms_set[$term] = 0;
+            }
+            $terms_set[$term] += 1;
+        }
+    }
+    return $terms_set;
 }
 
 function invert_dictionary($dictionary, $field='name') {
@@ -139,7 +197,7 @@ class ModelFields {
 
    const DEFAULT_LOCALE = 'en-US';
 
-   public function __construct($fields, $objective_id=null, $data_locale=null, $missing_tokens=null) {
+   public function __construct($fields, $objective_id=null, $data_locale=null, $missing_tokens=null, $terms=false, $categories=false, $numerics=false) {
       
       if ($fields instanceof STDClass) {
          $this->objective_id = $objective_id;
@@ -156,7 +214,51 @@ class ModelFields {
 	                                                           "#REF!", "#NAME?", "NIL", "nil", "NA", "na",
 						                   "#VALUE!", "#NULL!", "NaN", "#N/A", "#NUM!", "?");
          }
+         if ($terms) {
+
+             //adding text and items information to handle terms
+             //expansion
+             $this->term_forms = [];
+             $this->tag_clouds = [];
+             $this->term_analysis = [];
+             $this->items = [];
+             $this->item_analysis = [];
+         }
+         if ($categories) {
+             $this->categories = [];
+         }
+         if ($terms OR $categories) {
+             $this->add_terms($categories, $numerics);
+         }
       }
+   }
+
+   private function add_terms($categories=false, $numerics=false) {
+       //Adds the terms information of text and items fields
+
+       foreach ($this->fields as $field_id => $field) {
+           if ($field->optype == "text") {
+               $this->term_forms[$field_id] = $field->summary->term_forms;
+               foreach ($field->summary->tag_cloud as $tag) {
+                   $this->tag_clouds[$field_id][] = $tag[0];
+               }
+               $this->term_analysis[$field_id] = $field->term_analysis;
+           }
+           if ($field->optype == "items") {
+               foreach ($field->summary->items as $item) {
+                   $this->items[$field_id][] = $item[0];
+               }
+               $this->item_analysis[$field_id] = $field->item_analysis;
+           }
+           if ($categories && $field->optype == "categorical") {
+               foreach ($field->summary->categories as $category) {
+                   $this->categories[$field_id][] = $category[0];
+               }
+           }
+           if ($numerics && $this->missing_numerics && $field->optype == "numeric") {
+               $this->numeric_fields[$field_id] = true;
+           }
+       }
    }
 
    private function uniquify_varnames($fields) {
@@ -281,12 +383,120 @@ class ModelFields {
 
    }
 
-   protected function clean_empty_fields($var) {
-      $k = $var != null;
-      if (is_int($var) && $var == 0) return true;
-      return ($var != null);
-   }
+    protected function clean_empty_fields($var) {
+        $k = $var != null;
+        if (is_int($var) && $var == 0) return true;
+        return ($var != null);
+    }
 
+    public function get_unique_terms($input_data) {
+        // Parses the input data to find the list of unique terms in
+        // the tag cloud
+        $unique_terms = [];
+        foreach ($this->term_forms as $field_id => $contents) {
+           if (array_key_exists($field_id, $input_data)) {
+                if (!is_null($input_data[$field_id])) {
+                    $input_data_field = $input_data[$field_id];
+                } else {
+                    $input_data_field = '';
+                }
+                if (is_string($input_data_field)) {
+                    if (!is_null($this->term_analysis[$field_id]->case_sensitive)) {
+                        $case_sensitive = $this->term_analysis[$field_id]->case_sensitive;
+                    } else {
+                        $case_sensitive = true;
+                    }
+                    if (!is_null($this->term_analysis[$field_id]->token_mode)) {
+                        $token_mode = $this->term_analysis[$field_id]->token_mode;
+                    } else {
+                        $token_mode = "all";
+                    }
+                    if ($token_mode != Predicate::TM_FULL_TERM) {
+                        $terms = parse_terms($input_data_field, $case_sensitive);
+                    } else {
+                        $terms = [];
+                    }
+                    if ($case_sensitive) {
+                        $full_term = $input_data_field;
+                    } else {
+                        $full_term = strtolower($input_data_field);
+                    }
+
+                    /* We add full_term if needed. Note that when
+                       there's only one term in the input_data,
+                       full_term and term are equal. Then
+                       full_term will not be added to avoid
+                       duplicated counters for the term. */
+                    if ($token_mode == Predicate::TM_FULL_TERM OR 
+                        ($token_mode == Predicate::TM_ALL && 
+                         $terms[0] != $full_term)) {
+                        $terms[] = $full_term;
+                    }
+                    if (!is_null($this->tag_clouds[$field_id])) {
+                        $tag_cloud = $this->tag_clouds[$field_id];
+                    } else {
+                        $tag_cloud = [];
+                    }
+
+                    $unique_terms[$field_id] = get_unique_terms(
+                        $terms, $this->term_forms[$field_id],
+                        $tag_cloud);
+                } else {
+                    $unique_terms[$field_id] = array(array($input_data_field, 1));
+                }
+                unset($input_data[$field_id]);
+            }
+        }
+        //the same for items fields
+        foreach ($this->item_analysis as $field_id => $contents) {
+            if (array_key_exists($field_id, $input_data)) {
+                if (!is_null($input_data[$field_id])) {
+                    $input_data_field = $input_data[$field_id];
+                } else {
+                    $input_data_field = '';
+                }
+                if (is_string($input_data_field)) {
+                    //parsing the items in input_data
+                    if (!is_null($this->item_analysis[$field_id]->separator)) {
+                        $separator = $this->item_analysis[$field_id]->separator;
+                    } else {
+                        $separator = ' ';
+                    }
+                    $regexp = $this->item_analysis[$field_id]->separator_regexp;
+                    if (is_null($regexp)) {
+                        $regexp = preg_quote($separator);
+                    }
+
+                    $terms = parse_items($input_data_field, $regexp);
+
+                    if (!is_null($this->items[$field_id])) {
+                        $tag_cloud = $this->items[$field_id];
+                    } else {
+                        $tag_cloud = [];
+                    }
+                    $unique_terms[$field_id] = get_unique_terms($terms, [], $tag_cloud);
+                } else {
+                    $unique_terms[$field_id] = array(array($input_data_field, 1));
+                }
+                unset($input_data[$field_id]);
+            }
+        }
+
+        if (property_exists($this, 'categories') && $this->categories) {
+            foreach ($this->categories as $field_id => $contents) {
+                if (array_key_exists($field_id, $input_data)) {
+                    if (!is_null($input_data[$field_id])) {
+                        $input_data_field = $input_data[$field_id];
+                    } else {
+                        $input_data_field = '';
+                    }
+                    $unique_terms[$field_id] = array(array($input_data_field, 1));
+                    unset($input_data[$field_id]);
+                }
+            }
+        }
+        return $unique_terms;
+    }        
 }
 
 function isAssoc($arr)
