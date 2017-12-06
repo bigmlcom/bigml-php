@@ -4,7 +4,7 @@ include('test_utils.php');
 
 if (!class_exists('bigml')) {
    include '../bigml/bigml.php';
-}  
+}
 
 class BigMLTestPredictions extends PHPUnit_Framework_TestCase
 {
@@ -28,14 +28,14 @@ class BigMLTestPredictions extends PHPUnit_Framework_TestCase
     public static function tearDownAfterClass() {
        self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
     }
- 
-    /*  Scenario: Successfully creating a prediction: */ 
-    
+
+    /*  Scenario: Successfully creating a prediction: */
+
     public function test_scenario1() {
 
-        $data = array(array("filename"=>  self::$data_localfile, 
-	                    "data_input" => array('petal width'=> 0.5), 
-			    "objective" => "000004", 
+        $data = array(array("filename"=>  self::$data_localfile,
+	                    "data_input" => array('petal width'=> 0.5),
+			    "objective" => "000004",
 			    "prediction" => "Iris-setosa"),
 		      array("filename"=>  "./data/iris_sp_chars.csv",
 		            "data_input" => array('pétal&width'=> 0.5),
@@ -79,23 +79,23 @@ class BigMLTestPredictions extends PHPUnit_Framework_TestCase
 
 	    $this->assertEquals($item["prediction"], $prediction->object->prediction->{$item["objective"]});
 
-        } 
+        }
 
 
     }
 
     /*Scenario: Successfully creating a prediction from a source in a remote location */
-/* 
-    public function test_scenario2() { //TODO 
-        $data = array(array("url"=>  "s3://bigml-public/csv/iris.csv",
-                            "data_input" => array('petal width'=> 0.5), 
-                            "objective" => "000004", 
+
+    public function test_scenario2() { //TODO
+        $data = array(array("remote"=>  "s3://bigml-public/csv/iris.csv",
+                            "data_input" => array('petal width'=> 0.5),
+                            "objective" => "000004",
                             "prediction" => "Iris-setosa")
                      );
 
         foreach($data as $item) {
-            print "I create a data source uploading a ". $item["url"]. " file\n";
-	    $source = self::$api->create_source($item["url"], $options=array('name'=>'remote_test_source'));
+            print "I create a data source uploading a ". $item["remote"]. " file\n";
+	    $source = self::$api->create_source($item["remote"], $options=array('name'=>'remote_test_source'));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
@@ -129,29 +129,29 @@ class BigMLTestPredictions extends PHPUnit_Framework_TestCase
 
             $this->assertEquals($item["prediction"], $prediction->object->prediction->{$item["objective"]});
 
-        }   
+        }
     }
-*/    
-    public function test_scenario3() { 
+
+    public function test_scenario3() {
        //TODO  Successfully creating a prediction from a asynchronous uploaded file:
     }
 
     public function test_scenario4() {
        //TODO Successfully creating a prediction from inline data source
-    } 
+    }
 
     /* Successfully creating a centroid and the associated dataset: */
 
     public function test_scenario5() {
-       $data = array(array("filename"=> "./data/diabetes.csv", 
-                            "data_input" => array("pregnancies"=> 0, 
-                                                  "plasma glucose"=> 118, 
-                                                  "blood pressure"=> 84, 
-                                                  "triceps skin thickness"=> 47, 
-           					  "insulin"=> 230, 
-						  "bmi"=> 45.8, 
-						  "diabetes pedigree"=> 0.551, 
-						  "age"=> 31, 
+       $data = array(array("filename"=> "./data/diabetes.csv",
+                            "data_input" => array("pregnancies"=> 0,
+                                                  "plasma glucose"=> 118,
+                                                  "blood pressure"=> 84,
+                                                  "triceps skin thickness"=> 47,
+           					  "insulin"=> 230,
+						  "bmi"=> 45.8,
+						  "diabetes pedigree"=> 0.551,
+						  "age"=> 31,
 						  "diabetes"=> "true"),
                             "centroid" => "Cluster 3"));
 
@@ -174,12 +174,12 @@ class BigMLTestPredictions extends PHPUnit_Framework_TestCase
             print "And I wait until the dataset is ready\n";
             $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
- 
+
             print "And I create a cluster\n";
             $cluster = self::$api->create_cluster($dataset->resource, array('seed'=>'BigML tests', 'k' =>  8, 'cluster_seed' => 'BigML'));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $cluster->code);
             $this->assertEquals(BigMLRequest::QUEUED, $cluster->object->status->code);
- 
+
             print "And I wait until the cluster is ready\n";
             $resource = self::$api->_check_resource($cluster->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
@@ -191,7 +191,7 @@ class BigMLTestPredictions extends PHPUnit_Framework_TestCase
             print "Then the centroid is " . $item["centroid"] . "\n";
             $this->assertEquals($item["centroid"], $centroid->object->centroid_name);
 
-        }   
+        }
     }
 
     public function test_scenario6() {
@@ -220,7 +220,7 @@ class BigMLTestPredictions extends PHPUnit_Framework_TestCase
 
             print "Then I create an anomaly detector from a dataset\n";
             $anomaly = self::$api->create_anomaly($dataset->resource, array('seed' =>  'BigML'));
-            
+
             print "And I wait until the anomaly detector is ready\n";
             $resource = self::$api->_check_resource($anomaly->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
@@ -229,8 +229,8 @@ class BigMLTestPredictions extends PHPUnit_Framework_TestCase
 	    print "Then the anomaly score is " . $item["score"] . "\n";
             $this->assertEquals($resource->object->score, $item["score"]);
 
-        } 
+        }
     }
 
 
-}    
+}
