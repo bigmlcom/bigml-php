@@ -163,10 +163,10 @@ class BigML {
               The source can be a local file path or a URL o stream source
           
         */
-      if (is_file($data)) {
-         return self::_create_local_source($data, $options);
-      } elseif (filter_var($data, FILTER_VALIDATE_URL)) {
+      if (filter_var($data, FILTER_VALIDATE_URL)) {
          return self::_create_remote_source($data, $options);
+      } elseif (is_file($data)) {
+         return self::_create_local_source($data, $options);
       } else {
          error_log("Wrong source file or url");
          return null;
