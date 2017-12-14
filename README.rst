@@ -1,5 +1,6 @@
 BigML PHP Bindings
 =====================
+
 In this repository you'll find an open source PHP client that gives you a simple binding to interact with `BigML <https://bigml.com>`_.
 
 This module is licensed under the `Apache License, Version
@@ -47,7 +48,7 @@ Importing the module
 --------------------
 
 Using Composer
-==============
+""""""""""""""
 
 If you are currently using Composer to manage your project's
 libraries, simply add the following to your current `composer.json`::
@@ -82,7 +83,7 @@ At the beginning of your file include the line::
     require 'vendor/autoload.php';
 
 Cloning from GitHub
-==================
+"""""""""""""""""""
 
 If you would prefer, you can manually clone this repo from GitHub. You
 will still need to use Composer to install some third-party libraries.
