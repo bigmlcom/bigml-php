@@ -12,17 +12,45 @@ Requirements
 
 PHP 5.3.2 or higher are currently supported by these bindings.
 
-You need `mbstring <http://www.php.net/manual/en/mbstring.installation.php>`_. installed
-And Https Module Support for Curl.
+You will also need to install the non-default extensions `mbstring
+<http://php.net/manual/en/book.mbstring.php>`_ and `cURL
+<http://php.net/manual/en/book.curl.php>`_. To check which modules you
+have currently installed, run::
+
+  php -m
+
+To install with Linux/OSX:
+
+At the command line, run::
+
+  sudo apt-get install php5-mbstring
+  sudo apt-get install php5-curl
+
+using the correct extension name for your version of PHP.
+
+To install with Windows:
+
+If you have access to the php.ini, remove the semicolon in front of
+these lines in the php.ini::
+
+  extension = php_mbstring.dll
+  extension = php_curl.dll
+
+You may also need to check that `libeay32.dll` and `ssleay32.dll` are
+in your php directory.
+
+Once you have made the changes, don't forget to restart your server
+for them to take effect.
+
 
 Importing the module
 --------------------
 
-This module is imported with Composer. If you are not currently using
-Composer, first you must `install <https://getcomposer.org/download/>`_ 
-it.
+Using Composer
+==============
 
-Create a json file named `composer.json` with the contents::
+If you are currently using Composer to manage your project's
+libraries, simply add the following to your current `composer.json`::
 
     {
         "repositories": [
@@ -46,10 +74,50 @@ At the command line, run the command::
 
 This will install this module and all required dependencies.
 
-In your code, at the beginning of your file include the line::
+In your code:
+
+At the beginning of your file include the line::
 
     <? php
     require 'vendor/autoload.php';
+
+Cloning from GitHub
+==================
+
+If you would prefer, you can manually clone this repo from GitHub. You
+will still need to use Composer to install some third-party libraries.
+
+If you haven't already done so, you will need to install `Composer
+<https://getcomposer.org/>`_.
+
+Linux/OSX:
+
+Follow the instructions in the `download section <https://getcomposer.org/download/>`_ to get the
+`composer.phar` file, and run::
+
+  php composer.phar install
+
+This will install all necessary dependencies.
+
+Windows:
+
+Follow the instructions on the Composer website for `downloading <https://getcomposer.org/doc/00-intro.md#installation-windows>`_ Composer, and run::
+  
+  php composer.phar install
+
+This will install all necessary dependencies.
+
+In your code:
+
+At the beginning of your file you will need to include the various
+files you will be using. For example, if you are making API calls to
+create local logistic regressions, you would include::
+
+  <?php
+  include('bigml.php');
+  include('logistic.php');
+
+Please see the individual resource sections for more information.
 
 Authentication
 --------------
@@ -2842,8 +2910,9 @@ error If the request does not succeed, it will contain a dictionary with an erro
 
 Local Models
 ------------
-If you want to use a specfic connection object for the remote retrieval, you can set it as second parameter::
-    require 'vendor/autoload.php';
+
+If you want to use a specfic connection object for the remote
+retrieval, you can set it as second parameter::
 
     $api = new BigML("username", "api_key", false, 'storage');
 
@@ -2860,6 +2929,12 @@ Any of these methods will return a Model object that you can use to make local p
 For set default storage::
 
     $local_model = new Model("model/538XXXXXXXXXXXXXXXXXXX2", null, 'storagedirectory');
+
+If you have not imported our files with Composer and need to include them
+manually, use the lines::
+
+  include '../bigml/bigml.php';
+  include '../bigml/model.php';
 
 Local Predictions
 -----------------
@@ -2887,8 +2962,6 @@ Local Clusters
 
 You can also instantiate a local version of a remote cluster::
 
-    require 'vendor/autoload.php';
-
     $cluster = $api->get_cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18");
     $local_cluster = new Cluster($cluster);
 
@@ -2902,10 +2975,15 @@ If you want to use a specfic connection object for the remote retrieval, you can
 
     $local_cluster = new Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18", $api);
 
-For set default storage if you have storage unset in api->
+For set default storage if you have storage unset in::
 
-    $local_cluster = new Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18", null, storagedirectory);
+  $api->$local_cluster = new Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18", null, storagedirectory);
 
+If you have not imported our files with Composer and need to include them
+manually, use the lines::
+
+  include '../bigml/bigml.php';
+  include '../bigml/cluster.php';
 
 Local Centroids
 ---------------
@@ -2926,6 +3004,12 @@ Using the local cluster object, you can predict the centroid associated to an in
 
 You must keep in mind, though, that to obtain a centroid prediction, input data must have values for all the numeric fields. No missing values for the numeric fields are allowed.
 As in the local model predictions, producing local centroids can be done independently of BigML servers, so no cost or connection latencies are involved.
+
+If you have not imported our files with Composer and need to include them
+manually, use the lines::
+
+  include '../bigml/bigml.php';
+  include '../bigml/cluster.php';
 
 Local Anomaly Detector
 ----------------------
@@ -2948,6 +3032,12 @@ or even use the remote anomaly information retrieved previously to build the loc
 
 Note that in this example we used a limit=-1 query string for the anomaly retrieval. This ensures that all fields are retrieved by the get method in the same call (unlike in the standard calls where the number of fields returned is limited).
 
+If you have not imported our files with Composer and need to include them
+manually, use the lines::
+
+  include '../bigml/bigml.php';
+  include '../bigml/anomaly.php';
+
 Local Anomaly Scores
 --------------------
 
@@ -2957,6 +3047,12 @@ Using the local anomaly detector object, you can predict the anomaly score assoc
     0.9268527808726705
 
 As in the local model predictions, producing local anomaly scores can be done independently of BigML servers, so no cost or connection latencies are involved.
+
+If you have not imported our files with Composer and need to include them
+manually, use the lines::
+
+  include '../bigml/bigml.php';
+  include '../bigml/anomaly.php';
 
 Local Topic Model
 -----------------
@@ -2994,12 +3090,19 @@ topic model retrieval. This ensures that all fields are retrieved by
 the get method in the same call (unlike in the standard calls where
 the number of fields returned is limited).
 
+If you have not imported our files with Composer and need to include them
+manually, use the lines::
+
+  include '../bigml/bigml.php';
+  include '../bigml/topicmodel.php';
+
+Please note you will still need to use Composer to import the
+third-party stemming library used to create local topic models.
+
 Multi Models
 ------------
 
 Multi Models use a numbers of BigML remote models to build a local version that can be used to generate predictions locally. Predictions are generated combining the outputs of each model::
-
-    require 'vendor/autoload.php';
 
     $multimodel = new MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"));
 
@@ -3007,10 +3110,9 @@ or::
 
     $multimodel = new MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"), $api);
 
-or set default storage if you have storage unset in api->
+or set default storage if you have storage unset in::
 
-    $multimodel = new MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"), null, $storage);
-
+  $api->$multimodel = new MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"), null, $storage);
 
     $prediction = $multimodel->predict(array("petal length"=> 3, "petal width"=> 1));
 
@@ -3080,13 +3182,16 @@ node to build a probability distribution and combining them. The confidence is t
 
 In regression, all the models predictions’ confidences contribute to the weighted average confidence.
 
+If you have not imported our files with Composer and need to include them
+manually, use the lines::
+
+  include '../bigml/bigml.php';
+  include '../bigml/multimodel.php';
 
 Local Ensembles
 ---------------
 
 Remote ensembles can also be used locally through the Ensemble class. The simplest way to access an existing ensemble and using it to predict locally is::
-
-    require 'vendor/autoload.php';
 
     $ensemble = new Ensemble("ensemble/53dxxxxxxxxxxxxxxxxxxafa");
 
@@ -3103,10 +3208,8 @@ As in MultipleModel, several prediction combination methods are available, and y
 
     $ensemble->predict(array("petal length"=>3, "petal width"=> 1), true, 1);
 
-
 creates a new ensemble and stores its information in ./storagedirectory folder. Then this information is used to predict locally using the confidence weighted method.
    
-
 Similarly, local ensembles can also be created by giving a list of models to be combined to issue the final prediction::
 
     $ensemble = new Ensemble(array('model/50c0de043b563519830001c2','model/50c0de043b5635198300031b'));
@@ -3117,8 +3220,16 @@ You can also use the `predict_probability` function to obtain a probability pred
 
     $ensemble->predict_probability(array("petal width"=> 0.5));
 
+If you have not imported our files with Composer and need to include them
+manually, use the lines::
+
+  include '../bigml/bigml.php';
+  include '../bigml/ensemble.php';
+
+
 Rule Generation
 ---------------
+
 You can also use a local model to generate a IF-THEN rule set that can be very helpful to understand how the model works internally::
 
     $local_model->rules();
