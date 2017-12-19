@@ -1,7 +1,8 @@
 BigML PHP Bindings
 =====================
 
-In this repository you'll find an open source PHP client that gives you a simple binding to interact with `BigML <https://bigml.com>`_.
+In this repository you'll find an open source PHP library that gives
+you a simple way to interact with `BigML <https://bigml.com>`_.
 
 This module is licensed under the `Apache License, Version
 2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>`_.
@@ -13,21 +14,42 @@ Requirements
 
 PHP 5.3.2 or higher are currently supported by these bindings.
 
-You will also need to install the non-default extensions `mbstring
-<http://php.net/manual/en/book.mbstring.php>`_ and `cURL
-<http://php.net/manual/en/book.curl.php>`_. To check which modules you
-have currently installed, run::
+You will also need to have the non-default extensions `mbstring
+<http://php.net/manual/en/book.mbstring.php>`_, `cURL
+<http://php.net/manual/en/book.curl.php>`_, and `OpenSSL
+<http://php.net/manual/en/book.openssl.php>`_ installed. Depending on
+how you installed PHP, you may already have one or more of these
+extensions.
+
+To check which modules you have currently installed, run::
 
   php -m
 
-To install with Linux/OSX:
+To install with Linux:
 
 At the command line, run::
 
-  sudo apt-get install php5-mbstring
-  sudo apt-get install php5-curl
+  sudo apt-get install phpXY-mbstring
+  sudo apt-get install phpXY-curl
 
-using the correct extension name for your version of PHP.
+where XY is the PHP version currently installed on your system (e.g.,
+php72-curl).
+
+To install with MacOS:
+
+At the command line, run::
+
+  sudo port install phpXY-mbstring
+  sudo port install phpXY-curl
+  sudo port install phpXY-openssl
+
+where XY is the PHP version currently installed on your system (e.g.,
+php720-curl).
+
+If you installed PHP by tapping homebrew-php, mbstring should already
+be installed. You will still need to install curl and openssl using::
+
+  brew install --with-openssl curl
 
 To install with Windows:
 
@@ -36,9 +58,11 @@ these lines in the php.ini::
 
   extension = php_mbstring.dll
   extension = php_curl.dll
+  extension = php_openssl.dll
 
-You may also need to check that `libeay32.dll` and `ssleay32.dll` are
-in your php directory.
+You will have to be sure you have these dll files, and they are
+available on your PATH. You may also need to check that `libeay32.dll`
+and `ssleay32.dll` are in your php directory.
 
 Once you have made the changes, don't forget to restart your server
 for them to take effect.
@@ -71,9 +95,10 @@ libraries, simply add the following to your current `composer.json`::
 
 At the command line, run the command::
 
-    composer install
+    php composer.phar install
 
-This will install this module and all required dependencies.
+This will install this library and all required library dependencies
+(but not extensions such as mbstring).
 
 In your code:
 
@@ -2912,20 +2937,27 @@ error If the request does not succeed, it will contain a dictionary with an erro
 Local Models
 ------------
 
-If you want to use a specfic connection object for the remote
-retrieval, you can set it as second parameter::
+You can use the information returned by the API when asking for a
+model to create a Model object in your own computer that will be able
+to produce predictions with no further connection to the remote
+API. The local Model object can be instantiated by using the entire
+response of the GET call to the API::
 
     $api = new BigML("username", "api_key", false, 'storage');
 
     $model = api->get_model('model/538XXXXXXXXXXXXXXXXXXX2');
     $local_model = new Model(model);
    
-or::
+It also accepts the model ID as the first argument. In this case, a
+new connection will be created internally to download the model
+information.::
  
     $local_model = new Model("model/538XXXXXXXXXXXXXXXXXXX2");
-    $local_model = new Model("model/538XXXXXXXXXXXXXXXXXXX2", $api);
 
-Any of these methods will return a Model object that you can use to make local predictions.
+If you want to use a specific connection object for the remote
+retrieval, you can set it as the second parameter::
+
+    $local_model = new Model("model/538XXXXXXXXXXXXXXXXXXX2", $api);
 
 For set default storage::
 
@@ -2961,24 +2993,33 @@ Local predictions have three clear advantages:
 Local Clusters
 --------------
 
-You can also instantiate a local version of a remote cluster::
+You can use the information returned by the API when asking for a
+cluster to create a Cluster object in your own computer that will be able
+to produce predictions with no further connection to the remote
+API. The local Cluster object can be instantiated by using the entire
+response of the GET call to the API::
 
     $cluster = $api->get_cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18");
     $local_cluster = new Cluster($cluster);
-
-or::
+   
+It also accepts the cluster ID as the first argument. This will
+retrieve the remote cluster information, using an implicitly built
+BigML() connection object (see the Authentication section for more
+details on how to set your credentials) and return a Cluster object
+that you can use to make local centroid predictions.::
 
     $local_cluster = new Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18");
 
-This will retrieve the remote cluster information, using an implicitly built BigML() connection object 
-(see the Authentication section for more details on how to set your credentials) and return a Cluster object that you can use to make local centroid predictions. 
-If you want to use a specfic connection object for the remote retrieval, you can set it as second parameter::
+If you want to use a specfic connection object for the remote
+retrieval, you can set it as second parameter::
 
     $local_cluster = new Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18", $api);
 
-For set default storage if you have storage unset in::
+For set default storage if you have storage unset in your API object::
 
-  $api->$local_cluster = new Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18", null, storagedirectory);
+  $local_cluster = new Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18", null, $storagedirectory);
+
+(where `$storagedirectory` is the desired storage location.)
 
 If you have not imported our files with Composer and need to include them
 manually, use the lines::
@@ -3111,9 +3152,9 @@ or::
 
     $multimodel = new MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"), $api);
 
-or set default storage if you have storage unset in::
+or set default storage if you have storage unset in `$api`::
 
-  $api->$multimodel = new MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"), null, $storage);
+  $multimodel = new MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"), null, $storage);
 
     $prediction = $multimodel->predict(array("petal length"=> 3, "petal width"=> 1));
 
