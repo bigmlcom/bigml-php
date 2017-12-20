@@ -44,7 +44,7 @@ At the command line, run::
   sudo port install phpXY-openssl
 
 where XY is the PHP version currently installed on your system (e.g.,
-php720-curl).
+php72-curl).
 
 If you installed PHP by tapping homebrew-php, mbstring should already
 be installed. You will still need to install curl and openssl using::
