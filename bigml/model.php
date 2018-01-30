@@ -14,20 +14,22 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-if (!class_exists('bigml')) {
+namespace BigML;
+
+if (!class_exists('BigML\BigML')) {
    include('bigml.php');
 }
-if (!class_exists('basemodel')) {
+if (!class_exists('BigML\BaseModel')) {
   include('basemodel.php');
 }
-if (!class_exists('tree')) {
+if (!class_exists('BigML\Tree')) {
    include('tree.php');
 }
-if (!class_exists('path')) {
+if (!class_exists('BigML\Path')) {
    include('path.php');
 }
 
-if(!defined('STDOUT')) define('STDOUT', fopen('php://stdout', 'w'));
+if(!defined('STDOUT')) define('STDOUT', \fopen('php://stdout', 'w'));
 
 function _distribution_sum($x, $y) {
     return $x+$y;
@@ -39,7 +41,7 @@ function print_distribution($distribution, $out=STDOUT) {
   foreach ($distribution as $group) {
      array_push($a, $group[1]);
   }
-  $total = array_reduce($a, "_distribution_sum");
+  $total = array_reduce($a, "BigML\_distribution_sum");
   foreach ($distribution as $group) {
     fwrite($out, "    " . $group[0] . ": " . number_format(round(($group[1]*1.0)/$total, 4)*100, 2) . "% (". strval($group[1]) ." instance" . ($group[1] == 1 ? ")\n" : "s)\n"));
   }
@@ -84,20 +86,20 @@ class Model extends BaseModel{
 
       if ($model == null || !property_exists($model, 'resource') ) {
          error_log("Cannot create the Model instance. Could not find the 'model' key in the resource");
-         throw new Exception('Cannot create the Model instance. Could not find the model key in the resource');
+         throw new \Exception('Cannot create the Model instance. Could not find the model key in the resource');
       }
 
       if (property_exists($model, "object") && property_exists($model->object, "status") && $model->object->status->code != BigMLRequest::FINISHED ) {
-         throw new Exception("The model isn't finished yet");
+         throw new \Exception("The model isn't finished yet");
       }
 
       parent::__construct($model);
 
-      if (property_exists($model, "object") && $model->object instanceof STDClass) {
+      if (property_exists($model, "object") && $model->object instanceof \STDClass) {
          $model=$model->object;
       }
 
-      if (property_exists($model, "model") && $model->model instanceof STDClass) {
+      if (property_exists($model, "model") && $model->model instanceof \STDClass) {
 
           if ($model->status->code == BigMLRequest::FINISHED) {
               $tree_info = array('max_bins' => 0);
@@ -108,10 +110,10 @@ class Model extends BaseModel{
               }
 
           } else {
-              throw new Exception("The model isn't finished yet");
+              throw new \Exception("The model isn't finished yet");
           }
       } else {
-         throw new Exception("Cannot create the Model instance. Could not find the 'model' key in the resource:\n\n" . $model);
+         throw new \Exception("Cannot create the Model instance. Could not find the 'model' key in the resource.\n\n");
       }
 
       if ($this->tree->regression) {
@@ -190,7 +192,7 @@ class Model extends BaseModel{
       $tree = $this->tree;
 
       if ($tree != null && $tree->regression && $missing_strategy==Tree::PROPORTIONAL && !$this->regression_ready) {
-         throw new Exception("You needed to use proportional missing strategy,
+         throw new \Exception("You needed to use proportional missing strategy,
                          for regressions. Please install them before, using local predictions for the model.");
       }
 
@@ -487,7 +489,7 @@ class Model extends BaseModel{
    {
       try {
          setlocale(LC_ALL, $data_locale);
-      } catch  (Exception $e) {
+      } catch  (\Exception $e) {
          error_log("Error find Locale");
       }
    }
@@ -511,7 +513,7 @@ class Model extends BaseModel{
       $ids_path = null;
       if (!is_null($filter_id) && !is_null($this->tree->id)) {
          if (array_key_exists($filter_id, $this->ids_map)) {
-            throw new Exception("The given id does not exist.");
+            throw new \Exception("The given id does not exist.");
          } else {
             $ids_path = array($filter_id);
             $last_id = $filter_id;
@@ -541,7 +543,7 @@ class Model extends BaseModel{
 
    function depth_first_search($tree, $path, $groups) {
          /* Search for leafs values and instances */
-         if (is_a($tree->predicate, 'Predicate')) {
+         if (is_a($tree->predicate, 'BigML\Predicate')) {
             array_push($path, $tree->predicate);
             if ($tree->predicate->term) {
                $term = $tree->predicate->term;

@@ -2,14 +2,19 @@
 
 include 'test_utils.php';
 
-if (!class_exists('bigml')) {
+if (!class_exists('BigML\BigML')) {
  include '../bigml/bigml.php';
 }
 
 
-if (!class_exists('multimodel')) {
+if (!class_exists('BigML\MultiModel')) {
  include '../bigml/multimodel.php';
 }
+
+use BigML\BigML;
+use BigML\BigMLRequest;
+use BigML\MultiModel;
+
 
 class BigMLTestMultiModelPredictions extends PHPUnit_Framework_TestCase
 {
@@ -163,7 +168,7 @@ class BigMLTestMultiModelPredictions extends PHPUnit_Framework_TestCase
           $local_multimodel = new MultiModel($list_of_models);
 
           print "When I create a batch multimodel prediction for " . json_encode($item["data_input"]) . " \n";
-          $predictions = $local_multimodel->batch_predict($item["data_input"], null, true, false, Tree::LAST_PREDICTION, null, false, false);
+          $predictions = $local_multimodel->batch_predict($item["data_input"], null, true, false, \BigML\Tree::LAST_PREDICTION, null, false, false);
           $i = 0;
         
           print "Then the predictions are " . json_encode($item["predictions"]) . "\n";

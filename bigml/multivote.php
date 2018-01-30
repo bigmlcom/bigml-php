@@ -13,6 +13,9 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+
+namespace BigML;
+
 function is_assoc($array){
     return !ctype_digit( implode('', array_keys($array)) );
 }
@@ -40,7 +43,7 @@ function ws_confidence($prediction, $distribution, $ws_z=1.96, $ws_n=null) {
    $ws_p = $distribution[$prediction];
    if ($ws_p < 0)
    {
-      throw new Exception("The distribution weight must be a positive value");
+      throw new \Exception("The distribution weight must be a positive value");
    }
 
    $ws_norm = floatval(array_sum($distribution));
@@ -56,7 +59,7 @@ function ws_confidence($prediction, $distribution, $ws_z=1.96, $ws_n=null) {
    }
 
    if ($ws_n < 1) {
-      throw new Exception("The total of instances in the distribution must be a positive integer");
+      throw new \Exception("The total of instances in the distribution must be a positive integer");
    }
 
    $ws_z = floatval($ws_z);
@@ -258,7 +261,7 @@ class MultiVote {
 
          foreach($instance->predictions as $prediction) {
             if (!array_key_exists('confidence', $prediction)) {
-               throw new Exception('Not enough data to use the selected prediction method. Try creating your model anew.');
+               throw new \Exception('Not enough data to use the selected prediction method. Try creating your model anew.');
             }
          }
       }
@@ -453,7 +456,7 @@ class MultiVote {
 
          foreach($this->predictions as $prediction) {
             if (!array_key_exists('confidence', $prediction)) {
-               throw new Exception('Not enough data to use the selected prediction method. Try creating your model anew.');
+               throw new \Exception('Not enough data to use the selected prediction method. Try creating your model anew.');
             }
             array_push($error_values, $prediction->confidence);
          }
@@ -517,7 +520,7 @@ class MultiVote {
 
       # there must be at least one prediction to be combined
       if ($this->predictions ==  null) {
-         throw new Exception('No predictions to be combined.');
+         throw new \Exception('No predictions to be combined.');
       }
       $method = (array_key_exists(strval($method),  $this->COMBINER_MAP)) ? $this->COMBINER_MAP[strval($method)] : $this->COMBINER_MAP[MultiVote::DEFAULT_METHOD];
 
@@ -528,7 +531,7 @@ class MultiVote {
          foreach($keys as $key) {
             foreach($this->predictions as $prediction) {
                if (!array_key_exists($key, $prediction)) {
-                  throw new Exception('Not enough data to use the selected prediction method. Try creating your model anew.');
+                  throw new \Exception('Not enough data to use the selected prediction method. Try creating your model anew.');
                }
             }
          }
@@ -628,12 +631,12 @@ class MultiVote {
          threshold.
       */
       if ($options == null) {
-         throw new Exception("No category and threshold information was found. Add threshold and category info");
+         throw new \Exception("No category and threshold information was found. Add threshold and category info");
       }
 
       foreach($options as $option) {
          if (!array_key_exists("threshold", $option) || !array_key_exists("category", $option) ) {
-            throw new Exception("No category and threshold information was found. Add threshold and category info");
+            throw new \Exception("No category and threshold information was found. Add threshold and category info");
          }
  
       }
@@ -641,11 +644,11 @@ class MultiVote {
       $length = count($this->predictions);
 
       if ($options["threshold"] > $length) {
-         throw new Exception("You cannot set a threshold value larger than ". length . "The ensemble has not enough models to use this threshold value.");
+         throw new \Exception("You cannot set a threshold value larger than ". length . "The ensemble has not enough models to use this threshold value.");
       }
 
       if ($options["threshold"] < 1) {
-         throw new Exception("The threshold must be a positive value");
+         throw new \Exception("The threshold must be a positive value");
       }
 
       $category_predictions=array();
@@ -676,7 +679,7 @@ class MultiVote {
       foreach($this->predictions as $prediction) { 
 
          if (!array_key_exists("distribution", $prediction) || !array_key_exists("count", $prediction) ) {
-            throw new Exception("Probability weighting is not available because distribution information is missing.");
+            throw new \Exception("Probability weighting is not available because distribution information is missing.");
          } 
 
          $total = $prediction->count;
@@ -688,7 +691,7 @@ class MultiVote {
          $order = $prediction->order;
 
          foreach($prediction->distribution as $key => $value) {
-            $prediction = new stdClass();
+            $prediction = new \stdClass();
             $prediction->prediction= $value[0];
             $prediction->probability= floatval($value[1]) / $total;
             $prediction->count =$value[1];
@@ -727,11 +730,11 @@ class MultiVote {
          if ($weight_label != null) {
          
             if (!in_array($weight_label, array_values($this->COMBINATION_WEIGHTS))) {
-               throw new Exception("Wrong weight_label value.");
+               throw new \Exception("Wrong weight_label value.");
             }
 
             if (!array_key_exists($weight_label, $prediction)) {
-               throw new Exception("Not enough data to use the selected prediction method. Try creating your model anew"); 
+               throw new \Exception("Not enough data to use the selected prediction method. Try creating your model anew"); 
             } else {
                $weight = is_object($prediction) ? $prediction->{$weight_label} : $prediction[$weight_label];
             }
@@ -824,7 +827,7 @@ class MultiVote {
 
       foreach($this->predictions as $prediction) {
          if (!array_key_exists($weight_label, $prediction)) {
-             throw new Exception("Not enough data to use the selected prediction method. Try creating your model anew.");
+             throw new \Exception("Not enough data to use the selected prediction method. Try creating your model anew.");
          }
 
          if (!array_key_exists($prediction->prediction, $distribution) ) {   
@@ -865,7 +868,7 @@ class MultiVote {
       }
 
       if ($weight_label != null && (!is_string($weight_label) || (!$check_confidence_and_weight_label)) ) {
-         throw new Exception("Not enough data to use the selected prediction method. Lacks " . $weight_label . " information.");
+         throw new \Exception("Not enough data to use the selected prediction method. Lacks " . $weight_label . " information.");
       }
 
       $final_confidence = 0.0;

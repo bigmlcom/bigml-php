@@ -67,7 +67,6 @@ and `ssleay32.dll` are in your php directory.
 Once you have made the changes, don't forget to restart your server
 for them to take effect.
 
-
 Importing the module
 --------------------
 
@@ -136,14 +135,21 @@ This will install all necessary dependencies.
 In your code:
 
 At the beginning of your file you will need to include the various
-files you will be using. For example, if you are making API calls to
-create local logistic regressions, you would include::
+files you will be using. If you will be making any remote calls, you
+will need bigml.php. If you will be making any local models, you will
+need their specific files. The most common files to include are::
 
   <?php
   include('bigml.php');
+  include('anomaly.php');
+  include('association.php');
+  include('boostedensemble.php');
+  include('cluster.php');
+  include('ensemble.php');
   include('logistic.php');
-
-Please see the individual resource sections for more information.
+  include('model.php');
+  include('prediction.php');
+  include('topicmodel.php');
 
 Authentication
 --------------
@@ -158,29 +164,30 @@ You can add the following lines to your .bashrc or .bash_profile to set those va
     export BIGML_USERNAME=myusername
     export BIGML_API_KEY=a11e579e7e53fb9abd646a6ff8aa99d4afe83ac2
 
-With that environment set up, connecting to BigML is a breeze::
+With that environment and your aliases set up, connecting to BigML is
+a breeze::
 
-   $api = new BigML();
+   $api = new BigML\BigML();
 
 You can initialize directly when instantiating the BigML
 class as follows::
 
-   $api = new BigML("myusername", "my_api_key");
+   $api = new BigML\BigML("myusername", "my_api_key");
 
 Also, you can initialize the library to work in the Sandbox environment by
 passing the parameter ``dev_mode``::
 
-   $api = new BigML("myusername", "my_api_key", true);
+   $api = new BigML\BigML("myusername", "my_api_key", true);
 
 Setting the storage argument in the api instantiation::
 
-   $api = new BigML("myusername", "my_api_key", true, 'storage/data');
+   $api = new BigML\BigML("myusername", "my_api_key", true, 'storage/data');
 
 all the generated, updated or retrieved resources will be automatically saved to the chosen directory.
 
 For Virtual Private Cloud setups, you can change the remote server domain::
     
-   $api = new BigML("myusername", "my_api_key", true, 'storage/data', my_VPC.bigml.io);
+   $api = new BigML\BigML("myusername", "my_api_key", true, 'storage/data', my_VPC.bigml.io);
 
 Quick Start
 -----------
@@ -213,14 +220,14 @@ for).
 
 You can easily generate a prediction following these steps::
 
-    $api = new BigML("myusername", "my_api_key");
+    $api = new BigML\BigML("myusername", "my_api_key");
 
     $source = $api->create_source('./tests/data/iris.csv');
     $dataset = $api->create_dataset($source);
     $model = $api->create_model($dataset);
     $prediction = $api->create_prediction($model, array('sepal length'=> 5, 'sepal width'=> 2.5));
 
-    then: 
+    then:
 
     $objective_field_name = $prediction->object->fields->{$prediction->object->objective_fields[0]}->name;
 
@@ -2346,8 +2353,7 @@ contents of a remote file is:
 
 .. code-block:: php
 
-    require 'vendor/autoload.php';
-    $api =  new BigML();
+    $api =  new BigML\BigML();
 
     # creating a script directly from the source code.
  
@@ -2461,7 +2467,7 @@ this source will remain in this project.
 The REST calls to manage the ``project`` resemble the ones used to manage the
 rest of resources. When you create a ``project``::
 
-    $api = new BigML();
+    $api = new BigML\BigML();
     $project = $api->create_project(array('name' => 'my first project'));
 
 the resulting resource is similar to the rest of resources, although shorter::
@@ -2943,31 +2949,25 @@ to produce predictions with no further connection to the remote
 API. The local Model object can be instantiated by using the entire
 response of the GET call to the API::
 
-    $api = new BigML("username", "api_key", false, 'storage');
+    $api = new BigML\BigML("username", "api_key", false, 'storage');
 
     $model = api->get_model('model/538XXXXXXXXXXXXXXXXXXX2');
-    $local_model = new Model(model);
+    $local_model = new BigML\Model(model);
    
 It also accepts the model ID as the first argument. In this case, a
 new connection will be created internally to download the model
 information.::
  
-    $local_model = new Model("model/538XXXXXXXXXXXXXXXXXXX2");
+    $local_model = new BigML\Model("model/538XXXXXXXXXXXXXXXXXXX2");
 
 If you want to use a specific connection object for the remote
 retrieval, you can set it as the second parameter::
 
-    $local_model = new Model("model/538XXXXXXXXXXXXXXXXXXX2", $api);
+    $local_model = new BigML\Model("model/538XXXXXXXXXXXXXXXXXXX2", $api);
 
 For set default storage::
 
-    $local_model = new Model("model/538XXXXXXXXXXXXXXXXXXX2", null, 'storagedirectory');
-
-If you have not imported our files with Composer and need to include them
-manually, use the lines::
-
-  include '../bigml/bigml.php';
-  include '../bigml/model.php';
+    $local_model = new BigML\Model("model/538XXXXXXXXXXXXXXXXXXX2", null, 'storagedirectory');
 
 Local Predictions
 -----------------
@@ -2989,18 +2989,17 @@ Local predictions have three clear advantages:
 - Extremely low latency to generate predictions for huge volumes of data.
 
 
-
 Local Clusters
 --------------
 
 You can use the information returned by the API when asking for a
-cluster to create a Cluster object in your own computer that will be able
-to produce predictions with no further connection to the remote
+cluster to create a Cluster object in your own computer that will be
+able to produce predictions with no further connection to the remote
 API. The local Cluster object can be instantiated by using the entire
 response of the GET call to the API::
 
     $cluster = $api->get_cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18");
-    $local_cluster = new Cluster($cluster);
+    $local_cluster = new BigML\Cluster($cluster);
    
 It also accepts the cluster ID as the first argument. This will
 retrieve the remote cluster information, using an implicitly built
@@ -3008,24 +3007,18 @@ BigML() connection object (see the Authentication section for more
 details on how to set your credentials) and return a Cluster object
 that you can use to make local centroid predictions.::
 
-    $local_cluster = new Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18");
+    $local_cluster = new BigML\Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18");
 
 If you want to use a specfic connection object for the remote
 retrieval, you can set it as second parameter::
 
-    $local_cluster = new Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18", $api);
+    $local_cluster = new BigML\Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18", $api);
 
 For set default storage if you have storage unset in your API object::
 
-  $local_cluster = new Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18", null, $storagedirectory);
+  $local_cluster = new BigML\Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18", null, $storagedirectory);
 
 (where `$storagedirectory` is the desired storage location.)
-
-If you have not imported our files with Composer and need to include them
-manually, use the lines::
-
-  include '../bigml/bigml.php';
-  include '../bigml/cluster.php';
 
 Local Centroids
 ---------------
@@ -3047,38 +3040,26 @@ Using the local cluster object, you can predict the centroid associated to an in
 You must keep in mind, though, that to obtain a centroid prediction, input data must have values for all the numeric fields. No missing values for the numeric fields are allowed.
 As in the local model predictions, producing local centroids can be done independently of BigML servers, so no cost or connection latencies are involved.
 
-If you have not imported our files with Composer and need to include them
-manually, use the lines::
-
-  include '../bigml/bigml.php';
-  include '../bigml/cluster.php';
-
 Local Anomaly Detector
 ----------------------
 
 You can also instantiate a local version of a remote anomaly.::
 
-    $local_anomaly = new Anomaly('anomaly/502fcbff15526876610002435');
+    $local_anomaly = new BigML\Anomaly('anomaly/502fcbff15526876610002435');
 
 This will retrieve the remote anomaly detector information, using an implicitly built BigML() connection object (see the Authentication section for more details on how to set your credentials) and return an Anomaly object that you can use to make local anomaly scores. If you want to use a specfic connection object for the remote retrieval, you can set it as second parameter::
 
-    $api = new BigML("username", "password");
-    $local_anomaly = new Anomaly('anomaly/502fcbff15526876610002435',
+    $api = new BigML\BigML("username", "password");
+    $local_anomaly = new BigML\Anomaly('anomaly/502fcbff15526876610002435',
                                  $api);
 
 or even use the remote anomaly information retrieved previously to build the local anomaly detector object::
 
-    $api = new BigML()
+    $api = new BigML\BigML()
     $anomaly = $api->get_anomaly('anomaly/502fcbff15526876610002435',
                                  'limit=-1')
 
 Note that in this example we used a limit=-1 query string for the anomaly retrieval. This ensures that all fields are retrieved by the get method in the same call (unlike in the standard calls where the number of fields returned is limited).
-
-If you have not imported our files with Composer and need to include them
-manually, use the lines::
-
-  include '../bigml/bigml.php';
-  include '../bigml/anomaly.php';
 
 Local Anomaly Scores
 --------------------
@@ -3090,12 +3071,6 @@ Using the local anomaly detector object, you can predict the anomaly score assoc
 
 As in the local model predictions, producing local anomaly scores can be done independently of BigML servers, so no cost or connection latencies are involved.
 
-If you have not imported our files with Composer and need to include them
-manually, use the lines::
-
-  include '../bigml/bigml.php';
-  include '../bigml/anomaly.php';
-
 Local Topic Model
 -----------------
 
@@ -3103,26 +3078,26 @@ You can also instantiate a local version of a remote topic model.::
 
     require 'vendor/autoload.php';
 
-    $local_topic_model = new TopicModel('topicmodel/502fdbcf15526876210042435');
+    $local_topic_model = new BigML\TopicModel('topicmodel/502fdbcf15526876210042435');
 
 This will retrieve the remote topic model information, using an
 implicitly built ``BigML()`` connection object (see the ``Authentication``
 section for more details on how to set your credentials) and return a
 ``TopicModel`` object that you can use to obtain local topic
-distributions. If you want to use a specfic connection object for the
+distributions. If you want to use a specific connection object for the
 remote retrieval, you can set it as second parameter::
 
     require 'vendor/autoload.php';
 
-    $api = new BigML(my_username, my_api_key);
-    $local_topic_model = new TopicModel('topicmodel/502fdbcf15526876210042435', $api);
+    $api = new BigML\BigML(my_username, my_api_key);
+    $local_topic_model = new BigML\TopicModel('topicmodel/502fdbcf15526876210042435', $api);
 
 You can also reuse a remote topic model JSON structure as previously
 retrieved to build the local topic model object::
 
     require 'vendor/autoload.php';
 
-    $api = new BigML();
+    $api = new BigML\BigML();
     $topic_model = $api->get_topicmodel('topicmodel/502fdbcf15526876210042435', 'limit=-1');
 
     $local_topic_model = new TopicModel($topic_model);
@@ -3132,29 +3107,25 @@ topic model retrieval. This ensures that all fields are retrieved by
 the get method in the same call (unlike in the standard calls where
 the number of fields returned is limited).
 
-If you have not imported our files with Composer and need to include them
-manually, use the lines::
-
-  include '../bigml/bigml.php';
-  include '../bigml/topicmodel.php';
-
-Please note you will still need to use Composer to import the
-third-party stemming library used to create local topic models.
+Please note you will need to use Composer to import the third-party
+stemming library used to create local topic models.
 
 Multi Models
 ------------
 
-Multi Models use a numbers of BigML remote models to build a local version that can be used to generate predictions locally. Predictions are generated combining the outputs of each model::
+Multi Models use a numbers of BigML remote models to build a local
+version that can be used to generate predictions locally. Predictions
+are generated combining the outputs of each model::
 
-    $multimodel = new MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"));
+    $multimodel = new BigML\MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"));
 
 or::
 
-    $multimodel = new MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"), $api);
+    $multimodel = new BigML\MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"), $api);
 
 or set default storage if you have storage unset in `$api`::
 
-  $multimodel = new MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"), null, $storage);
+  $multimodel = new BigML\MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"), null, $storage);
 
     $prediction = $multimodel->predict(array("petal length"=> 3, "petal width"=> 1));
 
@@ -3224,18 +3195,12 @@ node to build a probability distribution and combining them. The confidence is t
 
 In regression, all the models predictions’ confidences contribute to the weighted average confidence.
 
-If you have not imported our files with Composer and need to include them
-manually, use the lines::
-
-  include '../bigml/bigml.php';
-  include '../bigml/multimodel.php';
-
 Local Ensembles
 ---------------
 
 Remote ensembles can also be used locally through the Ensemble class. The simplest way to access an existing ensemble and using it to predict locally is::
 
-    $ensemble = new Ensemble("ensemble/53dxxxxxxxxxxxxxxxxxxafa");
+    $ensemble = new BigML\Ensemble("ensemble/53dxxxxxxxxxxxxxxxxxxafa");
 
     $ensemble->predict(array("petal length"=>3, "petal width"=> 1));
 
@@ -3246,7 +3211,7 @@ As in MultipleModel, several prediction combination methods are available, and y
 
     ensemble = $api->create_ensemble('dataset/5143a51a37203f2cf7000972');
 
-    $ensemble = new Ensemble($ensemble, $api); 
+    $ensemble = new BigML\Ensemble($ensemble, $api); 
 
     $ensemble->predict(array("petal length"=>3, "petal width"=> 1), true, 1);
 
@@ -3254,20 +3219,13 @@ creates a new ensemble and stores its information in ./storagedirectory folder. 
    
 Similarly, local ensembles can also be created by giving a list of models to be combined to issue the final prediction::
 
-    $ensemble = new Ensemble(array('model/50c0de043b563519830001c2','model/50c0de043b5635198300031b'));
+    $ensemble = new BigML\Ensemble(array('model/50c0de043b563519830001c2','model/50c0de043b5635198300031b'));
 
     $ensemble->predict(array("petal length": 3, "petal width": 1));
 
 You can also use the `predict_probability` function to obtain a probability prediction for each possible class of the objective field::
 
     $ensemble->predict_probability(array("petal width"=> 0.5));
-
-If you have not imported our files with Composer and need to include them
-manually, use the lines::
-
-  include '../bigml/bigml.php';
-  include '../bigml/ensemble.php';
-
 
 Rule Generation
 ---------------

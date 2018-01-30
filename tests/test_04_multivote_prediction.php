@@ -2,12 +2,15 @@
 
 include 'test_utils.php';
 
-if (!class_exists('bigml')) {
+if (!class_exists('BigML\BigML')) {
    include '../bigml/bigml.php';
 }   
-if (!class_exists('multivote')) {
+if (!class_exists('BigML\MultiVote')) {
    include '../bigml/multivote.php';
 }
+
+use BigML\BigML;
+use BigML\MultiVote;
 
 class BigMLTestMultiVote extends PHPUnit_Framework_TestCase
 {

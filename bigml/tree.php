@@ -14,19 +14,21 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-if (!class_exists('predicate')) {
+namespace BigML;
+
+if (!class_exists('BigML\Predicate')) {
    include('predicate.php'); 
 }
 
-if (!class_exists('multivote')) {
+if (!class_exists('BigML\Multivote')) {
    include('multivote.php'); 
 }
 
-if (!class_exists('ChiSquare')) {
+if (!class_exists('BigML\ChiSquare')) {
    include('ChiSquare.php'); 
 }
 
-if (!class_exists('Prediction')) {
+if (!class_exists('BigML\Prediction')) {
    include('prediction.php');
 }
 
@@ -198,7 +200,7 @@ class Tree {
       $this->objective_id = $objective_field;
       $this->output = $tree->output;
 
-      if ($tree->predicate instanceof STDClass)  {
+      if ($tree->predicate instanceof \STDClass)  {
          $this->predicate = new Predicate($tree->predicate->operator, $tree->predicate->field, $tree->predicate->value, property_exists($tree->predicate, "term") ? $tree->predicate->term : null);
       } else {
 	 $this->predicate = true;

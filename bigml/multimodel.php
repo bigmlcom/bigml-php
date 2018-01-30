@@ -14,11 +14,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-if (!class_exists('bigml')) {
+namespace BigML;
+
+if (!class_exists('BigML\BigML')) {
    include('bigml.php');
 }
 
-if (!class_exists('model')) {
+if (!class_exists('BigML\Model')) {
    include('model.php');
 }
 
@@ -55,7 +57,7 @@ function read_votes($votes_files, $model, $data_locale=null)
               $instances = intval($row[3]);
               try {
                  $confidence = floatval($row[1]);
-              } catch  (Exception $e) {
+              } catch  (\Exception $e) {
                  $confidence = 0;
               }
 
@@ -101,7 +103,7 @@ class MultiModel{
 
       if (is_array($models)) {
          foreach($models as $mo) {
-            if (!is_string($mo) && is_a($mo, "Model") ) {
+            if (!is_string($mo) && is_a($mo, "BigML\Model") ) {
                $m = $mo;
             } else {
                $m = new Model($mo, $api);
@@ -254,7 +256,7 @@ class MultiModel{
       }
    }
 
-    function generate_probability_votes($input_data, $by_name=true, $missing_strategy=Tree::LAST_PREDITION, $method=MultiVote::PROBABILITY_CODE) {
+    function generate_probability_votes($input_data, $by_name=true, $missing_strategy=Tree::LAST_PREDICTION, $method=MultiVote::PROBABILITY_CODE) {
         $votes = new MultiVote(array());
         $models = $this->models;
         foreach (range(0, sizeof($models) - 1) as $order) {
@@ -295,14 +297,14 @@ class MultiModel{
 
 
 
-   function generate_votes($input_data, $by_name=true, $missing_strategy=Tree::LAST_PREDICTION, $add_median=false,
+   function generate_votes($input_data, $by_name=true, $missing_strategy=\BigML\Tree\Tree::LAST_PREDICTION, $add_median=false,
                            $add_min=false, $add_max=false, $add_unused_fields=false) {
       /*
          Generates a MultiVote object that contains the predictions
          made by each of the models.
       */
 
-      $votes = new MultiVote(array());
+      $votes = new \BigML\MultiVote(array());
       $order = 0;
 
 

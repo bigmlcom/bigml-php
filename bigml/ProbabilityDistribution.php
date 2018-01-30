@@ -5,6 +5,9 @@
  * Parent class to all probability distributions.  Enforces a common interface
  * across subclasses and provides internal utility functions to them.
  */
+
+namespace BigML;
+
 abstract class ProbabilityDistribution {
 	//Internal Utility Functions
 	protected static function randFloat() {

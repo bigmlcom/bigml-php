@@ -19,6 +19,9 @@
 
   This module defines each Rule in an Association Rule.
 */
+
+namespace BigML;
+
 class AssociationRule {
   public $rule_id;
   public $confidence;

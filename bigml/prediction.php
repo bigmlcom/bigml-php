@@ -21,6 +21,7 @@
   Tree module to store all the available prediction info.
 */
 
+namespace BigML;
 
 class Prediction { 
    /*

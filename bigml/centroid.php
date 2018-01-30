@@ -14,6 +14,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+namespace BigML;
+
 function cosine_distance2($terms, $centroid_terms, $scale) {
    /*
       Returns the distance defined by cosine similarity

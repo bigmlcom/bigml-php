@@ -14,15 +14,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-if (!class_exists('bigml')) {
+namespace BigML;
+
+if (!class_exists('BigML\BigML')) {
    include('bigml.php');
 }
 
-if (!class_exists('model')) {
+if (!class_exists('BigML\Model')) {
    include('model.php');
 }
 
-if (!class_exists('BoostedTree')) {
+if (!class_exists('BigML\BoostedTree')) {
     include('boostedtree.php');
 }
 
@@ -49,7 +51,7 @@ class BoostedEnsemble extends ModelFields{
             $ensemble = $api::get_ensemble($ensemble);
       }
 
-      if ($ensemble instanceof STDClass && property_exists($ensemble, "resource") && $api::_checkEnsembleId($ensemble->resource) && $ensemble->object->status->code == 5) {
+      if ($ensemble instanceof \STDClass && property_exists($ensemble, "resource") && $api::_checkEnsembleId($ensemble->resource) && $ensemble->object->status->code == 5) {
 
           parent::__construct($ensemble->object->ensemble->fields);
  

@@ -21,6 +21,8 @@
    is used for local predictions.
 */
 
+namespace BigML;
+
 function strip_affixes($value, $field) 
 {
    /*
@@ -101,7 +103,7 @@ function check_model_structure($model) {
      /*
        Checks the model structure to see if it contains all the needed keys
      */
-     return ($model instanceof STDClass &&
+     return ($model instanceof \STDClass &&
              property_exists($model, "resource") &&
              $model->resource != null &&
              ((property_exists($model, "object") && property_exists($model->object, "model")) ||
@@ -141,7 +143,7 @@ class ModelFields {
 
    public function __construct($fields, $objective_id=null, $data_locale=null, $missing_tokens=null) {
       
-      if ($fields instanceof STDClass) {
+      if ($fields instanceof \STDClass) {
          $this->objective_id = $objective_id;
          $fields = $this->uniquify_varnames($fields);
          $this->inverted_fields = invert_dictionary($fields);

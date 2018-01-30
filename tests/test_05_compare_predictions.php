@@ -2,25 +2,32 @@
 
 include 'test_utils.php';
 
-if (!class_exists('bigml')) {
+if (!class_exists('BigML\BigML')) {
   include '../bigml/bigml.php';
 }
 
-if (!class_exists('cluster')) {
+if (!class_exists('BigML\Cluster')) {
    include '../bigml/cluster.php';
 }
 
-if (!class_exists('anomaly')) {
+if (!class_exists('BigML\Anomaly')) {
    include '../bigml/anomaly.php';
 }
 
-if (!class_exists('model')) {
+if (!class_exists('BigML\Model')) {
    include '../bigml/model.php';
 }
 
-if (!class_exists('LogisticRegression')) {
+if (!class_exists('BigML\LogisticRegression')) {
   include  '../bigml/logistic.php';
 }
+
+use BigML\BigML;
+use BigML\BigMLRequest;
+use BigML\Cluster;
+use BigML\Anomaly;
+use BigML\Model;
+use BigML\LogisticRegression;
 
 class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
 {

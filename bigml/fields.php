@@ -21,6 +21,8 @@
    is used for local predictions.
 */
 
+namespace BigML;
+
 function get_fields_structure($resource, $errors=false) {
     $DEFAULT_LOCALE = 'en-US'; 
     $DEFAULT_MISSING_TOKENS = array("", "N/A", "n/a", "NULL", "null", "-", "#DIV/0",
@@ -32,7 +34,7 @@ function get_fields_structure($resource, $errors=false) {
       $resource_type = null;
       $field_errors = null;
 
-      if ($resource instanceof STDClass && property_exists($resource, "resource")) {
+      if ($resource instanceof \STDClass && property_exists($resource, "resource")) {
          $resourceId = $resource->resource;
       } else if (is_string($resource)) {
          $resourceId = $resource;
@@ -106,7 +108,7 @@ function get_fields_structure($resource, $errors=false) {
 
      } else { 
         return $errors ? array(null, null, null, null, null) : array(null, null, null, null);
-        throw new Exception("Unknown resource structure");
+        throw new \Exception("Unknown resource structure");
      }
      
 }
@@ -158,7 +160,7 @@ class Fields {
 	      $errors = $resource_errors;
 	   }
 
-       } catch  (Exception $e) {
+       } catch  (\Exception $e) {
           $this->fields = $resource_or_fields;
           if (is_null($data_locale)) { 
              $data_locale = "en_utf8";
@@ -219,7 +221,7 @@ class Fields {
        */
      try {
         return $this->fields->{$key}->column_number;
-     } catch  (Exception $e) {
+     } catch  (\Exception $e) {
         return $this->fields->{$this->fields_by_name->{$key}}->column_number;
      } 
       
@@ -233,13 +235,13 @@ class Fields {
        if (is_string($key)) {
           try {
             return $this->fields_by_name[$key];
-          } catch  (Exception $e) {
+          } catch  (\Exception $e) {
             exit("Error: field name '" . $key . "' does not exist ");
           }
        } else if (is_int($key)) {
           try {
             return $this->fields_by_column_number[$key]; 
-          } catch  (Exception $e) {
+          } catch  (\Exception $e) {
              exit("Error: field column number '" . $key . "' does not exist ");
           }
        }
@@ -253,13 +255,13 @@ class Fields {
       if (is_string($key)) {
         try {
           return $this->fields->{$key}->name;
-        } catch  (Exception $e) {
+        } catch  (\Exception $e) {
           exit("Error: field id '" . $key . "' does not exist ");
         }
       } else if (is_int($key)) { 
         try {
           return $this->fields->{$this->fields_by_column_number[$key]}->$name;
-        } catch  (Exception $e) {
+        } catch  (\Exception $e) {
           exit("Error: field column number '" . $key . "' does not exist ");
         } 
       }
@@ -277,7 +279,7 @@ class Fields {
       } else if (is_string($objective_field)) {
          try {
 	    $this->objective_field = $this->field_column_number($objective_field);
-	 } catch  (Exception $e) {
+	 } catch  (\Exception $e) {
             $this->objective_field = end($this->fields_columns);
 	 }
          $this->objective_field = $this->field_column_number($objective_field);
@@ -330,7 +332,7 @@ class Fields {
            if (($key = array_search($field, $this->row_ids)) !== false) {
               array_push($this->filtered_indexes, $key);
            }
-        } catch  (Exception $e) {
+        } catch  (\Exception $e) {
         }
       }
 
@@ -460,7 +462,7 @@ class Fields {
       } 
      
       if (count($summaries) == 0) {
-          throw new Exception("The structure has not enough information to extract the fields containing missing values. Only datasets and models have such information. You could retry the get remote call with 'limit=-1' as query string.");
+          throw new \Exception("The structure has not enough information to extract the fields containing missing values. Only datasets and models have such information. You could retry the get remote call with 'limit=-1' as query string.");
       }
      
       $hash_result = array();
@@ -550,7 +552,7 @@ function find_locale($data_locale="en_US.UTF-8", $verbose=false)
 {
   try {
    setlocale(LC_ALL, $data_locale);
-  } catch  (Exception $e) {
+  } catch  (\Exception $e) {
    error_log("Error find Locale");
   }
 }

@@ -2,9 +2,12 @@
 
 include 'test_utils.php';
 
-if (!class_exists('bigml')) {
+if (!class_exists('BigML\BigML')) {
    include '../bigml/bigml.php';
 }   
+
+use BigML\BigML;
+use BigML\BigMLRequest;
 
 class BigMLTestSourceArgs extends PHPUnit_Framework_TestCase
 {

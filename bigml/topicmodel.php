@@ -25,28 +25,24 @@
  BIGML_USERNAME and BIGML_API_KEY environment variables and that you
  own the topicmodel/id below): 
 
- if (!class_exists('bigml')) {
-   include '../bigml/bigml.php';
- }
+ require 'vendor/autoload.php'
 
- if (!class_exists('TopicModel')) {
-   include '../bigml/topicmodel.php';
- }
-
- $api = new BigML(); 
- $topic_model = new TopicModel('topicmodel/5026965515526876630001b2'); 
+ $api = new BigML\BigML(); 
+ $topic_model = new BigML\TopicModel('topicmodel/5026965515526876630001b2'); 
  $topic_distribution = topic_model.distribution({"text": "A sample string"}));
 */
 
-if (!class_exists('bigml')) {
+namespace BigML;
+
+if (!class_exists('BigML\BigML')) {
    include('bigml.php');
 }
 
-if (!class_exists('basemodel')) {
+if (!class_exists('BigML\BaseModel')) {
   include('basemodel.php');
 }
 
-if (!class_exists('modelfields')) {
+if (!class_exists('BigML\ModelFields')) {
   include('modelfields.php');
 }
 
@@ -60,43 +56,43 @@ define("SAMPLES_PER_TOPIC", 128);
 function code_to_name($lang) {
     switch ($lang) {
         case "da":
-            $stemmer = new Wamania\Snowball\Danish();
+            $stemmer = new \Wamania\Snowball\Danish();
             return $stemmer;
         case "nl":
-            $stemmer = new Wamania\Snowball\Dutch();
+            $stemmer = new \Wamania\Snowball\Dutch();
             return $stemmer;
         case "en":
-            $stemmer = new Wamania\Snowball\English();
+            $stemmer = new \Wamania\Snowball\English();
             return $stemmer;
         case "fr":
-            $stemmer = new Wamania\Snowball\French();
+            $stemmer = new \Wamania\Snowball\French();
             return $stemmer;
         case "de":
-            $stemmer = new Wamania\Snowball\German();
+            $stemmer = new \Wamania\Snowball\German();
             return $stemmer;
         case "it":
-            $stemmer = new Wamania\Snowball\Italian();
+            $stemmer = new \Wamania\Snowball\Italian();
             return $stemmer;
         case "nn":
-            $stemmer = new Wamania\Snowball\Norwegian();
+            $stemmer = new \Wamania\Snowball\Norwegian();
             return $stemmer;
         case "pt":
-            $stemmer = new Wamania\Snowball\Portuguese();
+            $stemmer = new \Wamania\Snowball\Portuguese();
             return $stemmer;
         case "ro":
-            $stemmer = new Wamania\Snowball\Romanian();
+            $stemmer = new \Wamania\Snowball\Romanian();
             return $stemmer;
         case "ru":
-            $stemmer = new Wamania\Snowball\Russian();
+            $stemmer = new \Wamania\Snowball\Russian();
             return $stemmer;
         case "es":
-            $stemmer = new Wamania\Snowball\Spanish();
+            $stemmer = new \Wamania\Snowball\Spanish();
             return $stemmer;
         case "sv":
-            $stemmer = new Wamania\Snowball\Swedish();
+            $stemmer = new \Wamania\Snowball\Swedish();
             return $stemmer;
         default:
-            throw new Exception("Your language is not currently supported.");
+            throw new \Exception("Your language is not currently supported.");
     }        
 }
 
@@ -134,14 +130,14 @@ class TopicModel extends ModelFields{
       }
 
       if (property_exists($topicmodel, "object") && property_exists($topicmodel->object, "status") && $topicmodel->object->status->code != BigMLRequest::FINISHED ) {
-          throw new Exception("The topic model isn't finished yet");
+          throw new \Exception("The topic model isn't finished yet");
       }
 
-      if (property_exists($topicmodel, "object") && $topicmodel->object instanceof STDClass) {
+      if (property_exists($topicmodel, "object") && $topicmodel->object instanceof \STDClass) {
           $topicmodel = $topicmodel->object;
       }
 
-      if (property_exists($topicmodel, "topic_model") && $topicmodel->topic_model instanceof STDClass) {
+      if (property_exists($topicmodel, "topic_model") && $topicmodel->topic_model instanceof \STDClass) {
 
           if ($topicmodel->status->code == BigMLRequest::FINISHED) {
 
@@ -197,10 +193,10 @@ class TopicModel extends ModelFields{
               parent::__construct($fields);
 
           } else {
-              throw new Exception("The topic model isn't finished yet");
+              throw new \Exception("The topic model isn't finished yet");
           }
       } else {
-          throw new Exception("Cannot create the Topic Model instance. Could not find the 'topic_model' key in the resource.\n\n ");
+          throw new \Exception("Cannot create the Topic Model instance. Could not find the 'topic_model' key in the resource.\n\n ");
       }
     }
 
@@ -278,7 +274,7 @@ class TopicModel extends ModelFields{
         } elseif (mb_detect_encoding($astr, 'UTF-8, ISO-8859-1') == 'ISO-8859-1') {
             $text = utf8_encode($astr);
         } else {
-            throw new Exception("Your input text encoding is not supported.");
+            throw new \Exception("Your input text encoding is not supported.");
         }
 
         $index = 0;

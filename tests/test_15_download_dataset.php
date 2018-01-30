@@ -2,9 +2,13 @@
 
 include 'test_utils.php';
 
-if (!class_exists('bigml')) {
+if (!class_exists('BigML\BigML')) {
   include '../bigml/bigml.php';
 }
+
+use BigML\BigML;
+use BigML\BigMLRequest;
+
 class BigMLTestDownloadDataset extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
@@ -60,7 +64,7 @@ class BigMLTestDownloadDataset extends PHPUnit_Framework_TestCase
           $this->assertNotNull($filename);
 
 	  print "Then the download dataset file is like " . $item["filename"] . "\n";
-	  $this->assertTrue(compareFiles($item["filename"], $item["local_file"]));
+	  $this->assertTrue(\BigML\compareFiles($item["filename"], $item["local_file"]));
  
       } 
     }

@@ -14,7 +14,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-if (!class_exists('modelfields')) {
+namespace BigML;
+
+if (!class_exists('BigML\ModelFields')) {
    include('modelfields.php');
 }
 
@@ -71,7 +73,7 @@ class BaseModel extends ModelFields{
 
     public function __construct($model, $api=null) {
 
-      if (check_model_structure($model) ) {
+      if ( check_model_structure($model) ) {
          $this->resource_id = $model->resource;
       } else {
          if ($api == null) {
@@ -88,18 +90,18 @@ class BaseModel extends ModelFields{
 
       } 
          
-      if (property_exists($model, "object") && $model->object instanceof STDClass) {
+      if (property_exists($model, "object") && $model->object instanceof \STDClass) {
          $model=$model->object;
       }
 
-      if (property_exists($model, "model") && $model->model instanceof STDClass) {
+      if (property_exists($model, "model") && $model->model instanceof \STDClass) {
          if ($model->status->code == BigMLRequest::FINISHED) {
 
             if (property_exists($model->model, "model_fields")) {
               
                foreach($model->model->model_fields as $key => $value) {
 			      if (!property_exists($model->model->fields, $key)) {
-                     throw new Exception("Some fields are missing to generate a local model " . $key .  "  Please, provide a model with the complete list of fields.");
+                     throw new \Exception("Some fields are missing to generate a local model " . $key .  "  Please, provide a model with the complete list of fields.");
                   }	
                   if (property_exists($model->model->fields->{$key}, "summary")) {
                      $model->model->model_fields->{$key}->summary = $model->model->fields->{$key}->summary;
@@ -129,10 +131,10 @@ class BaseModel extends ModelFields{
              }
 
           } else {
-             throw new Exception("The model isn't finished yet");
+             throw new \Exception("The model isn't finished yet");
           }
        } else {
-        throw new Exception("Cannot create the BaseModel instance. Could not  find the 'model' key in the resource:\n\n " . print_r($model));
+        throw new \Exception("Cannot create the BaseModel instance. Could not  find the 'model' key in the resource:\n\n " . print_r($model));
        }
 
     }

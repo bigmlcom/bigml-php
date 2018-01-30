@@ -14,13 +14,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-if (!class_exists('modelfields')) {
+namespace BigML;
+
+if (!class_exists('BigML\ModelFields')) {
    include('modelfields.php');
 }   
-if (!class_exists('item')) {
+if (!class_exists('BigML\Item')) {
    include('item.php');
 }   
-if (!class_exists('associationrule')) {
+if (!class_exists('BigML\AssociationRule')) {
    include('associationrule.php');
 }   
 
@@ -100,16 +102,16 @@ class Association extends ModelFields{
 
       if ($association == null || !property_exists($association, 'resource') ) {
          error_log("Cannot create the Association instance. Could not find the 'association' key in the resource");
-         throw new Exception('Cannot create the association instance. Could not find the association key in the resource');
+         throw new \Exception('Cannot create the association instance. Could not find the association key in the resource');
       }
 
       if (property_exists($association, "object") && property_exists($association->object, "status") && $association->object->status->code != BigMLRequest::FINISHED ) {
-         throw new Exception("The association isn't finished yet");
+         throw new \Exception("The association isn't finished yet");
       }
 
-      if (property_exists($association, "object") && $association->object instanceof STDClass) {
+      if (property_exists($association, "object") && $association->object instanceof \STDClass) {
          $association=$association->object;
-         if (property_exists($association, "associations") && $association->associations instanceof STDClass) {
+         if (property_exists($association, "associations") && $association->associations instanceof \STDClass) {
             if ( property_exists($association, "status") && $association->status->code == BigMLRequest::FINISHED ) {
 
                $associations = $association->associations;
@@ -146,15 +148,15 @@ class Association extends ModelFields{
                $this->significance_level = property_exists($associations, "significance_level") ? $associations->significance_level : 0.05;
  
             } else {
-               throw new Exception("The association isn't finished yet");
+               throw new \Exception("The association isn't finished yet");
             }
         
          } else {
-            throw new Exception("Cannot create the Association instance. Could not find the 'association' key in the resource:\n\n" . json_encode($association));
+            throw new \Exception("Cannot create the Association instance. Could not find the 'association' key in the resource:\n\n" . json_encode($association));
          }
 
       } else {
-          throw new Exception("Cannot create the Association instance. Could not find the 'association' key in the resource:\n\n" . json_encode($association));
+          throw new \Exception("Cannot create the Association instance. Could not find the 'association' key in the resource:\n\n" . json_encode($association));
       }
 
    }
@@ -186,7 +188,7 @@ class Association extends ModelFields{
      */ 
      $predictions = array();
      if ($score_by != null && !in_array($score_by, json_decode($SCORES)) ) {
-        throw new Exception("The available values of score_by are " . $SCORES); 
+        throw new \Exception("The available values of score_by are " . $SCORES); 
      }
 
      $input_data = $this->filter_input_data($input_data, $by_name);
@@ -266,7 +268,7 @@ class Association extends ModelFields{
         } else if (in_array($field, $this->inverted_fields)) {
            $field_id = $this->inverted_fields[$field];
         } else {
-           throw new Exception("Failed to find a field name or ID corresponding to " . $field);
+           throw new \Exception("Failed to find a field name or ID corresponding to " . $field);
         }
      }
 
@@ -338,7 +340,7 @@ class Association extends ModelFields{
         return true;
      } 
      $items = array(); 
-     if (is_a($item_list[0], "item") ){
+     if (is_a($item_list[0], "BigML\Item") ){
         foreach ($item_list as $item) {
            array_push($items, $item->index);
         }
@@ -416,7 +418,7 @@ class Association extends ModelFields{
 
       if (is_null($filename)) {
          error_log("A valid file name is required to store the rules.");
-         throw new Exception('A valid file name is required to store the rules.');
+         throw new \Exception('A valid file name is required to store the rules.');
       }
 
       $file = fopen("$filename", "w");

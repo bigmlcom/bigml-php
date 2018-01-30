@@ -14,6 +14,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+namespace BigML;
+
 function term_matches($text, $forms_list, $options) {
   /*
     Counts the number of occurences of the words in forms_list in the text

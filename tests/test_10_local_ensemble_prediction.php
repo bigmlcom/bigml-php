@@ -2,13 +2,17 @@
 
 include 'test_utils.php';
 
-if (!class_exists('bigml')) {
+if (!class_exists('BigML\BigML')) {
   include '../bigml/bigml.php';
 }
 
-if (!class_exists('ensemble')) {
+if (!class_exists('BigML\Ensemble')) {
   include '../bigml/ensemble.php';
 }
+
+use BigML\BigML;
+use BigML\BigMLRequest;
+use BigML\Ensemble;
 
 class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
 {
@@ -76,7 +80,7 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
             $local_ensemble = new Ensemble($ensemble, self::$api);
 
             print "When I create prediction for local ensemble with confidence for " . json_encode($item["data_input"]) . " \n";
-            $prediction = $local_ensemble->predict($item["data_input"], true, MultiVote::PLURALITY_CODE, true);
+            $prediction = $local_ensemble->predict($item["data_input"], true, \BigML\MultiVote::PLURALITY_CODE, true);
 
             print "Then the prediction for local ensemble is equals " . $item["prediction"] . "\n";
             $this->assertEquals($item["prediction"], $prediction[0]);
@@ -85,7 +89,7 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
             $this->assertEquals($item["confidence"], round($prediction[1], 4));
 
             print "And the local probabilities are " . json_encode($item["probabilities"]) . "\n";
-            $predict_probability = $local_ensemble->predict_probability($item["data_input"], true, MultiVote::PROBABILITY_CODE, Tree::LAST_PREDICTION, true);
+            $predict_probability = $local_ensemble->predict_probability($item["data_input"], true, \BigML\MultiVote::PROBABILITY_CODE, \BigML\Tree::LAST_PREDICTION, true);
             foreach (range(0, count($predict_probability) - 1) as $index) {
                 $predict_probability[$index] = round($predict_probability[$index], 4);
             }
@@ -203,7 +207,7 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
             $local_ensemble = new Ensemble($ensemble, self::$api);
 
             print "When I create a local ensemble prediction for ". json_encode($item["data_input"]) ." in JSON adding confidence\n";
-            $prediction = $local_ensemble->predict($item["data_input"], true, MultiVote::PLURALITY_CODE, false, true);
+            $prediction = $local_ensemble->predict($item["data_input"], true, \BigML\MultiVote::PLURALITY_CODE, false, true);
 
             print "Then the local prediction is equals " . $item["prediction"] . "\n";
             $this->assertEquals($item["prediction"], $prediction[0]);
@@ -272,9 +276,9 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
         $model_2 = self::$api->get_model($model_2->resource);
         $model_3 = self::$api->get_model($model_3->resource);
 
-            $local_model_1 = new Model($model_1);
-            $local_model_2 = new Model($model_2);
-        $local_model_3 = new Model($model_3);
+            $local_model_1 = new \BigML\Model($model_1);
+            $local_model_2 = new \BigML\Model($model_2);
+        $local_model_3 = new \BigML\Model($model_3);
 
             print "When I create a local Ensemble with the last " . $item["number_of_models"] ." local models\n";
             $local_ensemble = new Ensemble(array($local_model_1, $local_model_2, $local_model_3), self::$api);
@@ -329,7 +333,7 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
             $local_ensemble = new Ensemble($ensemble, self::$api);
 
             print "When I create a local ensemble prediction using median with confidence  for " . json_encode($item["data_input"]) ."\n";
-            $prediction = $local_ensemble->predict($item["data_input"], true, MultiVote::PLURALITY_CODE, true, false, false, false, false, false, false, false, null, Tree::LAST_PREDICTION, true);
+            $prediction = $local_ensemble->predict($item["data_input"], true, \BigML\MultiVote::PLURALITY_CODE, true, false, false, false, false, false, false, false, null, \BigML\Tree::LAST_PREDICTION, true);
 
             print "Then the local prediction is " . $item["prediction"] . "\n";
             $this->assertEquals($item["prediction"], round($prediction[0], 4));
@@ -396,7 +400,7 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
             }
 
             print "And the local probabilities are " . json_encode($item["probabilities"]) . "\n";
-            $predict_probability = $local_ensemble->predict_probability($item["data_input"], true, MultiVote::PROBABILITY_CODE, Tree::LAST_PREDICTION, true);
+            $predict_probability = $local_ensemble->predict_probability($item["data_input"], true, \BigML\MultiVote::PROBABILITY_CODE, \BigML\Tree::LAST_PREDICTION, true);
             foreach (range(0, count($predict_probability) - 1) as $index) {
                 $predict_probability[$index] = round($predict_probability[$index], 4);
             }

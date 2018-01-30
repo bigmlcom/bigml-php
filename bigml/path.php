@@ -14,6 +14,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+namespace BigML;
+
 function reverse($operator) {
     /*Reverses the unequality operators*/
     $REVERSE_OP = array('<' => '>', '>'=> '<');
@@ -227,11 +229,11 @@ class Path {
       /* Path instance constructor accepts only lists of Predicate objects */
       if ($predicates == null) {
          $this->predicates = array(); 
-      } else if (is_array($predicates) && is_a($predicates[0], "Predicate") ) {
+      } else if (is_array($predicates) && is_a($predicates[0], "BigML\Predicate") ) {
         $this->predicates = $predicates;
       } else {
          error_log("The Path constructor accepts a list of Predicate objects. Please check the arguments for the  constructor");
-	 throw new Exception("The Path constructor accepts a list of Predicate objects. Please check the arguments for the  constructor");
+	 throw new \Exception("The Path constructor accepts a list of Predicate objects. Please check the arguments for the  constructor");
       }
    }
 
@@ -243,7 +245,7 @@ class Path {
          return $this->to_brief_rules($fields, $label);
       } else {
          error_log("Invalid format. The list of valid formats are 0 (extended) or 1 (brief).");
-	 throw new Exception("Invalid format. The list of valid formats are 0 (extended) or 1 (brief)");
+	 throw new \Exception("Invalid format. The list of valid formats are 0 (extended) or 1 (brief)");
       }
    }
 

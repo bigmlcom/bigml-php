@@ -14,19 +14,21 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-if (!class_exists('bigml')) {
+namespace BigML;
+
+if (!class_exists('BigML\BigML')) {
    include('bigml.php');
 }
 
-if (!class_exists('modelfields')) {
+if (!class_exists('BigML\ModelFields')) {
   include('modelfields.php');
 }
 
-if (!class_exists('predicate')) {
+if (!class_exists('BigML\Predicate')) {
   include('predicate.php');
 }
 
-if (!class_exists('cluster')) {
+if (!class_exists('BigML\Cluster')) {
   include('cluster.php');
 }
 
@@ -150,18 +152,18 @@ class LogisticRegression extends ModelFields {
 
       if ($logistic_regression == null || !property_exists($logistic_regression, 'resource') ) {
          error_log("Cannot create the Model instance. Could not find the 'logistic_regression' key in the resource");
-         throw new Exception('Cannot create the logistic regression instance. Could not find the logistic regression key in the resource');
+         throw new \Exception('Cannot create the logistic regression instance. Could not find the logistic regression key in the resource');
       }
 
       if (property_exists($logistic_regression, "object") && property_exists($logistic_regression->object, "status") && $logistic_regression->object->status->code != BigMLRequest::FINISHED ) {
-         throw new Exception("The logistic_regression isn't finished yet");
+         throw new \Exception("The logistic_regression isn't finished yet");
       }
 
-      if (property_exists($logistic_regression, "object") && $logistic_regression->object instanceof STDClass) {
+      if (property_exists($logistic_regression, "object") && $logistic_regression->object instanceof \STDClass) {
          $logistic_regression=$logistic_regression->object;
       }
 
-      if (property_exists($logistic_regression, "logistic_regression") && $logistic_regression->logistic_regression instanceof STDClass) {
+      if (property_exists($logistic_regression, "logistic_regression") && $logistic_regression->logistic_regression instanceof \STDClass) {
 
          if ($logistic_regression->status->code == BigMLRequest::FINISHED) {
 
@@ -252,10 +254,10 @@ class LogisticRegression extends ModelFields {
             }
 
          } else {
-            throw new Exception("The logistic regression isn't finished yet");
+            throw new \Exception("The logistic regression isn't finished yet");
          }
       } else {
-         throw new Exception("Cannot create the Model instance. Could not find the 'logistic regression' key in the resource:\n\n" . $logistic_regression);
+         throw new \Exception("Cannot create the Model instance. Could not find the 'logistic regression' key in the resource:\n\n" . $logistic_regression);
       }
 
    }
@@ -322,7 +324,7 @@ class LogisticRegression extends ModelFields {
          foreach ($fields as $field_id => $field) {
            if (!in_array($field->optype, json_decode(OPTIONAL_FIELDS, true)) and
                !array_key_exists($field_id, $input_data) ) {
-               throw new Exception("Failed to predict. Input data must contain values for all numeric fields to get a logistic regression prediction.");
+               throw new \Exception("Failed to predict. Input data must contain values for all numeric fields to get a logistic regression prediction.");
            }
          }
 

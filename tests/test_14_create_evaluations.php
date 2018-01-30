@@ -2,9 +2,13 @@
 
 include 'test_utils.php';
 
-if (!class_exists('bigml')) {
+if (!class_exists('BigML\BigML')) {
   include '../bigml/bigml.php';
 }
+
+use BigML\BigML;
+use BigML\BigMLRequest;
+
 class BigMLTestCreateDataset extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
@@ -82,7 +86,7 @@ class BigMLTestCreateDataset extends PHPUnit_Framework_TestCase
         $data = array(array('filename' => 'data/iris.csv',
                           'number_of_models' => 5,
                           'measure' => 'average_phi',
-                          'value' => '0.98029',
+                          'value' => '0.97064',
                           'tlp' => 1));
         foreach($data as $item) {
           print "\nSuccessfully creating an evaluation for an ensemble\n";

@@ -2,12 +2,16 @@
 
 include 'test_utils.php';
 
-if (!class_exists('bigml')) {
+if (!class_exists('BigML\BigML')) {
  include '../bigml/bigml.php';
 }
-if (!class_exists('model')) {
+if (!class_exists('BigML\Model')) {
  include '../bigml/model.php';
 }
+
+use BigML\BigML;
+use BigML\BigMLRequest;
+use BigML\Model;
 
 class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
 {

@@ -7,6 +7,9 @@
  * Fills in where PHP's math functions fall short.  Many functions are
  * used extensively by the probability distributions.
  */
+
+namespace BigML;
+
 class Stats {
    //Useful to tell if a float has a mathematically integer value.
    private static function is_integer($x) {

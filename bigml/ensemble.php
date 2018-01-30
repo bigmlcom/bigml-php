@@ -14,27 +14,29 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-if (!class_exists('bigml')) {
+namespace BigML;
+
+if (!class_exists('BigML\BigML')) {
    include('bigml.php');
 }
 
-if (!class_exists('multimodel')) {
+if (!class_exists('BigML\MultiModel')) {
   include('multimodel.php');
 }
 
-if (!class_exists('multivote')) {
+if (!class_exists('BigML\MultiVote')) {
   include('multivote.php');
 }
 
-if (!class_exists('BoostedEnsemble')) {
+if (!class_exists('BigML\BoostedEnsemble')) {
   include('boostedensemble.php');
 }
 
-if (!class_exists('model')) {
+if (!class_exists('BigML\Model')) {
   include('model.php');
 }
 
-if (!class_exists('basemodel')) {
+if (!class_exists('BigML\BaseModel')) {
   include('basemodel.php');
 }
 
@@ -72,16 +74,18 @@ class Ensemble {
 
          foreach($ensemble as $model_id) {
 
-            if (!is_string($model_id) && is_a($model_id, "Model") ) {
+            if (!is_string($model_id) && is_a($model_id, "BigML\Model") ) {
                array_push($models, $model_id);
                $this->objective_id = $model_id->tree->objective_field;
-            } else if ($model_id instanceof STDClass) {
-               array_push($models, $model_id);
+            } else if ($model_id instanceof \STDClass) {
+                array_push($models, $model_id);
                $this->objective_id = $model_id->object->objective_field;
             } else if ($api != null && $api::_checkModelId($model_id)) {
-               $m = $api::get_model($model_id);
+                $m = $api::get_model($model_id);
+
                if ($m != null) {
                  array_push($models, $m);
+
                  $this->objective_id = $m->object->objective_field;
                } else {
                   error_log("Failed to verify the list of models. Check your model id values");
@@ -101,7 +105,7 @@ class Ensemble {
             $ensemble = $api::get_ensemble($ensemble);
          }
 
-         if ($ensemble instanceof STDClass && property_exists($ensemble, "resource") && $api::_checkEnsembleId($ensemble->resource) && $ensemble->object->status->code == 5) {
+         if ($ensemble instanceof \STDClass && property_exists($ensemble, "resource") && $api::_checkEnsembleId($ensemble->resource) && $ensemble->object->status->code == 5) {
 
             $this->boosting = isset($ensemble->object->boosting);
 
@@ -145,7 +149,7 @@ class Ensemble {
          $models = array();
 
          foreach($this->models_splits[0] as $model_id) {
-            if (!is_string($model_id) && is_a($model_id, "Model") ) {
+            if (!is_string($model_id) && is_a($model_id, "BigML\Model") ) {
               $mo = $model_id;
             } else {
               $mo = $api::retrieve_resource($model_id, $api::ONLY_MODEL);
@@ -164,7 +168,7 @@ class Ensemble {
                   $distributions[] = array('training'=>array('categories'=> $model->tree->distribution));
               }
           }
-          catch(Exception $e) {
+          catch(\Exception $e) {
               $this->distributions = array();
               foreach ($models as $model) {
                   $distributions = $this->distributions;
@@ -182,7 +186,7 @@ class Ensemble {
                   $classes[] = $category[0];
               }
           }
-          catch (Exception $e) {
+          catch (\Exception $e) {
               $classes = [];
               foreach ($this->distributions as $distribution) {
                   $categories = $distribution->training->categories;
@@ -420,11 +424,11 @@ class Ensemble {
       $models= array();
 
       if ($this->boosting) {
-          throw new Exception("This function is not implemented for boosting yet.");
+          throw new \Exception("This function is not implemented for boosting yet.");
       }
 
       foreach($this->model_ids as $model_id) {
-         if (!is_string($model_id) && is_a($model_id, "Model") ) {
+         if (!is_string($model_id) && is_a($model_id, "BigML\Model") ) {
            $local_model = $model_id;
          } else {
            $local_model=new Model($model_id, $this->api);
@@ -451,7 +455,7 @@ class Ensemble {
       $check_importance = false;
 
       if ($this->boosting) {
-          throw new Exception("This function is not implemented for boosting yet.");
+          throw new \Exception("This function is not implemented for boosting yet.");
       }
 
       if ($this->distributions != null && is_array($this->distributions))
@@ -489,7 +493,7 @@ class Ensemble {
         {
            # Old ensembles, extracts importance from model information
            foreach($this->model_ids as $model_id) {
-              if (!is_string($model_id) && is_a($model_id, "Model") ) {
+              if (!is_string($model_id) && is_a($model_id, "BigML\Model") ) {
                  $local_model = $model_id;
               } else {
                  $local_model = new BaseModel($model_id, $this->api);

@@ -2,9 +2,12 @@
 
 include 'test_utils.php';
 
-if (!class_exists('bigml')) {
+if (!class_exists('BigML\BigML')) {
   include '../bigml/bigml.php';
 }
+
+use BigML\BigML;
+use BigML\BigMLRequest;
 
 class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
 {
@@ -78,7 +81,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
 	  $this->assertNotNull($filename);
 
           print "Then the batch prediction file is like " . $item["predictions_file"]. "\n";
-          $this->assertTrue(compareFiles($item["local_file"], $item["predictions_file"]));
+          $this->assertTrue(\BigML\compareFiles($item["local_file"], $item["predictions_file"]));
 
       }
     }
@@ -134,7 +137,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
           $this->assertNotNull($filename);
 
           print "Then the batch prediction file is like " . $item["predictions_file"]. "\n";
-          $this->assertTrue(compareFiles($item["local_file"], $item["predictions_file"]));
+          $this->assertTrue(\BigML\compareFiles($item["local_file"], $item["predictions_file"]));
 
       }
     }
@@ -187,7 +190,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
           $this->assertNotNull($filename);
 
           print "Then the batch centroid file is like " . $item["predictions_file"]. "\n";
-          $this->assertTrue(compareFiles($item["local_file"], $item["predictions_file"]));
+          $this->assertTrue(\BigML\compareFiles($item["local_file"], $item["predictions_file"]));
 
       }
     }
@@ -290,7 +293,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
           $this->assertNotNull($filename);
 
           print "Then the batch anomaly score file is like " . $item["predictions_file"] . "\n";
-          $this->assertTrue(compareFiles($item["local_file"], $item["predictions_file"]));
+          $this->assertTrue(\BigML\compareFiles($item["local_file"], $item["predictions_file"]));
 
       }
     }
@@ -343,7 +346,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
           $this->assertNotNull($filename);
 
           print "Then the batch prediction file is like " . $item["predictions_file"]. "\n";
-          $this->assertTrue(compareFiles($item["local_file"], $item["predictions_file"]));
+          $this->assertTrue(\BigML\compareFiles($item["local_file"], $item["predictions_file"]));
 
       }
 

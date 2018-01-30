@@ -2,13 +2,17 @@
 
 include 'test_utils.php';
 
-if (!class_exists('bigml')) {
+if (!class_exists('BigML\BigML')) {
    include '../bigml/bigml.php';
 }
 
-if (!class_exists('association')) {
+if (!class_exists('BigML\Association')) {
   include '../bigml/association.php';
 }
+
+use BigML\BigML;
+use BigML\BigMLRequest;
+use BigML\Association;
 
 class BigMLTestAssociations extends PHPUnit_Framework_TestCase
 {

@@ -6,6 +6,9 @@ if (!class_exists('bigml')) {
    include '../bigml/bigml.php';
 }
 
+use BigML\BigML;
+use BigML\BigMLRequest;
+
 class BigMLTestPredictions extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"

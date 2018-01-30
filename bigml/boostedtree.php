@@ -21,15 +21,17 @@
 # boosted Ensemble to predict locally or embedded into your application 
 # without needing to send requests to BigML.io.
 
-if (!class_exists('Predicate')) {
+namespace BigML;
+
+if (!class_exists('BigML\Predicate')) {
    include('predicate.php'); 
 }
 
-if (!class_exists('Prediction')) {
+if (!class_exists('BigML\Prediction')) {
    include('prediction.php'); 
 }
 
-if (!class_exists('Tree')) {
+if (!class_exists('BigML\Tree')) {
    include('tree.php');
 }
 

@@ -14,14 +14,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-if (!class_exists('bigml')) {
+namespace BigML;
+
+if (!class_exists('BigML\BigML')) {
    include('bigml.php');
 }
 
-if (!class_exists('modelfields')) {
+if (!class_exists('BigML\ModelFields')) {
    include('modelfields.php');
 }
-if (!class_exists('centroid')) {
+if (!class_exists('BigML\Centroid')) {
    include('centroid.php');
 }
 
@@ -46,7 +48,6 @@ function parse_terms($text, $case_sensitive=true) {
    if ($text == null) {
       return array();
    }
-
 
    preg_match_all("/(\b|_)([^\b_\s]+?)(\b|_)/u", $text, $matches);
 
@@ -135,14 +136,14 @@ class Cluster extends ModelFields {
       }
 
       if (property_exists($cluster, "object") && property_exists($cluster->object, "status") && $cluster->object->status->code != BigMLRequest::FINISHED ) {
-         throw new Exception("The cluster isn't finished yet");
+         throw new \Exception("The cluster isn't finished yet");
       }
 
-      if (property_exists($cluster, "object") && $cluster->object instanceof STDClass) {
+      if (property_exists($cluster, "object") && $cluster->object instanceof \STDClass) {
           $cluster = $cluster->object;
       }
 
-      if (property_exists($cluster, "clusters") && $cluster->clusters instanceof STDClass) {
+      if (property_exists($cluster, "clusters") && $cluster->clusters instanceof \STDClass) {
 
          if ($cluster->status->code == BigMLRequest::FINISHED) {
 
@@ -209,16 +210,16 @@ class Cluster extends ModelFields {
             foreach($this->scales as $field_id=>$field) {
 
                if (!property_exists($this->fields, $field_id) )  {
-                  throw new Exception("Some fields are missing  to generate a local cluster. Please, provide a cluster with the complete list of fields.");
+                  throw new \Exception("Some fields are missing  to generate a local cluster. Please, provide a cluster with the complete list of fields.");
                }
             }
 
          } else {
-            throw new Exception("The cluster isn't finished yet");
+            throw new \Exception("The cluster isn't finished yet");
          }
 
       } else {
-         throw new Exception("Cannot create the Cluster instance. Could not  find the 'clusters' key in the resource:\n\n " .$cluster);
+         throw new \Exception("Cannot create the Cluster instance. Could not  find the 'clusters' key in the resource:\n\n " .$cluster);
       }
    }
 
@@ -232,7 +233,7 @@ class Cluster extends ModelFields {
       # Checks that all numeric fields are present in input data
       foreach($this->fields as $field_id=>$field) {
          if (!in_array($field->optype, json_decode(OPTIONAL_FIELDS_CENTROID)) && !array_key_exists($field_id, $input_data) ) {
-            throw new Exception("Failed to predict a centroid. Input data must contain values for all numeric fields to find a centroid.");
+            throw new \Exception("Failed to predict a centroid. Input data must contain values for all numeric fields to find a centroid.");
          }
       }
       #Strips affixes for numeric values and casts to the final field type

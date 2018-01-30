@@ -3,13 +3,17 @@
 include 'test_utils.php';
 
 //importing
-if (!class_exists('bigml')) {
+if (!class_exists('BigML\BigML')) {
   include '../bigml/bigml.php';
 }
 
-if (!class_exists('TopicModel')) {
+if (!class_exists('BigML\TopicModel')) {
   include '../bigml/topicmodel.php';
 }
+
+use BigML\BigML;
+use BigML\BigMLRequest;
+use BigML\TopicModel;
 
 class BigMLTestBoostedEnsemble extends PHPUnit_Framework_TestCase
 {

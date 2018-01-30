@@ -14,16 +14,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+namespace BigML;
 
-if (!class_exists('bigml')) {
+if (!class_exists('BigML\BigML')) {
    include('bigml.php');
 }
-
-if (!class_exists('modelfields')) {
+if (!class_exists('BigML\ModelFields')) {
    include('modelfields.php');
 }
-
-if (!class_exists('anomalytree')) {
+if (!class_exists('BigML\AnomalyTree')) {
    include('anomalytree.php');
 }
 
@@ -53,36 +52,40 @@ class Anomaly extends ModelFields {
     public $top_anomalies;
 
     public function __construct($anomaly, $api=null, $storage="storage") {
+
        if ($api == null) {
           $api = new BigML(null, null, null, $storage);
        }
 
        if (is_string($anomaly)) {
+
           if (!($api::_checkAnomalyId($anomaly)) ) {
              error_log("Wrong anomaly id");
              return null;
           }
 
           $anomaly = $api::retrieve_resource($anomaly, $api::ONLY_MODEL);
+
        }
 
        if ($anomaly == null || !property_exists($anomaly, 'resource') ) {
           error_log("Cannot create the Anomaly instance. Could not find the 'model' key in the resource");
-          throw new Exception('Cannot create the Anomaly instance. Could not find the model key in the resource');
+          throw new \Exception('Cannot create the Anomaly instance. Could not find the model key in the resource');
        }
 
        if (property_exists($anomaly, "object") && property_exists($anomaly->object, "status") && $anomaly->object->status->code != BigMLRequest::FINISHED ) {
-          throw new Exception("The model isn't finished yet");
+          throw new \Exception("The model isn't finished yet");
        }
 
-       if (property_exists($anomaly, "object") && $anomaly->object instanceof STDClass)  {
+       if (property_exists($anomaly, "object") && $anomaly->object instanceof \STDClass)  {
+
           $anomaly = $anomaly->object;
           $this->sample_size = $anomaly->sample_size;
           $this->input_fields = $anomaly->input_fields;
           $this->id_fields = $anomaly->id_fields;
        }
 
-       if (property_exists($anomaly, "model") && $anomaly->model instanceof STDClass) {
+       if (property_exists($anomaly, "model") && $anomaly->model instanceof \STDClass) {
           parent::__construct($anomaly->model->fields);
 
           if ( property_exists($anomaly->model, "top_anomalies") && is_array($anomaly->model->top_anomalies) ) {
@@ -92,7 +95,7 @@ class Anomaly extends ModelFields {
 	       $this->expected_mean_depth = null;
                if ($this->mean_depth == null || $this->sample_size == null) {
                   error_log("The anomaly data is not complete. Score will not be available");
-                  throw new Exception('The anomaly data is not complete. Score will not be available');
+                  throw new \Exception('The anomaly data is not complete. Score will not be available');
                } else {
                   $default_depth = 2*(0.5772156649 + log($this->sample_size - 1) - (floatval($this->sample_size-1)/$this->sample_size));
                   $this->expected_mean_depth = min(array($this->mean_depth, $default_depth));
@@ -109,12 +112,12 @@ class Anomaly extends ModelFields {
 
 	     } else {
 	        error_log("The anomaly isn't finished yet");
-		throw new Exception("The anomaly isn't finished yet");
+		throw new \Exception("The anomaly isn't finished yet");
 	     }
 
           } else {
              error_log("Cannot create the Anomaly instance. Could not find the 'top_anomalies' key in the resource");
-             throw new Exception("Cannot create the Anomaly instance. Could not find the 'top_anomalies' key in the resource");
+             throw new \Exception("Cannot create the Anomaly instance. Could not find the 'top_anomalies' key in the resource");
           }
 
 
@@ -154,7 +157,7 @@ class Anomaly extends ModelFields {
 
       } else {
          error_log("We could not find the iforest information to compute the anomaly score. Please, rebuild your Anomaly object from a complete anomaly detector resource");
-         throw new Exception("We could not find the iforest information to compute the anomaly score. Please, rebuild your Anomaly object from a complete anomaly detector resource");
+         throw new \Exception("We could not find the iforest information to compute the anomaly score. Please, rebuild your Anomaly object from a complete anomaly detector resource");
       }
 
     }

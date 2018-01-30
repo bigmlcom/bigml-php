@@ -2,13 +2,17 @@
 
 include 'test_utils.php';
 
-if (!class_exists('bigml')) {
+if (!class_exists('BigML\BigML')) {
   include '../bigml/bigml.php';
 } 
 
-if (!class_exists('multimodel')) {
+if (!class_exists('BigML\MultiModel')) {
   include '../bigml/multimodel.php';
 }
+
+use BigML\BigML;
+use BigML\BigMLRequest;
+use BigML\MultiModel;
 
 class BigMLTestMultimodelBatch extends PHPUnit_Framework_TestCase
 {

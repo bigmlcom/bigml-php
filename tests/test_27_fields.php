@@ -2,12 +2,16 @@
 
 include 'test_utils.php';
 
-if (!class_exists('bigml')) {
+if (!class_exists('BigML\BigML')) {
   include '../bigml/bigml.php';
 } 
-if (!class_exists('fields')) { 
+if (!class_exists('BigML\Fields')) { 
   include '../bigml/fields.php';
 }  
+
+use BigML\BigML;
+use BigML\BigMLRequest;
+use BigML\Fields;
 
 class BigMLTestFields extends PHPUnit_Framework_TestCase
 {

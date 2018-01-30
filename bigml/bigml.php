@@ -18,6 +18,8 @@
 
 # This is a simple binding to BigML.io, the BigML API.
 
+namespace BigML;
+
 class BigML {
    const BIGML_ENDPOINT = "https://bigml.io";
    const ONLY_MODEL = "only_model=true;limit=-1;"; 
@@ -268,7 +270,7 @@ class BigML {
       if (is_string($resource)) 
          $r = json_decode($resource);
 
-      if ($r instanceof STDClass && property_exists($r, "resource")) {
+      if ($r instanceof \STDClass && property_exists($r, "resource")) {
          $resource = $r->resource;
       }
 
@@ -439,7 +441,7 @@ class BigML {
    public static function error_counts($dataset, $raise_on_error=true, $waitTime=3000, $retries=10) {
 
       if (!is_string($dataset)) {
-        if ($dataset instanceof STDClass && property_exists($dataset, "resource")) {
+        if ($dataset instanceof \STDClass && property_exists($dataset, "resource")) {
 	   $dataset = $dataset->resource;
         } else {
 	   error_log("Wrong dataset id");
@@ -462,7 +464,7 @@ class BigML {
 
       try {
          $errors = $resource["resource"]->object->status->field_errors;
-      } catch  (Exception $e) {
+      } catch  (\Exception $e) {
       }
 
       foreach ($errors as $field_id => $value) {
@@ -805,7 +807,7 @@ class BigML {
       }
 
       $args = $args == null? array() : $args; 
-      $args["input_data"] = new StdClass();
+      $args["input_data"] = new \StdClass();
 
       if ($inputData != null) {
          $args["input_data"] = $inputData;
@@ -1222,7 +1224,7 @@ class BigML {
       }
 
       $args["cluster"] = $resource["id"];
-      $args["input_data"] = $inputData == null?  new StdClass() : $inputData;
+      $args["input_data"] = $inputData == null?  new \StdClass() : $inputData;
 
       $rest = new BigMLRequest('CREATE', 'centroid');
 
@@ -1532,7 +1534,7 @@ class BigML {
       }
 
       $args["anomaly"] = $resource["id"];
-      $args["input_data"] = $inputData == null?  new StdClass() : $inputData;
+      $args["input_data"] = $inputData == null?  new \StdClass() : $inputData;
 
       $rest = new BigMLRequest('CREATE', 'anomalyscore');
 
@@ -2100,7 +2102,7 @@ class BigML {
       if (phpversion() < 5.5) {
          $options['file'] = '@' . realpath($file_name);
       } else {
-         $options['file'] = new CurlFile(realpath($file_name));
+         $options['file'] = new \CurlFile(realpath($file_name));
       }	 
 
       if ($options != null ){
@@ -2131,18 +2133,18 @@ class BigML {
       */
       $args = $args == null? array() : $args;
       if (is_null($source_code)) {
-         throw new Exception('A valid code string or a script id must be provided.');
+         throw new \Exception('A valid code string or a script id must be provided.');
       }
 
       #$resource = self::_check_resource($source_code, null, $waitTime, $retries);
       $resource = null;
       if ($resource != null) {
          if ($resource['type'] != "script") {
-            throw new Exception('A valid code string or a script id must be provided.');
+            throw new \Exception('A valid code string or a script id must be provided.');
          }
 
          if ($resource["status"] != BigMLRequest::FINISHED) {
-            throw new Exception($resource['message']);
+            throw new \Exception($resource['message']);
          }
 
          $args["origin"] = $resource["id"];
@@ -2150,7 +2152,7 @@ class BigML {
       } else if (is_string($source_code)) {
          $args["source_code"] = $source_code;
       } else {
-        throw new Exception('A valid code string or a script id must be provided.');
+        throw new \Exception('A valid code string or a script id must be provided.');
       }
 
       $rest = new BigMLRequest('CREATE', 'script');
@@ -2233,18 +2235,18 @@ class BigML {
         foreach ($script as $var => $scriptId) {
           $resource = self::_check_resource($scriptId, null, $waitTime, $retries);
           if ($resource == null || $resource['type'] != "script") {
-             throw new Exception('A script id is needed to create a script execution.');
+             throw new \Exception('A script id is needed to create a script execution.');
           } elseif ($resource["status"] != BigMLRequest::FINISHED) {
-             throw new Exception($resource['message']);
+             throw new \Exception($resource['message']);
           }
           array_push($scriptsIds, $resource["id"]);
         }
       } else {
         $resource = self::_check_resource($script, null, $waitTime, $retries);
         if ($resource == null || $resource['type'] != "script") {
-          throw new Exception('A script id is needed to create a script execution.');
+          throw new \Exception('A script id is needed to create a script execution.');
         } elseif ($resource["status"] != BigMLRequest::FINISHED) {
-          throw new Exception($resource['message']);
+          throw new \Exception($resource['message']);
         }
         array_push($scriptsIds, $resource["id"]);
       }
@@ -2336,7 +2338,7 @@ class BigML {
       $args = $args == null? array() : $args;
 
       if (is_null($source_code)) {
-         throw new Exception('A valid code string or a library id must be provided.');
+         throw new \Exception('A valid code string or a library id must be provided.');
          return null;
       }
  
@@ -2345,11 +2347,11 @@ class BigML {
 
       if ($resource != null) { 
          if ($resource['type'] != "library") {
-            throw new Exception('A valid code string or a library id must be provided.');
+            throw new \Exception('A valid code string or a library id must be provided.');
          }
 
          if ($resource["status"] != BigMLRequest::FINISHED) {
-            throw new Exception($resource['message']);
+            throw new \Exception($resource['message']);
          }
  
          $args["origin"] = $resource["id"];
@@ -2357,7 +2359,7 @@ class BigML {
       } else if (is_string($source_code)) {
          $args["source_code"] = $source_code;
       } else {
-        throw new Exception('A valid code string or a library id must be provided.');
+        throw new \Exception('A valid code string or a library id must be provided.');
       }
 
       $rest = new BigMLRequest('CREATE', 'library');
@@ -2598,7 +2600,7 @@ class BigML {
       */
       $resource_id = null;
 
-      if ($resource instanceof STDClass && property_exists($resource, "resource")) {
+      if ($resource instanceof \STDClass && property_exists($resource, "resource")) {
          $resource_id = $resource->resource;
          } else {
          error_log("Wrong resource object");
@@ -2642,7 +2644,7 @@ class BigML {
                      $rest->setQueryString($query_string);
                   }
                   return $rest->getResponse();
-               } catch  (Exception $e) {
+               } catch  (\Exception $e) {
                   error_log("The resource isn't finished yet");
                   return $resource;
                }
@@ -2677,7 +2679,7 @@ class BigML {
       /*
          Pretty prints a resource or part of it.
       */
-      if ($resource instanceof STDClass && property_exists($resource, "resource") && property_exists($resource, "object")) {
+      if ($resource instanceof \STDClass && property_exists($resource, "resource") && property_exists($resource, "object")) {
 
          $resource_id = $resource->resource;
          if (preg_match('/(source|dataset|model|evaluation|ensemble|cluster)(\/)([a-f,0-9]{24}|[a-f,0-9]{27})$/i', $resource_id, $result)) {
@@ -2718,7 +2720,7 @@ class BigML {
 
    private static function check_resource_type($resourceId, $resourceType) {
       $resource = null;
-      if ($resourceId instanceof STDClass && property_exists($resourceId, "resource")) {
+      if ($resourceId instanceof \STDClass && property_exists($resourceId, "resource")) {
          $resource = $resourceId->resource;
       } else if (is_string($resourceId)) {
          $resource = $resourceId;
@@ -2930,7 +2932,7 @@ class BigML {
 
         return $data;
 
-      } catch (Exception $e) {
+      } catch (\Exception $e) {
          error_log("Unexpected exception error");
       }
    }
@@ -2963,83 +2965,86 @@ class BigML {
           $url = $this->endpoint.'/'.$this->version.'/'.$this->uri;
 
       try {
-	 if (BigML::getDebug() != null && BigML::getDebug() == true)
-             echo "URL: " . $url . "\n";
+          if (BigML::getDebug() != null && BigML::getDebug() == true)
+              echo "URL: " . $url . "\n";
+          
+          $curl = curl_init();
+          curl_setopt($curl, CURLOPT_URL, $url);
 
-         $curl = curl_init();
-         curl_setopt($curl, CURLOPT_URL, $url);
+          curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+          curl_setopt($curl, CURLOPT_HEADER, true);
+          curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false );
+          curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false );
 
-         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-         curl_setopt($curl, CURLOPT_HEADER, true);
-         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false );
-	 curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false );
+          if ($this->method == "CREATE") {
+              curl_setopt($curl, CURLOPT_POST, true);
+              curl_setopt($curl, CURLOPT_POSTFIELDS, $this->data);
+          } elseif ($this->method == "UPDATE") {
+              curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
+              curl_setopt($curl, CURLOPT_POSTFIELDS, $this->data);
+          } elseif ($this->method == "DELETE") {
+              curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+          } elseif ($this->method == "DOWNLOAD") { 
+              curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
+              curl_setopt($curl, CURLOPT_BINARYTRANSFER, true );
+              curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false );
+              curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10 );
+              curl_setopt($curl, CURLOPT_FILE, $this->data);
 
-         if ($this->method == "CREATE") {
-            curl_setopt($curl, CURLOPT_POST, true);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $this->data);
-         } elseif ($this->method == "UPDATE") {
-            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $this->data);
-         } elseif ($this->method == "DELETE") {
-            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "DELETE");
-         } elseif ($this->method == "DOWNLOAD") { 
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
-            curl_setopt($curl, CURLOPT_BINARYTRANSFER, true );
-            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false );
-            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10 );
-            curl_setopt($curl, CURLOPT_FILE, $this->data);
+          }
+          // Set Headers
+          $headers = array();
+          foreach ($this->headers as $header => $value)
+              if (strlen($value) > 0) $headers[] = $header.': '.$value;
 
-         }
-         // Set Headers
-         $headers = array();
-         foreach ($this->headers as $header => $value)
-             if (strlen($value) > 0) $headers[] = $header.': '.$value;
-
-         curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+          curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
          
-	 if (BigML::getDebug() != null && BigML::getDebug() == true) {
-	    curl_setopt($curl, CURLOPT_VERBOSE, true);
-	 }
+          if (BigML::getDebug() != null && BigML::getDebug() == true) {
+              curl_setopt($curl, CURLOPT_VERBOSE, true);
+          }
 
-         $response = curl_exec($curl);
-         $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+          $response = curl_exec($curl);
+          $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
-         if ($code == $this->response_code) {
+          if ($code == $this->response_code) {
 
-            $header_size = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
-            $header = substr($response, 0, $header_size);
-            $body = substr($response, $header_size);
+              $header_size = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+              $header = substr($response, 0, $header_size);
+              $body = substr($response, $header_size);
 
-            $this->parseJsonResponse($body, $code, $header);
+              $this->parseJsonResponse($body, $code, $header);
 
-         } else if (in_array(intval($code), array(BigMLRequest::HTTP_BAD_REQUEST, BigMLRequest::HTTP_UNAUTHORIZED, BigMLRequest::HTTP_NOT_FOUND, BigMLRequest::HTTP_TOO_MANY_REQUESTS))) {
-            $header_size = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
-            $header = substr($response, 0, $header_size);
-            $body = substr($response, $header_size);
-            $this->response["code"] = $code; 
-            $error_message = $this->error_message(json_decode($body), $this->method);
-            $this->response["error"]["status"]["message"] = $error_message["message"];
-            $this->response["error"]["status"]["code"] = $code;
-	    error_log($this->response["error"]["status"]["message"]);
-            if ($error_message["code"] != null)
-               $this->response["error"]["status"]["code"] = $error_message["code"];
+          } else if (in_array(intval($code), array(BigMLRequest::HTTP_BAD_REQUEST, BigMLRequest::HTTP_UNAUTHORIZED, BigMLRequest::HTTP_NOT_FOUND, BigMLRequest::HTTP_TOO_MANY_REQUESTS))) {
+              $header_size = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+              $header = substr($response, 0, $header_size);
+              $body = substr($response, $header_size);
+              $this->response["code"] = $code; 
+              $error_message = $this->error_message(json_decode($body), $this->method);
+              $this->response["error"]["status"]["message"] = $error_message["message"];
+              $this->response["error"]["status"]["code"] = $code;
+              error_log($this->response["error"]["status"]["message"]);
+              if ($error_message["code"] != null)
+                  $this->response["error"]["status"]["code"] = $error_message["code"];
 
-         } else {
-            error_log("Unexpected error ". $code);
-	    print_r($response);
-            $this->response["code"] = BigMLRequest::HTTP_INTERNAL_SERVER_ERROR;
-         }
+          } else {
+              error_log("Unexpected error ". $code);
+              print_r($response);
+              $this->response["code"] = BigMLRequest::HTTP_INTERNAL_SERVER_ERROR;
+          }
+          
+          curl_close($curl);
+      } catch (\Exception $e) {
+          print("got exception");
 
-         curl_close($curl);
-      } catch (Exception $e) {
-         error_log("Unexpected exception error"); 
+          error_log("Unexpected exception error"); 
       }
 
-      return json_decode(json_encode($this->response));
+      return json_decode( json_encode($this->response));
    }
 
    private function parseJsonResponse($response, $code, $headers) {
       $location = null;
+
       $r =json_decode($response,true);
 
       if ($this->method ==  "LIST") { 
@@ -3116,7 +3121,7 @@ class BigML {
       $error_info = null;
       $error_response = array("message"=> null, "code"=>null);
 
-      if ($resource instanceof STDClass) {
+      if ($resource instanceof \STDClass) {
          if (property_exists($resource, "error")) {
             $error_info = $resource->error;
          } elseif (property_exists($resource, "code") && property_exists($resource, "status")) {
@@ -3136,7 +3141,7 @@ class BigML {
                $extra = $error_info->status->extra;
             }
             if ($extra != null) {
-               if ($extra instanceof STDClass) {
+               if ($extra instanceof \STDClass) {
                   $error = $error . ":"; 
                   $error_response["code"] = $extra->error;
                   foreach(get_object_vars($extra) as $key => $value) {
@@ -3214,11 +3219,11 @@ function check_dir($path) {
    */
    if (file_exists($path)){
       if (!is_dir($path)) {
-         throw new Exception("The given path is not a directory");
+         throw new \Exception("The given path is not a directory");
       }
    } elseif (count($path) > 0) {
       if(!mkdir($path, 0777, true)) {
-         throw new Exception("Cannot create a directory");
+         throw new \Exception("Cannot create a directory");
       }   
    }
    return $path;
