@@ -38,52 +38,24 @@ define("EXPANSION_ATTRIBUTES", json_encode(array("categorical" => "categories",
 
 define("OPTIONAL_FIELDS", json_encode(array('categorical', 'text', 'items')));
 
+function transform_unique_terms($unique_terms) {
+    /*
+      Turns the associative array in $unique_terms into a list of
+      lists, which is the expected input for category_probability.
+    */
 
-function logistic_get_unique_terms($terms, $term_forms, $tag_cloud) {
-  /*
-     Extracts the unique terms that occur in one of the alternative forms in
-     term_forms or in the tag cloud.
-   */
+    $term_and_count = $unique_terms[0];
 
-  $extend_forms = array();
+    foreach ($term_and_count as $field_id => $content) {
+        $new_array = [];
+        foreach ($content as $term => $count) {
+            $new_array[] = array($term, $count);
+        }
+        $term_and_count[$field_id] = $new_array;
+    }
 
-  foreach ($term_forms as $term => $forms) {
-
-     foreach ($forms as $form => $value) {
-         $extend_forms[$value] = $term;
-     }
-  }
-
-  $terms_set=array();
-
-  foreach ($terms as $key => $term) {
-      if (in_array($term, $tag_cloud)) {
-          if (!array_key_exists($term, $terms_set)) {
-             $terms_set[$term] = 0;
-          }
-
-          $terms_set[$term] +=1;
-
-      } else if (array_key_exists($term, $extend_forms)) {
-        $term = $extend_forms[$term];
-         if (!array_key_exists($term, $terms_set)) {
-            $terms_set[$term] = 0;
-         }
-         $terms_set[$term] +=1;
-      }
-
-  }
-
-  $result = array();
-
-  foreach ($terms_set as $key => $value) {
-    array_push($result, array($key, $value));
-  }
-
-  return $result;
-
+    return array($term_and_count, $unique_terms[1]);
 }
-
 
 class LogisticRegression extends ModelFields {
    /*
@@ -142,7 +114,7 @@ class LogisticRegression extends ModelFields {
          if (file_exists($logistic_regression))
          {
             $logistic_regression = json_decode(file_get_contents($logistic_regression));
-         } else if (!($api::_checkModelId($logistic_regression)) ) {
+         } elseif (!($api::_checkLogisticRegressionId($logistic_regression)) ) {
             error_log("Wrong logistic regression id");
             return null;
          } else {
@@ -351,7 +323,7 @@ class LogisticRegression extends ModelFields {
       }
 
       #Compute text and categorical field expansion
-      $unique_terms = $this->get_unique_terms($input_data);
+      $unique_terms = $this->get_unique_terms($input_data, true, "pair_count");
       $input_data = $unique_terms[1];
       $unique_terms = $unique_terms[0];
 
@@ -523,78 +495,6 @@ class LogisticRegression extends ModelFields {
      return $probability;
 
    }
-
-   public function get_unique_terms($input_data) {
-      /* Parses the input data to find the list of unique terms in the
-         tag cloud */
-
-      $unique_terms = array();
-      foreach($this->term_forms as $field_id => $field) {
-         if (array_key_exists($field_id, $input_data) ) {
-            $input_data_field = (array_key_exists($field_id, $input_data)) ?  $input_data[$field_id] : '';
-
-            if (is_string($input_data_field)) {
-               $case_sensitive = (array_key_exists('case_sensitive', $this->term_analysis[$field_id])) ? $this->term_analysis[$field_id]->case_sensitive : true;
-               $token_mode = (array_key_exists('token_mode', $this->term_analysis[$field_id])) ? $this->term_analysis[$field_id]->token_mode : 'all';
-
-               if ($token_mode != Predicate::TM_FULL_TERM) {
-                  $terms = parse_terms($input_data_field, $case_sensitive);
-               } else {
-                  $terms = array();
-               }
-
-               if ($token_mode != Predicate::TM_TOKENS) {
-                  array_push($terms, ($case_sensitive) ? $input_data_field : strtolower($input_data_field) );
-               }
-
-               $unique_terms[$field_id] = logistic_get_unique_terms($terms,
-                                                        $this->term_forms[$field_id],
-                                                        array_key_exists($field_id, $this->tag_clouds) ? $this->tag_clouds[$field_id] : array());
-
-            } else {
-              $unique_terms[$field_id] = array(array($input_data_field, 1));
-            }
-            unset($input_data[$field_id]);
-
-         }
-      }
-
-      # the same for items fields
-      foreach($this->item_analysis as $field_id => $value){
-         if ( array_key_exists($field_id, $input_data) ) {
-            $input_data_field = (array_key_exists($field_id, $input_data)) ?  $input_data[$field_id] : '';
-
-            if (is_string($input_data_field)) {
-               $separator = (property_exists($this->item_analysis[$field_id], 'separator')) ? $value->separator : ' ';
-               $regexp = (property_exists($this->item_analysis[$field_id], 'separator_regexp')) ? $value->separator_regexp : null;
-
-               if (is_null($regexp)) {
-                  $regexp='' . preg_quote($separator);
-               }
-
-               $terms = parse_items($input_data_field, $regexp);
-                $unique_terms[$field_id] = get_unique_terms($terms,
-                                                            array(),
-                                                          array_key_exists($field_id, $this->items) ? $this->items[$field_id] : array());
-            } else {
-               $unique_terms[$field_id] = array(array($input_data_field,1));
-            }
-
-            unset($input_data[$field_id]);
-        }
-      }
-
-      foreach ($this->categories as $field_id => $value) {
-         if (array_key_exists($field_id, $input_data)) {
-	     $input_data_field = (array_key_exists($field_id, $input_data)) ?  $input_data[$field_id] : '';
-	     $unique_terms[$field_id]=array(array($input_data_field, 1));
-	     unset($input_data[$field_id]);
-	 }
-      }
-
-      return array($unique_terms, $input_data);
-   }
-
 
    public function map_coefficients() {
      /*

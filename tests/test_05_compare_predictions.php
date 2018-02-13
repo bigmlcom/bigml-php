@@ -429,7 +429,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
 			   "distance" => 0.7294650227133437)
 		          );
 
-      foreach($data as $item) {
+      foreach($data as $key=>$item) {
             print "\n Successfully comparing centroids with or without text options\n";
             print "Given I create a data source uploading a ". $item["filename"]. " file\n";
             $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
@@ -472,7 +472,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
 
             print "And I create a local centroid for " . json_encode($item["data_input"]) ."\n";
             $local_centroid = $local_cluster->centroid($item["data_input"]);
-            print "Then the local centroid is " . $item["centroid"] . " with distance " . $item["distance"] . "\n";
+            print "Then the local centroid is " . $local_centroid["centroid_name"] . " with distance " . $local_centroid["distance"] . "\n";
             $this->assertEquals($item["centroid"], $local_centroid["centroid_name"]);
             $this->assertEquals(round($item["distance"],5), round($local_centroid["distance"], 5));
 
@@ -1274,5 +1274,4 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
            $this->assertEquals(round($local_prediction["probability"], 4), round($item["probability"], 4));
        }
     }
-
 }
