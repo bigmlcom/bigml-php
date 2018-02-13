@@ -3129,7 +3129,7 @@ as second parameter::
      require 'vendor/autoload.php';
      $api = new BigML(my_username, my_api_key);
 
-     $local_deepnet = new Deepnet('topicmodel/502fdbcf15526876210042435', $api);
+     $local_deepnet = new Deepnet('deepnet/502fdbcf15526876210042435', $api);
 
 You can also reuse a remote Deepnet JSON structure as previously
 retrieved to build the local Deepnet object::
