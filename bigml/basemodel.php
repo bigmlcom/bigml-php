@@ -77,7 +77,7 @@ class BaseModel extends ModelFields{
          $this->resource_id = $model->resource;
       } else {
          if ($api == null) {
-             $api = new BigML(null, null, null, $storage);
+             $api = new BigML(null, null, null, BigML::getStorage());
          }
  
          if (is_string($model)) {                                
