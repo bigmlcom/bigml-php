@@ -178,7 +178,7 @@ class as follows::
 NOTICE: BigML API used to provide a sandbox mode, also know as
 development mode. This has been deprecated and is not supported in the
 PHP binding anymore. To guarantee backward-compatibility, the BigML
-class constructor still support the specification of a ``dev_mode``
+class constructor still supports the specification of a ``dev_mode``
 argument, but it is now ignored.
 
 Setting the storage argument in the api instantiation::

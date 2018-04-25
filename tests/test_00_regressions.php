@@ -2,27 +2,15 @@
 
 include 'test_utils.php';
 
-if (!class_exists('BigML\BigML')) {
-    include '../bigml/bigml.php';
-}
-
-if (!class_exists('BigML\Model')) {
-    include '../bigml/model.php';
-}
-
 if (!class_exists('BigML\BaseModel')) {
     include '../bigml/basemodel.php';
 }
 
 use BigML\BigML;
 use BigML\BigMLRequest;
-use BigML\Cluster;
-use BigML\Anomaly;
 use BigML\BaseModel;
-use BigML\Model;
-use BigML\LogisticRegression;
 
-class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
+class BigMLTestCompareRegressions extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
@@ -48,16 +36,13 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
 
     public function test_scenario1() {
 
-        $data = array(array("filename" => "data/iris.csv",
-                            "data_input" => array("petal width"=> 0.5),
-                            "objective"=> '000004',
-                            "prediction" => 'Iris-setosa'));
+        $data = array(array("filename" => "data/iris.csv"));
 
         foreach($data as $item) {
-            print "\nSuccessfully comparing predictions:\n";
+            print "\nSuccessfully creating BaseModel with default API object:\n";
 
             print "Given I create a data source uploading a ". $item["filename"]. " file\n";
-            $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
+            $source = self::$api->create_source($item["filename"],$options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
 
@@ -82,12 +67,12 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
             $resource = self::$api->_check_resource($model->resource, null, 10000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "And I create a local model " . $model->resource . "\n";
+            print "And I create a base model " . $model->resource . "\n";
             $localmodel = new BaseModel($model->resource);
         }
     }
     #
-    # Successfully comparing predictions
+    # Successfully creating base model with default API object
     #
 
 }
