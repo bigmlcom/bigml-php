@@ -41,15 +41,6 @@ class BigML {
    private static $__apiKey = null;
 
    /**
-       * The BigML Environment Mode
-       *
-       * @var string
-       * @access private
-       * @static
-     */
-     private static $devMode = false;
-
-   /**
        * The BigML Virual Private domain
        *
        * @var string
@@ -84,7 +75,6 @@ class BigML {
       if ($username !== null && $apiKey !== null)
          self::setAuth($username, $apiKey);
 
-      self::$devMode = $devMode;
       self::$domain = $domain;
       self::$version= $version;
 
@@ -112,7 +102,8 @@ class BigML {
    }
 
    public static function setDevMode($devMode=false) {
-      self::$devMode = $defMode;
+       trigger_error('Deprecated BigML::setDevMode.',
+                     E_USER_NOTICE);
    }
 
    /**
@@ -125,7 +116,9 @@ class BigML {
    }
 
    public static function isDevMode() {
-      return self::$devMode;
+       trigger_error('Deprecated BigML::isDevMode.',
+                     E_USER_NOTICE);
+       return false;
    }
 
    public static function getUsername() {
@@ -2933,7 +2926,6 @@ class BigML {
       $this->endpoint=(BigML::getDomain() != null) ? BigML::getDomain() : BigML::BIGML_ENDPOINT;
       $this->headers['Host'] = str_replace('https://','', $this->endpoint);
 
-      $this->endpoint.=(BigML::isDevMode() == true) ? '/dev' : '' ; 
       $this->method = $method;
       $this->version = BigML::getVersion();
       $this->uri = $uri;
