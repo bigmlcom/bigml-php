@@ -998,7 +998,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                        array('filename' => 'data/iris.csv',
                            'options' => array("fields" => array("000000" => array("optype" => "categorical"))),
                            'data_input' => array("species" => "Iris-setosa"),
-                           'probability' => 0.0511,
+                           'probability' => 0.051,
                            'prediction' => "5.0",
                            'objective' => '000000',
                            'params' => array("balance_fields" => false, "field_codings" => array(array("field" => "species", "coding" => "contrast", "coefficients" => array(array(1,2,-1,-2)))))
@@ -1006,7 +1006,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                        array('filename' => 'data/iris.csv',
                            'options' => array("fields" => array("000000" => array("optype" => "categorical"))),
                            'data_input' => array("species" => "Iris-setosa"),
-                           'probability' => 0.0511,
+                           'probability' => 0.051,
                            'prediction' => "5.0",
                            'objective' => '000000',
                            'params' => array("balance_fields" => false, "field_codings" => array(array("field" => "species", "coding" => "other", "coefficients" => array(array(1,2,-1,-2))))),
@@ -1168,7 +1168,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                                   "source_parser"=> array("separator" => ";")),
                             'data_input' => array("timestamp" => "999999999"),
                             'prediction' => "4",
-                            'probability' => 0.3231,
+                            'probability' => 0.4028,
                             'objective' => "000009",
                             'parms' => array("balance_fields" => false)
                           ),

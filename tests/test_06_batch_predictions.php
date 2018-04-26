@@ -117,7 +117,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
           print "And I create a ensemble from ";
-          $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "tlp"=> $item["tlp"], "ensemble_sample" => array("seed" => 'BigML', 'rate'=> 0.70)));
+          $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "ensemble_sample" => array("seed" => 'BigML', 'rate'=> 0.70)));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $ensemble->code);
 
           print "And I wait until the ensemble is ready\n";

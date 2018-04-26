@@ -77,8 +77,8 @@ class BigMLTestEnsemble extends PHPUnit_Framework_TestCase
             $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "And I create an ensemble of " . json_encode($item["number_of_models"]) . " and " . $item["tlp"] . " tlp\n";
-            $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "tlp"=> $item["tlp"], "ensemble_sample" => array("seed" => 'BigML', 'rate'=> 0.70)));
+            print "And I create an ensemble of " . json_encode($item["number_of_models"]) . "\n";
+            $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "ensemble_sample" => array("seed" => 'BigML', 'rate'=> 0.70)));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $ensemble->code);
 
             print "And I wait until the ensemble is ready\n";

@@ -67,8 +67,8 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
             $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "And create a ensemble of ". $item["number_of_models"] . " models and ". $item["tlp"] . " tlp\n";
-            $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "tlp"=> $item["tlp"], "ensemble_sample" => array("seed" => 'BigML', 'rate'=> 0.70)));
+            print "And create a ensemble of ". $item["number_of_models"] . " models.\n";
+            $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "ensemble_sample" => array("seed" => 'BigML', 'rate'=> 0.70)));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $ensemble->code);
 
             print "And I wait until the ensemble is ready\n";
@@ -194,8 +194,8 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
             $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "And I create a ensemble of " .$item["number_of_models"] . "  models and ". $item["tlp"] . " tlp\n";
-            $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "tlp"=> $item["tlp"], "ensemble_sample" => array("seed" => 'BigML', 'rate'=> 0.70)));
+            print "And I create a ensemble of " .$item["number_of_models"] . "  models.\n";
+            $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "ensemble_sample" => array("seed" => 'BigML', 'rate'=> 0.70)));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $ensemble->code);
 
             print "And I wait until the ensemble is ready\n";
@@ -320,8 +320,8 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
             $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-            print "And I create a ensemble of " . $item["number_of_models"] . " models and " . $item["tlp"] . " tlp\n";
-            $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "tlp"=> $item["tlp"], "ensemble_sample" => array("seed" => 'BigML', 'rate'=> 0.70)));
+            print "And I create a ensemble of " . $item["number_of_models"] . " models.\n";
+            $ensemble = self::$api->create_ensemble($dataset->resource, array("number_of_models"=> $item["number_of_models"], "ensemble_sample" => array("seed" => 'BigML', 'rate'=> 0.70)));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $ensemble->code);
 
             print "And I wait until the ensemble is ready\n";
@@ -363,11 +363,11 @@ class BigMLTestLocalEnsemble extends PHPUnit_Framework_TestCase
             $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
             $this->assertEquals(1, $source->object->status->code);
-            
+
             print "And I wait until the source is ready\n";
             $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
-            
+
             print "And I create dataset with local source\n";
             $dataset = self::$api->create_dataset($source->resource);
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
