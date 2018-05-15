@@ -88,6 +88,7 @@ class Deepnet extends ModelFields{
 //             - a deepnet structure
 //             - a deepnet id
 //             - a path to a JSON file containing a deepnet structure
+echo "DEEPNET CONSTRUCTOR -- 1\n";
 
         if ($api == null) {
             $api = new BigML(null, null, null, $storage);
@@ -97,12 +98,12 @@ class Deepnet extends ModelFields{
             if (file_exists($deepnet)) {
                 $deepnet = json_decode(file_get_contents($deepnet));
                 $this->resource_id = $deepnet["resource"];
-            } elseif (!($api::_checkDeepnetId($deepnet)) ) {
+            } elseif (!($api->_checkDeepnetId($deepnet)) ) {
                 error_log("Wrong deepnet id");
                 return null;
             } else {
-                $deepnet = $api::retrieve_resource($deepnet, 
-                                                   $api::ONLY_MODEL);
+                $deepnet = $api->retrieve_resource($deepnet, 
+                                                   BigML::ONLY_MODEL);
             }
         }
 
@@ -126,10 +127,14 @@ class Deepnet extends ModelFields{
                 $objective_id = extract_objective($deepnet->objective_fields);
                 $deepnet = $deepnet->deepnet;
 
+echo "EXTRACTED OBJ\n";
+
                 $this->fields = $deepnet->fields;
                 parent::__construct($this->fields, 
                                     $objective_id, 
                                     null, null, true, true);
+
+echo "PARENT CXONSTRUCTED\n";
 
                 $this->regression = ($this->fields->$objective_id->optype ==
                                      NUMERIC);
@@ -140,11 +145,13 @@ class Deepnet extends ModelFields{
                     sort($this->class_names);
                 }
 
+echo "PARENT CXONSTRUCTED -- 1\n";
                 if (array_key_exists("missing_numerics", $deepnet)) {
                     $this->missing_numerics = $deepnet->missing_numerics;
                 } else {
                     $this->missing_numerics = false;
                 }
+echo "PARENT CXONSTRUCTED -- 2\n";
                 if (array_key_exists("network", $deepnet)) {
                     $network = $deepnet->network;
                     $this->network = $network;
@@ -153,6 +160,7 @@ class Deepnet extends ModelFields{
                     } else {
                         $this->networks = [];
                     }
+echo "PARENT CXONSTRUCTED -- 3\n";
                     $this->preprocess = $network->preprocess;
                     if (array_key_exists("optimizer", $network)) {
                         $this->optimizer = $network->optimizer;

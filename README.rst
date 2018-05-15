@@ -191,6 +191,34 @@ For Virtual Private Cloud setups, you can change the remote server domain::
     
    $api = new BigML\BigML("myusername", "my_api_key", true, 'storage/data', my_VPC.bigml.io);
 
+Projects and Organizations
+--------------------------
+
+When you instantiate the BigML class you can specify a project or
+organization that the instance shall default to:
+
+   $api = new BigML\BigML("myusername","my_api_key", true, null,
+                           null, null, null, $projectID);
+
+   $api = new BigML\BigML("myusername","my_api_key", true, null,
+                           null, null, null, null, $organizationID);
+
+When $project is set to a project ID and that project exists for an
+organization, the user is considered to be working in an organization
+project. The scope of the API requests will be limited to this project
+and permissions should be previously given by the organization
+administrator.
+
+If the specified project does not belong to an organization but is a
+project of the user's, then the scope of all API requests will be
+limited to that project.
+
+When $organization is set to an organization ID, the user is considered
+to be working for an organization. The scope of the API requests will
+be limited to the projects of the organization and permissions need to
+be previously given by the organization administrator.
+
+
 Quick Start
 -----------
 

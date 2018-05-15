@@ -47,11 +47,11 @@ class BoostedEnsemble extends ModelFields{
       $this->ensemble_id = null;
       $models = array();
 
-      if (is_string($ensemble) && $api != null && $api::_checkEnsembleId($ensemble)) {
-            $ensemble = $api::get_ensemble($ensemble);
+      if (is_string($ensemble) && $api != null && $api->_checkEnsembleId($ensemble)) {
+            $ensemble = $api->get_ensemble($ensemble);
       }
 
-      if ($ensemble instanceof \STDClass && property_exists($ensemble, "resource") && $api::_checkEnsembleId($ensemble->resource) && $ensemble->object->status->code == 5) {
+      if ($ensemble instanceof \STDClass && property_exists($ensemble, "resource") && $api->_checkEnsembleId($ensemble->resource) && $ensemble->object->status->code == 5) {
 
           parent::__construct($ensemble->object->ensemble->fields);
  
@@ -85,7 +85,7 @@ class BoostedEnsemble extends ModelFields{
             if (!is_string($mo) && is_a($mo, "BoostedTree") ) {
                $m = $mo;
             } else {
-               $model = $api::retrieve_resource($mo, $api::ONLY_MODEL);
+               $model = $api->retrieve_resource($mo, BigML::ONLY_MODEL);
                $m = new BoostedTree($model->object->model->root, $this->fields, $model->object->model->boosting);
             }
             $this->models[] = clone $m;

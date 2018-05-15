@@ -121,12 +121,12 @@ class TopicModel extends ModelFields{
       }
 
       if (is_string($topicmodel)) {
-          if (!($api::_checkTopicmodelId($topicmodel)) ) {
+          if (!($api->_checkTopicmodelId($topicmodel)) ) {
               error_log("Wrong topic model id");
               return null;
           }
           
-          $topicmodel = $api::retrieve_resource($topicmodel, $api::ONLY_MODEL);
+          $topicmodel = $api->retrieve_resource($topicmodel, BigML::ONLY_MODEL);
       }
 
       if (property_exists($topicmodel, "object") && property_exists($topicmodel->object, "status") && $topicmodel->object->status->code != BigMLRequest::FINISHED ) {

@@ -80,8 +80,8 @@ class Ensemble {
             } else if ($model_id instanceof \STDClass) {
                 array_push($models, $model_id);
                $this->objective_id = $model_id->object->objective_field;
-            } else if ($api != null && $api::_checkModelId($model_id)) {
-                $m = $api::get_model($model_id);
+            } else if ($api != null && $api->_checkModelId($model_id)) {
+                $m = $api->get_model($model_id);
 
                if ($m != null) {
                  array_push($models, $m);
@@ -101,11 +101,11 @@ class Ensemble {
          $this->distributions = null;
 
       } else {
-         if (is_string($ensemble) && $api != null && $api::_checkEnsembleId($ensemble)) {
-            $ensemble = $api::get_ensemble($ensemble);
+         if (is_string($ensemble) && $api != null && $api->_checkEnsembleId($ensemble)) {
+            $ensemble = $api->get_ensemble($ensemble);
          }
 
-         if ($ensemble instanceof \STDClass && property_exists($ensemble, "resource") && $api::_checkEnsembleId($ensemble->resource) && $ensemble->object->status->code == 5) {
+         if ($ensemble instanceof \STDClass && property_exists($ensemble, "resource") && $api->_checkEnsembleId($ensemble->resource) && $ensemble->object->status->code == 5) {
 
             $this->boosting = isset($ensemble->object->boosting);
 
@@ -152,7 +152,7 @@ class Ensemble {
             if (!is_string($model_id) && is_a($model_id, "BigML\Model") ) {
               $mo = $model_id;
             } else {
-              $mo = $api::retrieve_resource($model_id, $api::ONLY_MODEL);
+              $mo = $api->retrieve_resource($model_id, BigML::ONLY_MODEL);
             }
 
             $models[] = clone $mo;
@@ -273,7 +273,7 @@ class Ensemble {
          foreach($this->models_splits as $model_split) {
             $models = array();
             foreach($model_split as $model_id) {
-               array_push($models, $api::retrieve_resource($model_id, $api::ONLY_MODEL));
+               array_push($models, $api->retrieve_resource($model_id, BigML::ONLY_MODEL));
             }
 
             $multi_model = new MultiModel($models, $this->api);
@@ -382,7 +382,7 @@ class Ensemble {
               foreach($this->models_splits as $model_split) {
                   $models = array();
                   foreach($model_split as $model_id) {
-                      array_push($models, $api::retrieve_resource($model_id, $api::ONLY_MODEL));
+                      array_push($models, $api->retrieve_resource($model_id, BigML::ONLY_MODEL));
                   }
 
                   $multi_model = new MultiModel($models, $this->api, $this->fields, $this->class_names);

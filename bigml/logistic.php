@@ -114,11 +114,12 @@ class LogisticRegression extends ModelFields {
          if (file_exists($logistic_regression))
          {
             $logistic_regression = json_decode(file_get_contents($logistic_regression));
-         } elseif (!($api::_checkLogisticRegressionId($logistic_regression)) ) {
+         } elseif (!($api->_checkLogisticRegressionId($logistic_regression)) ) {
             error_log("Wrong logistic regression id");
             return null;
          } else {
-            $logistic_regression = $api::retrieve_resource($logistic_regression, $api::ONLY_MODEL);
+            $logistic_regression = $api->retrieve_resource($logistic_regression,
+                                                           BigML::ONLY_MODEL);
          }
       }
 
