@@ -88,7 +88,6 @@ class Deepnet extends ModelFields{
 //             - a deepnet structure
 //             - a deepnet id
 //             - a path to a JSON file containing a deepnet structure
-echo "DEEPNET CONSTRUCTOR -- 1\n";
 
         if ($api == null) {
             $api = new BigML(null, null, null, $storage);
@@ -127,14 +126,10 @@ echo "DEEPNET CONSTRUCTOR -- 1\n";
                 $objective_id = extract_objective($deepnet->objective_fields);
                 $deepnet = $deepnet->deepnet;
 
-echo "EXTRACTED OBJ\n";
-
                 $this->fields = $deepnet->fields;
                 parent::__construct($this->fields, 
                                     $objective_id, 
                                     null, null, true, true);
-
-echo "PARENT CXONSTRUCTED\n";
 
                 $this->regression = ($this->fields->$objective_id->optype ==
                                      NUMERIC);
@@ -145,13 +140,12 @@ echo "PARENT CXONSTRUCTED\n";
                     sort($this->class_names);
                 }
 
-echo "PARENT CXONSTRUCTED -- 1\n";
                 if (array_key_exists("missing_numerics", $deepnet)) {
                     $this->missing_numerics = $deepnet->missing_numerics;
                 } else {
                     $this->missing_numerics = false;
                 }
-echo "PARENT CXONSTRUCTED -- 2\n";
+
                 if (array_key_exists("network", $deepnet)) {
                     $network = $deepnet->network;
                     $this->network = $network;
@@ -160,7 +154,6 @@ echo "PARENT CXONSTRUCTED -- 2\n";
                     } else {
                         $this->networks = [];
                     }
-echo "PARENT CXONSTRUCTED -- 3\n";
                     $this->preprocess = $network->preprocess;
                     if (array_key_exists("optimizer", $network)) {
                         $this->optimizer = $network->optimizer;

@@ -159,15 +159,15 @@ class BigML {
 
       $this->storage = assign_dir($storage);
 
-      if ($project == null) {
+/*      if ($project == null) {
          $project = getenv("BIGML_PROJECT");
       }
-      $this->project = $project;
+*/      $this->project = $project;
 
-      if ($org == null) {
+/*      if ($org == null) {
          $org = getenv("BIGML_ORGANIZATION");
       }
-      $this->org = $org;
+*/      $this->org = $org;
    }
 
    /**

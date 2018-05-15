@@ -3,21 +3,21 @@ BigML PHP Bindings v. 2.0
 
 **Notice: the BigML PHP bindings 2.0 may break existing code. In
 particular, all static methods have been removed from the BigML
-class. So, if you ever used the syntaxis, e.g.:
+class. So, if you ever used the syntaxis, e.g.:**
 
     BigML::create_source(...);
 
-you will get an error. On the other hand, if you followed the syntaxis
-which was documented in this README, i.e.,
+**you will get an error. On the other hand, if you followed the syntaxis
+which was documented in this README, i.e.,**
 
     $api->create_source(...)
 
-you will be fine.
+**you will be fine.
 
-Another notice that the old constructor which accepted all of its
-parameters as individual arguments has been deprecated in favour of a
-new one supporting the sprcification of named parameters. Use the new
-syntaxis instead, as described below. The old constructor syntaxis
+**Additionally, notice that the old constructor which accepted all of
+its parameters as individual arguments has been deprecated in favour
+of a new one supporting the sprcification of named parameters. Use the
+new syntaxis instead, as described below. The old constructor syntaxis
 will be maintained until version 3.0, then removed.**
 
 In this repository you'll find an open source PHP library that gives
