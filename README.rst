@@ -1,5 +1,24 @@
-BigML PHP Bindings
-=====================
+BigML PHP Bindings v. 2.0
+=========================
+
+**Notice: the BigML PHP bindings 2.0 may break existing code. In
+particular, all static methods have been removed from the BigML
+class. So, if you ever used the syntaxis, e.g.:
+
+    BigML::create_source(...);
+
+you will get an error. On the other hand, if you followed the syntaxis
+which was documented in this README, i.e.,
+
+    $api->create_source(...)
+
+you will be fine.
+
+Another notice that the old constructor which accepted all of its
+parameters as individual arguments has been deprecated in favour of a
+new one supporting the sprcification of named parameters. Use the new
+syntaxis instead, as described below. The old constructor syntaxis
+will be maintained until version 3.0, then removed.**
 
 In this repository you'll find an open source PHP library that gives
 you a simple way to interact with `BigML <https://bigml.com>`_.
@@ -172,7 +191,8 @@ a breeze::
 You can initialize directly when instantiating the BigML
 class as follows::
 
-   $api = new BigML\BigML("myusername", "my_api_key");
+   $api = new BigML\BigML([ "username" => "myusername",
+                            "apiKey" => "my_api_key"]);
 
 
 NOTICE: BigML API used to provide a sandbox mode, also know as
@@ -183,13 +203,24 @@ argument, but it is now ignored.
 
 Setting the storage argument in the api instantiation::
 
-   $api = new BigML\BigML("myusername", "my_api_key", true, 'storage/data');
+   $api = new BigML\BigML([ "username" => "myusername",
+                            "apiKey" => "my_api_key",
+                            "storage" => "storage/data"]);
 
-all the generated, updated or retrieved resources will be automatically saved to the chosen directory.
+Or, more succinctly:
 
-For Virtual Private Cloud setups, you can change the remote server domain::
+   $api = new BigML\BigML(["storage" => "storage/data"]);
+
+if you have your environment set.
+
+All resources will be created, updated, or retrieved in/from the chosen directory.
+
+For Virtual Private Cloud setups, you can change the remote server domain:
     
-   $api = new BigML\BigML("myusername", "my_api_key", true, 'storage/data', my_VPC.bigml.io);
+   $api = new BigML\BigML([ "username" => "myusername",
+                            "apiKey" => "my_api_key",
+                            "domain" => "my_VPC.bigml.io",
+                            "storage" => "storage/data"]);
 
 Projects and Organizations
 --------------------------
@@ -197,11 +228,13 @@ Projects and Organizations
 When you instantiate the BigML class you can specify a project or
 organization that the instance shall default to:
 
-   $api = new BigML\BigML("myusername","my_api_key", true, null,
-                           null, null, null, $projectID);
+   $api = new BigML\BigML(["username" => "myusername",
+                            "apiKey" => "my_api_key",
+                            "project" => $projectID]);
 
-   $api = new BigML\BigML("myusername","my_api_key", true, null,
-                           null, null, null, null, $organizationID);
+   $api = new BigML\BigML(["username" => "myusername",
+                            "apiKey" => "my_api_key",
+                            "organization" => $organization]);
 
 When $project is set to a project ID and that project exists for an
 organization, the user is considered to be working in an organization
@@ -250,7 +283,7 @@ for).
 
 You can easily generate a prediction following these steps::
 
-    $api = new BigML\BigML("myusername", "my_api_key");
+    $api = new BigML\BigML();
 
     $source = $api->create_source('./tests/data/iris.csv');
     $dataset = $api->create_dataset($source);
@@ -3016,9 +3049,9 @@ You can use the information returned by the API when asking for a
 model to create a Model object in your own computer that will be able
 to produce predictions with no further connection to the remote
 API. The local Model object can be instantiated by using the entire
-response of the GET call to the API::
+response of the GET call to the API:
 
-    $api = new BigML\BigML("username", "api_key", false, 'storage');
+    $api = new BigML\BigML();
 
     $model = api->get_model('model/538XXXXXXXXXXXXXXXXXXX2');
     $local_model = new BigML\Model(model);
@@ -3157,7 +3190,7 @@ a specfic connection object for the remote retrieval, you can set it
 as second parameter::
 
      require 'vendor/autoload.php';
-     $api = new BigML(my_username, my_api_key);
+     $api = new BigML();
 
      $local_deepnet = new Deepnet('deepnet/502fdbcf15526876210042435', $api);
 
@@ -3236,7 +3269,7 @@ remote retrieval, you can set it as second parameter::
 
     require 'vendor/autoload.php';
 
-    $api = new BigML\BigML(my_username, my_api_key);
+    $api = new BigML\BigML();
     $local_topic_model = new BigML\TopicModel('topicmodel/502fdbcf15526876210042435', $api);
 
 You can also reuse a remote topic model JSON structure as previously

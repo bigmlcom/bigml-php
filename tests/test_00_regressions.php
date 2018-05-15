@@ -6,7 +6,6 @@ if (!class_exists('BigML\BigML')) {
     include ('../bigml/bigml.php');
 }
 
-
 if (!class_exists('BigML\BaseModel')) {
     include '../bigml/basemodel.php';
 }
@@ -17,18 +16,17 @@ use BigML\BaseModel;
 
 class BigMLTestCompareRegressions extends PHPUnit_Framework_TestCase
 {
-    protected static $username; # "you_username"
-    protected static $api_key; # "your_api_key"
     protected static $api;
     protected static $project;
 
     public static function setUpBeforeClass() {
-        self::$api =  new BigML(self::$username, self::$api_key, false, "./test-cache");
+        self::$api = new BigML([
+            "storage" => "./test-cache"]);
         ini_set('memory_limit', '512M');
         ini_set('xdebug.max_nesting_level', '300');
-        $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
+        $test_name = basename(preg_replace('/\.php$/', '', __FILE__));
         self::$api->delete_all_project_by_name($test_name);
-        self::$project=self::$api->create_project(array('name'=> $test_name));
+        self::$project = self::$api->create_project(array('name'=> $test_name));
     }
 
     public static function tearDownAfterClass() {

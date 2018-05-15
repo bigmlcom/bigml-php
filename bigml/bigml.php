@@ -116,7 +116,29 @@ class BigML {
                                $version = "andromeda",
                                $project = null,
                                $org = null) {
-        
+      
+      if (is_array($username)) {
+         $options = $username;
+         if (array_key_exists("username", $options))
+            $username = $options["username"];
+         else
+            $username = null;
+         if (array_key_exists("apiKey", $options))
+            $apiKey = $options["apiKey"];
+         if (array_key_exists("storage", $options))
+            $storage = $options["storage"];
+         if (array_key_exists("domain", $options))
+            $domain = $options["domain"];
+         if (array_key_exists("locale", $options))
+            $locale = $options["locale"];
+         if (array_key_exists("version", $options))
+            $version = $options["version"];
+         if (array_key_exists("project", $options))
+            $project = $options["project"];
+         if (array_key_exists("organization", $options))
+            $org = $options["organization"];
+      }
+
       if ($username == null) {
          $username = getenv("BIGML_USERNAME");
       }
