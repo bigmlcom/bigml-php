@@ -95,7 +95,7 @@ class Association extends ModelFields{
             error_log("Wrong association id");
             return null;
          } else {
-            $association = $api::retrieve_resource($association, BigML::ONLY_MODEL);
+            $association = $api->retrieve_resource($association, BigML::ONLY_MODEL);
          }
 
       }

@@ -16,7 +16,7 @@ which was documented in this README, i.e.,**
 
 **Additionally, notice that the old constructor which accepted all of
 its parameters as individual arguments has been deprecated in favour
-of a new one supporting the sprcification of named parameters. Use the
+of a new one supporting the specification of named parameters. Use the
 new syntaxis instead, as described below. The old constructor syntaxis
 will be maintained until version 3.0, then removed.**
 
@@ -177,8 +177,10 @@ All the requests to BigML.io must be authenticated using your username
 and `API key <https://bigml.com/account/apikey>`_. and are always
 transmitted over HTTPS.
 
-This module will look for your username and API key in the environment variables BIGML_USERNAME and BIGML_API_KEY respectively. 
-You can add the following lines to your .bashrc or .bash_profile to set those variables automatically when you log in::
+This module will look for your username and API key in the environment
+variables BIGML_USERNAME and BIGML_API_KEY respectively.  You can add
+the following lines to your .bashrc or .bash_profile to set those
+variables automatically when you log in::
 
     export BIGML_USERNAME=myusername
     export BIGML_API_KEY=a11e579e7e53fb9abd646a6ff8aa99d4afe83ac2
@@ -188,20 +190,24 @@ a breeze::
 
    $api = new BigML\BigML();
 
-You can initialize directly when instantiating the BigML
-class as follows::
+Otherwise, you can initialize directly when instantiating the BigML
+class as follows by manually supplying your credentials:
 
    $api = new BigML\BigML([ "username" => "myusername",
                             "apiKey" => "my_api_key"]);
 
+Caching
+-------
 
-NOTICE: BigML API used to provide a sandbox mode, also know as
-development mode. This has been deprecated and is not supported in the
-PHP binding anymore. To guarantee backward-compatibility, the BigML
-class constructor still supports the specification of a ``dev_mode``
-argument, but it is now ignored.
+An important feature provided by the api constructor is the
+specification of a local cache to speed up the retrieval of
+resources. If you supply a storage for your BigML instance, the PHP
+bindings will hit the network only once for each resource. On
+subsequent accesses, the resource will be retrieved from the local
+cache.
 
-Setting the storage argument in the api instantiation::
+This is how you can set the storage argument when you instantiate the
+BigML class:
 
    $api = new BigML\BigML([ "username" => "myusername",
                             "apiKey" => "my_api_key",
@@ -215,12 +221,22 @@ if you have your environment set.
 
 All resources will be created, updated, or retrieved in/from the chosen directory.
 
+Virtual Private Clouds
+----------------------
+
 For Virtual Private Cloud setups, you can change the remote server domain:
     
    $api = new BigML\BigML([ "username" => "myusername",
                             "apiKey" => "my_api_key",
                             "domain" => "my_VPC.bigml.io",
                             "storage" => "storage/data"]);
+
+NOTICE: BigML API used to provide a sandbox mode, also know as
+development mode. This has been deprecated and is not supported in the
+PHP binding anymore. To guarantee backward-compatibility, the BigML
+class constructor still supports the specification of a ``dev_mode``
+argument, but it is now ignored.
+
 
 Projects and Organizations
 --------------------------
@@ -281,7 +297,8 @@ for).
     5.7,2.5,5.0,2.0,Iris-virginica
     5.8,2.8,5.1,2.4,Iris-virginica
 
-You can easily generate a prediction following these steps::
+If your credentials are stored in the environment as mentioned above,
+you can easily generate a prediction following these steps:
 
     $api = new BigML\BigML();
 
@@ -290,7 +307,7 @@ You can easily generate a prediction following these steps::
     $model = $api->create_model($dataset);
     $prediction = $api->create_prediction($model, array('sepal length'=> 5, 'sepal width'=> 2.5));
 
-    then:
+then:
 
     $objective_field_name = $prediction->object->fields->{$prediction->object->objective_fields[0]}->name;
 
@@ -3098,7 +3115,7 @@ You can use the information returned by the API when asking for a
 cluster to create a Cluster object in your own computer that will be
 able to produce predictions with no further connection to the remote
 API. The local Cluster object can be instantiated by using the entire
-response of the GET call to the API::
+response of the GET call to the API:
 
     $cluster = $api->get_cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18");
     $local_cluster = new BigML\Cluster($cluster);

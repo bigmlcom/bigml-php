@@ -30,6 +30,7 @@ class BigMLTestOrganizations extends PHPUnit_Framework_TestCase
        self::$test_name = basename(preg_replace('/\.php$/', '', __FILE__));
        self::$api_org->delete_all_project_by_name(self::$test_name);
        self::$project = self::$api_org->create_project(array('name'=> self::$test_name));
+       self::assertEquals($org, self::$project->object->organization);
 
        self::$api = new BigML(["project" => self::$project->resource]);
     }
@@ -49,6 +50,7 @@ class BigMLTestOrganizations extends PHPUnit_Framework_TestCase
         );
         
         foreach($data as $item) {
+
            print "\nSuccessfully creating a prediction:\n";
            print "Given I create a data source uploading a ". $item["filename"]. " file\n";
            $source = self::$api->create_source($item["filename"],
@@ -56,6 +58,7 @@ class BigMLTestOrganizations extends PHPUnit_Framework_TestCase
                                                   'name'=>'local_test_source'));
            $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
            $this->assertEquals(1, $source->object->status->code);
+           $this->assertEquals(self::$project->resource, $source->object->project);
            
            print "And I wait until the source is ready\n";
            $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
