@@ -76,11 +76,11 @@ class Model extends BaseModel{
             if (file_exists($model))
             {
                 $model = json_decode(file_get_contents($model));
-            } else if (!($api::_checkModelId($model)) ) {
+            } else if (!($api->_checkModelId($model)) ) {
                 error_log("Wrong model id");
                 return null;
             } else {
-                $model = $api::retrieve_resource($model, $api::ONLY_MODEL);
+                $model = $api->retrieve_resource($model, BigML::ONLY_MODEL);
             }
         }
 
