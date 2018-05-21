@@ -60,12 +60,12 @@ class Cluster extends ModelFields {
       }
 
       if (is_string($cluster)) {
-         if (!($api::_checkClusterId($cluster)) ) {
+         if (!($api->_checkClusterId($cluster)) ) {
             error_log("Wrong cluster id");
             return null;
          }
 
-         $cluster = $api::retrieve_resource($cluster, $api::ONLY_MODEL);
+         $cluster = $api->retrieve_resource($cluster, BigML::ONLY_MODEL);
       }
 
       if (property_exists($cluster, "object") && property_exists($cluster->object, "status") && $cluster->object->status->code != BigMLRequest::FINISHED ) {

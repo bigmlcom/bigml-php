@@ -59,12 +59,12 @@ class Anomaly extends ModelFields {
 
        if (is_string($anomaly)) {
 
-          if (!($api::_checkAnomalyId($anomaly)) ) {
+          if (!($api->_checkAnomalyId($anomaly)) ) {
              error_log("Wrong anomaly id");
              return null;
           }
 
-          $anomaly = $api::retrieve_resource($anomaly, $api::ONLY_MODEL);
+          $anomaly = $api->retrieve_resource($anomaly, BigML::ONLY_MODEL);
 
        }
 

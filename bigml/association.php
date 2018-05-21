@@ -91,11 +91,11 @@ class Association extends ModelFields{
          if (file_exists($association))
          {
             $association = json_decode(file_get_contents($association));
-         } else if (!($api::_checkAssociationId($association)) ) {
+         } else if (!($api->_checkAssociationId($association)) ) {
             error_log("Wrong association id");
             return null;
          } else {
-            $association = $api::retrieve_resource($association, $api::ONLY_MODEL);
+            $association = $api->retrieve_resource($association, BigML::ONLY_MODEL);
          }
 
       }
