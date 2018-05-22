@@ -1,6 +1,7 @@
 language: php
 env:
-  - BML_TESTS="05"
+  - BML_TESTS="05_a"
+  - BML_TESTS="05_b"
   - BML_TESTS="01 03 04 06 07"
   - BML_TESTS="08 09 10 11 12 36"
   - BML_TESTS="32"
@@ -8,6 +9,7 @@ env:
   - BML_TESTS="21 22 24 25 26 27 28 29 30 31"
   - BML_TESTS="23 38"
 script:
+  - composer update
   - cd tests
   - export TESTS=$(for t in $BML_TESTS; do ls *$t*.php;done|paste -sd " ")
   - echo $TESTS
