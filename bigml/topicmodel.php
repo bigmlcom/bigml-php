@@ -14,21 +14,21 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-/* A local Predictive Topic Model.  
+/* A local Predictive Topic Model.
 
  This module allows you to download and use Topic models for local
  predicitons.  Specifically, the function topic_model.distribution
  allows you to pass in input text and infers a generative distribution
- over the topics in the learned topic model.  
+ over the topics in the learned topic model.
 
  Example usage (assuming that you have previously set up the
  BIGML_USERNAME and BIGML_API_KEY environment variables and that you
- own the topicmodel/id below): 
+ own the topicmodel/id below):
 
  require 'vendor/autoload.php'
 
- $api = new BigML\BigML(); 
- $topic_model = new BigML\TopicModel('topicmodel/5026965515526876630001b2'); 
+ $api = new BigML\BigML();
+ $topic_model = new BigML\TopicModel('topicmodel/5026965515526876630001b2');
  $topic_distribution = topic_model.distribution({"text": "A sample string"}));
 */
 
@@ -93,7 +93,7 @@ function code_to_name($lang) {
             return $stemmer;
         default:
             throw new \Exception("Your language is not currently supported.");
-    }        
+    }
 }
 
 class TopicModel extends ModelFields{
@@ -121,12 +121,12 @@ class TopicModel extends ModelFields{
       }
 
       if (is_string($topicmodel)) {
-          if (!($api::_checkTopicmodelId($topicmodel)) ) {
+          if (!($api->_checkTopicmodelId($topicmodel)) ) {
               error_log("Wrong topic model id");
               return null;
           }
-          
-          $topicmodel = $api::retrieve_resource($topicmodel, $api::ONLY_MODEL);
+
+          $topicmodel = $api->retrieve_resource($topicmodel, BigML::ONLY_MODEL);
       }
 
       if (property_exists($topicmodel, "object") && property_exists($topicmodel->object, "status") && $topicmodel->object->status->code != BigMLRequest::FINISHED ) {
@@ -149,7 +149,7 @@ class TopicModel extends ModelFields{
                   $lang = $model->language;
                   $this->stemmer = code_to_name($lang);
               }
-              
+
               $term_to_index = [];
               foreach ($model->termset as $index => $term) {
                   $term_to_index[$this->stem($term)] = $index;
@@ -206,7 +206,7 @@ class TopicModel extends ModelFields{
         //Checks and cleans input_data leaving the fields used in the model
         $input_data = $this->filter_input_data($input_data, $by_name);
 
-        return $this->distribution_for_text(implode("\n\n", array_values($input_data))); 
+        return $this->distribution_for_text(implode("\n\n", array_values($input_data)));
     }
 
     public function distribution_for_text($text) {
@@ -223,7 +223,7 @@ class TopicModel extends ModelFields{
         $doc = $this->tokenize($astr);
 
         $topics_probability = $this->infer($doc);
-        
+
         $distribution = [];
         foreach ($topics_probability as $index => $probability) {
             $distribution[] = array("name" => $this->topics[$index]->name, "probability" => $probability );
@@ -249,7 +249,7 @@ class TopicModel extends ModelFields{
         if ($this->bigrams && !is_null($first) && !is_null($second)) {
             $bigram = $this->stem($first . " " . $second);
             if (array_key_exists($bigram, $this->term_to_index)) {
-                $out_terms[] = $this->term_to_index[$bigram];                
+                $out_terms[] = $this->term_to_index[$bigram];
             }
         }
 
@@ -297,11 +297,11 @@ class TopicModel extends ModelFields{
                 $index = $next_char[1];
             }
 
-            while ($index < $length 
-                   && (preg_match('/^[\pL\pN]+/u', $char) OR $char == "'") 
+            while ($index < $length
+                   && (preg_match('/^[\pL\pN]+/u', $char) OR $char == "'")
                    && strlen(utf8_decode($buf)) < MAX_TERM_LENGTH) {
                 $buf .= $char;
-                $next_char = $this->next_char($text, $index, $length);                
+                $next_char = $this->next_char($text, $index, $length);
                 $char = $next_char[0];
                 $index = $next_char[1];
             }
@@ -338,10 +338,10 @@ class TopicModel extends ModelFields{
 
         $out_terms = $this->append_bigram($out_terms, $term_before, $last_term);
 
-        return $out_terms;            
+        return $out_terms;
     }
 
-    private function next_char($text, $index, $length) {        
+    private function next_char($text, $index, $length) {
         //Auxiliary function to get next char and index with end check
 
         $index += 1;

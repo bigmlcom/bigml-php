@@ -38,7 +38,7 @@ function print_importance($instance, $out=STDOUT) {
    }   
 }
 
-class BaseModel extends ModelFields{
+class BaseModel extends ModelFields {
    /*
       A lightweight wrapper of the basic model information
 
@@ -77,15 +77,15 @@ class BaseModel extends ModelFields{
          $this->resource_id = $model->resource;
       } else {
          if ($api == null) {
-             $api = new BigML(null, null, null, BigML::getStorage());
+             $api = new BigML(null, null, null);
          }
  
          if (is_string($model)) {                                
-            if (!($api::_checkModelId($model)) ) {
+            if (!($api->_checkModelId($model)) ) {
                error_log("Wrong model id");
                return null;
             }
-            $model = $api::retrieve_resource($model, $api::ONLY_MODEL);
+            $model = $api->retrieve_resource($model, BigML::ONLY_MODEL);
          } 
 
       } 

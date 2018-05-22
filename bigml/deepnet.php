@@ -97,12 +97,12 @@ class Deepnet extends ModelFields{
             if (file_exists($deepnet)) {
                 $deepnet = json_decode(file_get_contents($deepnet));
                 $this->resource_id = $deepnet["resource"];
-            } elseif (!($api::_checkDeepnetId($deepnet)) ) {
+            } elseif (!($api->_checkDeepnetId($deepnet)) ) {
                 error_log("Wrong deepnet id");
                 return null;
             } else {
-                $deepnet = $api::retrieve_resource($deepnet, 
-                                                   $api::ONLY_MODEL);
+                $deepnet = $api->retrieve_resource($deepnet, 
+                                                   BigML::ONLY_MODEL);
             }
         }
 
@@ -145,6 +145,7 @@ class Deepnet extends ModelFields{
                 } else {
                     $this->missing_numerics = false;
                 }
+
                 if (array_key_exists("network", $deepnet)) {
                     $network = $deepnet->network;
                     $this->network = $network;

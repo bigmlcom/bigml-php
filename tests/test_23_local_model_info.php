@@ -26,7 +26,7 @@ class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
           mkdir('tmp');
        }
        ini_set('memory_limit', '512M');
-       ini_set('xdebug.max_nesting_level', '300');
+       ini_set('xdebug.max_nesting_level', '500');
        $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
        self::$api->delete_all_project_by_name($test_name);
        self::$project=self::$api->create_project(array('name'=> $test_name));
