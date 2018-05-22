@@ -11,4 +11,4 @@ script:
   - cd tests
   - export TESTS=$(for t in $BML_TESTS; do ls *$t*.php;done|paste -sd " ")
   - echo $TESTS
-  - for t in $TESTS; do echo 'running test: '$t;phpunit $t;done
+  - for t in $TESTS; do phpunit $t;done
