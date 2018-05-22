@@ -46,6 +46,8 @@ if (!class_exists('BigML\ModelFields')) {
   include('modelfields.php');
 }
 
+require_once '../vendor/autoload.php';
+
 define("MAX_TERM_LENGTH", 30);
 define("MIN_UPDATES", 16);
 define("MAX_UPDATES", 512);
