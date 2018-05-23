@@ -22,6 +22,7 @@ class BigMLTestAssociations extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
        $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
@@ -66,24 +67,24 @@ class BigMLTestAssociations extends PHPUnit_Framework_TestCase
 
           print "And I wait until the association is ready\n";
           $resource = self::$api->_check_resource($association->resource, null, 10000, 30);
-          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]); 
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
           print "And I update the association name to " . $item["test_name"] . "\n";
           $updated= self::$api->update_association($association->resource, array('name'=> $item["test_name"]));
 
           print "When I wait until the association is ready\n";
           $association = self::$api->get_association($association->resource);
-            
+
           print "Then the associations  name is " . $item["test_name"] . "\n";
           $this->assertEquals($item["test_name"], $association->object->name);
 
-      } 
+      }
     }
 
     public function test_scenario2() {
-      $data = array(array('filename' => 'data/tiny_mushrooms.csv', 
+      $data = array(array('filename' => 'data/tiny_mushrooms.csv',
 	                      'item_list'=> array('Edible'),
-			      'json_rule' => '{"rule_id":"000002","confidence":1,"leverage":0.24986,"lhs":[0,21,16,7],"lhs_cover":[0.488,122],"p_value":5.26971e-31,"rhs":[19],"rhs_cover":[0.488,122],"lift":2.04918,"support":[0.488,122]}')); 
+			      'json_rule' => '{"rule_id":"000002","confidence":1,"leverage":0.24986,"lhs":[0,21,16,7],"lhs_cover":[0.488,122],"p_value":5.26971e-31,"rhs":[19],"rhs_cover":[0.488,122],"lift":2.04918,"support":[0.488,122]}'));
 
       foreach($data as $item) {
           print "\nSuccessfully creating local association object\n";
@@ -127,7 +128,7 @@ class BigMLTestAssociations extends PHPUnit_Framework_TestCase
     }
 
     public function test_scenario3() {
-      $data = array(array('filename' => 'data/tiny_mushrooms.csv', 
+      $data = array(array('filename' => 'data/tiny_mushrooms.csv',
                           'item_list' => array('Edible'),
 			  #'json_rule' => '{"p_value":2.08358e-17,"confidence":0.79279,"rhs_cover":[0.704,176],"leverage":0.07885,"rhs":[11],"rule_id":"000007","lift":1.12613,"lhs":[0],"lhs_cover":[0.888,222],"support":[0.704,176]}',
 			  'json_rule' => '{"rule_id":"000007","confidence":0.79279,"leverage":0.07885,"lhs":[0],"lhs_cover":[0.888,222],"p_value":2.08358e-17,"rhs":[11],"rhs_cover":[0.704,176],"lift":1.12613,"support":[0.704,176]}',
@@ -139,7 +140,7 @@ class BigMLTestAssociations extends PHPUnit_Framework_TestCase
          $source = self::$api->create_source($item["filename"], $options=array('project'=> self::$project->resource));
          $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
          $this->assertEquals(1, $source->object->status->code);
-  
+
          print "And I wait until the source is ready\n";
          $resource = self::$api->_check_resource($source->resource, null, 20000, 30);
          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
@@ -160,7 +161,7 @@ class BigMLTestAssociations extends PHPUnit_Framework_TestCase
          print "And I wait until the association is ready\n";
          $resource = self::$api->_check_resource($association->resource, null, 10000, 30);
          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
- 
+
          print $association->resource . "\n";
          $association = self::$api->get_association($association->resource);
          print "And I create a local association\n";
@@ -174,4 +175,4 @@ class BigMLTestAssociations extends PHPUnit_Framework_TestCase
 
       }
     }
-}    
+}

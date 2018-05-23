@@ -17,6 +17,7 @@ class BigMLTestCorrelation extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
        $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
@@ -34,7 +35,7 @@ class BigMLTestCorrelation extends PHPUnit_Framework_TestCase
 
     public function test_scenario1() {
       $data = array(array('filename' => 'data/iris.csv',
-			  'correlation_name' => "my new correlation name")); 
+			  'correlation_name' => "my new correlation name"));
 
 
       foreach($data as $item) {
@@ -52,7 +53,7 @@ class BigMLTestCorrelation extends PHPUnit_Framework_TestCase
           $dataset = self::$api->create_dataset($source->resource);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
           $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
-          
+
           print "And I wait until the dataset is ready\n";
           $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
@@ -72,8 +73,8 @@ class BigMLTestCorrelation extends PHPUnit_Framework_TestCase
 
           print "Then the correlation name is " . $item["correlation_name"]. "\n";
           $this->assertEquals($item["correlation_name"], $correlation->object->name);
-         
-      } 
+
+      }
     }
 
-}    
+}

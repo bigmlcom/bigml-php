@@ -17,6 +17,7 @@ class BigMLTestDownloadDataset extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
        if (!file_exists('tmp')) {
@@ -65,7 +66,7 @@ class BigMLTestDownloadDataset extends PHPUnit_Framework_TestCase
 
 	  print "Then the download dataset file is like " . $item["filename"] . "\n";
 	  $this->assertTrue(\BigML\compareFiles($item["filename"], $item["local_file"]));
- 
-      } 
+
+      }
     }
-}    
+}

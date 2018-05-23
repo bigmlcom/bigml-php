@@ -24,13 +24,14 @@ class BigMLTestMultiModelPredictions extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, false);
        ini_set('memory_limit', '512M');
        $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
        self::$api->delete_all_project_by_name($test_name);
        self::$project=self::$api->create_project(array('name'=> $test_name));
     }
-   
+
     public static function tearDownAfterClass() {
        self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
     }
@@ -38,9 +39,9 @@ class BigMLTestMultiModelPredictions extends PHPUnit_Framework_TestCase
     /*
      Successfully creating a prediction from a multi model
     */
-    
+
     public function test_scenario1() {
-      $data = array(array('filename' => 'data/iris.csv', 
+      $data = array(array('filename' => 'data/iris.csv',
                           'params' => array("tags" => array("mytag"), 'missing_splits' => false),
 			  'data_input' => array("petal width"=> 0.5),
 			  'tag' => 'mytag',
@@ -70,7 +71,7 @@ class BigMLTestMultiModelPredictions extends PHPUnit_Framework_TestCase
           print "And I create model with params " .json_encode($item["params"]) .  "\n";
           $model_1 = self::$api->create_model($dataset->resource, $item["params"]);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $model_1->code);
- 
+
           print "And I wait until the model is ready\n";
           $resource = self::$api->_check_resource($model_1->resource, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
@@ -78,7 +79,7 @@ class BigMLTestMultiModelPredictions extends PHPUnit_Framework_TestCase
           print "And I create model with params " .json_encode($item["params"]) .  "\n";
           $model_2 = self::$api->create_model($dataset->resource, $item["params"]);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $model_2->code);
- 
+
           print "And I wait until the model is ready\n";
           $resource = self::$api->_check_resource($model_2->resource, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
@@ -86,7 +87,7 @@ class BigMLTestMultiModelPredictions extends PHPUnit_Framework_TestCase
           print "And I create model with params " .json_encode($item["params"]) .  "\n";
           $model_3 = self::$api->create_model($dataset->resource, $item["params"]);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $model_3->code);
- 
+
           print "And I wait until the model is ready\n";
           $resource = self::$api->_check_resource($model_3->resource, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
@@ -104,10 +105,10 @@ class BigMLTestMultiModelPredictions extends PHPUnit_Framework_TestCase
 
           print "Then the prediction is ". $item["predictions"] . " \n";
           $this->assertEquals($prediction, $item["predictions"]);
- 
-      } 
+
+      }
     }
-    
+
     // Successfully creating a local batch prediction from a multi model
     public function test_scenario2() {
       $data = array(array('filename' => 'data/iris.csv',
@@ -170,15 +171,15 @@ class BigMLTestMultiModelPredictions extends PHPUnit_Framework_TestCase
           print "When I create a batch multimodel prediction for " . json_encode($item["data_input"]) . " \n";
           $predictions = $local_multimodel->batch_predict($item["data_input"], null, true, false, \BigML\Tree::LAST_PREDICTION, null, false, false);
           $i = 0;
-        
+
           print "Then the predictions are " . json_encode($item["predictions"]) . "\n";
 	  foreach ($predictions as $multivote) {
 	     foreach ($multivote->predictions as $prediction) {
-	        $this->assertEquals($prediction["prediction"], $item["predictions"][$i]); 
-	     } 
-	     $i+=1; 
+	        $this->assertEquals($prediction["prediction"], $item["predictions"][$i]);
+	     }
+	     $i+=1;
 	  }
           $this->assertEquals($i, count($predictions));
       }
     }
-}    
+}

@@ -4,7 +4,7 @@ include 'test_utils.php';
 
 if (!class_exists('BigML\BigML')) {
    include '../bigml/bigml.php';
-}   
+}
 
 use BigML\BigML;
 use BigML\BigMLRequest;
@@ -17,6 +17,7 @@ class BigMLTestSplitDataset extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
        $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
@@ -73,6 +74,6 @@ class BigMLTestSplitDataset extends PHPUnit_Framework_TestCase
           $this->assertEquals(intval($dataset->object->rows * floatval($item['rate'])), $dataset_sample->object->rows);
 
 
-      } 
+      }
     }
-}    
+}

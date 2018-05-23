@@ -23,6 +23,7 @@ class BigMLTestBoostedEnsemble extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, false);
        ini_set('memory_limit', '512M');
        $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
@@ -38,8 +39,8 @@ class BigMLTestBoostedEnsemble extends PHPUnit_Framework_TestCase
     public function test_scenario1() {
 
         $data = array(
-              array("model" => 
-                      array("topic_model" => 
+              array("model" =>
+                      array("topic_model" =>
                             array("alpha" => 0.08,
                                   "beta" => 0.1,
                                   "hashed_seed" => 0,
@@ -99,14 +100,14 @@ class BigMLTestBoostedEnsemble extends PHPUnit_Framework_TestCase
 
     public function testscenerio2() {
 
-        $data = array(array("filename" => 'data/spam.csv', 
-                      "topic_model_name" => 'my new topic model name', 
-                      "params" => array("fields"=> 
-                                        array("000001"=> 
-                                              array("optype"=> "text", 
-                                                    "term_analysis"=> array("case_sensitive" => true, 
-                                                                            "stem_words" => true, 
-                                                                            "use_stopwords" => false, 
+        $data = array(array("filename" => 'data/spam.csv',
+                      "topic_model_name" => 'my new topic model name',
+                      "params" => array("fields"=>
+                                        array("000001"=>
+                                              array("optype"=> "text",
+                                                    "term_analysis"=> array("case_sensitive" => true,
+                                                                            "stem_words" => true,
+                                                                            "use_stopwords" => false,
                                                                             "language" => "en"))))));
 
         foreach($data as $item) {

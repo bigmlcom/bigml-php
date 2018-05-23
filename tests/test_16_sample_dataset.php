@@ -4,7 +4,7 @@ include 'test_utils.php';
 
 if (!class_exists('BigML\BigML')) {
    include '../bigml/bigml.php';
-}   
+}
 
 use BigML\BigML;
 use BigML\BigMLRequest;
@@ -17,6 +17,7 @@ class BigMLTestSampleDataset extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
        $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
@@ -64,19 +65,19 @@ class BigMLTestSampleDataset extends PHPUnit_Framework_TestCase
           print "And I wait the sample is ready " . $sample->resource . " \n";
 	  $resource = self::$api->_check_resource($sample->resource, null, 20000, 30);
 	  $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
-          
+
 	  print "I update the sample name to " . $item["sample_name"] . "\n";
           $sample = self::$api->update_sample($sample->resource, array('name'=> $item["sample_name"]));
           $this->assertEquals(BigMLRequest::HTTP_ACCEPTED, $sample->code);
-         
+
 	  print "When I wait until the sample is ready\n";
 	  $resource = self::$api->_check_resource($sample->resource, null, 20000, 30);
 	  $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
-	 
+
 	  $sample = self::$api->get_sample($sample->resource);
           print "Then the sample name is " . $item["sample_name"] . "\n";
 
           $this->assertEquals($sample->object->name, $item["sample_name"]);
-      } 
+      }
     }
-}    
+}

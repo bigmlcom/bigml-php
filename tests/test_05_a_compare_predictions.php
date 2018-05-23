@@ -37,6 +37,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, false);
        ini_set('memory_limit', '512M');
        ini_set('xdebug.max_nesting_level', '500');

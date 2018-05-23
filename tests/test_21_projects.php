@@ -4,7 +4,7 @@ include 'test_utils.php';
 
 if (!class_exists('BigML\BigML')) {
   include '../bigml/bigml.php';
-}  
+}
 
 use BigML\BigML;
 use BigML\BigMLRequest;
@@ -17,6 +17,7 @@ class BigMLTestProjects extends PHPUnit_Framework_TestCase
     protected static $api;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
     }
@@ -31,7 +32,7 @@ class BigMLTestProjects extends PHPUnit_Framework_TestCase
       print "Testing projects REST api calls\n";
 
       foreach($data as $item) {
-          print "\nTesting projects REST api calls\n"; 
+          print "\nTesting projects REST api calls\n";
           print "Given I create a project with name ". $item["name"]. "\n";
           $project = self::$api->create_project(array('name'=> $item["name"]));
 	  print "And I wait until project is ready\n";
@@ -57,7 +58,7 @@ class BigMLTestProjects extends PHPUnit_Framework_TestCase
 
           $this->assertEquals($resource->code, BigMLRequest::HTTP_NOT_FOUND);
 
-      } 
+      }
     }
 
-}    
+}

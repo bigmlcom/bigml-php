@@ -4,10 +4,10 @@ include 'test_utils.php';
 
 if (!class_exists('BigML\BigML')) {
   include '../bigml/bigml.php';
-} 
-if (!class_exists('BigML\Fields')) { 
+}
+if (!class_exists('BigML\Fields')) {
   include '../bigml/fields.php';
-}  
+}
 
 use BigML\BigML;
 use BigML\BigMLRequest;
@@ -21,6 +21,7 @@ class BigMLTestFields extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
        $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
@@ -50,14 +51,14 @@ class BigMLTestFields extends PHPUnit_Framework_TestCase
           $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
-          $source = self::$api->get_source($source->resource); 
+          $source = self::$api->get_source($source->resource);
           print "And I create a Fields object from the source with objective column " . $item["objective_column"] . "\n";
           $fields = new Fields($source, null, null, null, intval($item["objective_column"]), true);
 
 	  print "Then the object id is " . $item["objective_id"] . "\n";
-          $this->assertEquals($fields->field_id($fields->objective_field), $item["objective_id"]); 
-	  
-      } 
+          $this->assertEquals($fields->field_id($fields->objective_field), $item["objective_id"]);
+
+      }
     }
 
-}    
+}

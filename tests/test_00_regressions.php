@@ -20,6 +20,7 @@ class BigMLTestCompareRegressions extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+        print __FILE__;
         self::$api = new BigML([
             "storage" => "./test-cache"]);
         ini_set('memory_limit', '512M');

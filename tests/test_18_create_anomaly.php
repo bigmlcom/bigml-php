@@ -7,7 +7,7 @@ if (!class_exists('BigML\BigML')) {
 }
 if (!class_exists('BigML\Anomaly')) {
   include '../bigml/anomaly.php';
-}  
+}
 
 use BigML\BigML;
 use BigML\BigMLRequest;
@@ -21,6 +21,7 @@ class BigMLTestAnomaly extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
        $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
@@ -83,11 +84,11 @@ class BigMLTestAnomaly extends PHPUnit_Framework_TestCase
           print "I wait until the anomaly detector is ready\n";
           $resource = self::$api->_check_resource($anomaly->resource, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
-          
+
           print "I check the anomaly detector stems from the original dataset list\n";
           $this->assertEquals($anomaly->object->datasets, array($dataset->resource, $dataset_1->resource));
 
-      } 
+      }
     }
 
     /*
@@ -133,7 +134,7 @@ class BigMLTestAnomaly extends PHPUnit_Framework_TestCase
 
           print "And I wait until the dataset is ready " . $new_dataset->resource . " \n";
           $resource = self::$api->_check_resource($new_dataset->resource, null, 20000, 30);
-          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]); 
+          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
           $dataset = self::$api->get_dataset($new_dataset->resource);
           print "And I check that the dataset has "  . $item["rows"] ." rows\n";
@@ -142,4 +143,4 @@ class BigMLTestAnomaly extends PHPUnit_Framework_TestCase
       }
 
    }
-}    
+}

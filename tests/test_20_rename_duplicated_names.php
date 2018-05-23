@@ -22,13 +22,14 @@ class BigMLTestRenameDuplicatedNames extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
        $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
        self::$api->delete_all_project_by_name($test_name);
        self::$project=self::$api->create_project(array('name'=> $test_name));
     }
-   
+
     public static function tearDownAfterClass() {
        self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
     }
@@ -83,7 +84,7 @@ class BigMLTestRenameDuplicatedNames extends PHPUnit_Framework_TestCase
           $this->assertEquals($local_model->tree->fields->{$item["field_id"]}->name, $item["new_name"]);
 
 
-      } 
+      }
     }
 
-}    
+}

@@ -4,7 +4,7 @@ include 'test_utils.php';
 
 if (!class_exists('BigML\BigML')) {
   include '../bigml/bigml.php';
-} 
+}
 
 if (!class_exists('BigML\MultiModel')) {
   include '../bigml/multimodel.php';
@@ -22,6 +22,7 @@ class BigMLTestMultimodelBatch extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, false);
        ini_set('memory_limit', '512M');
        $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
@@ -36,7 +37,7 @@ class BigMLTestMultimodelBatch extends PHPUnit_Framework_TestCase
      Successfully creating a batch prediction from a multi model
     */
     public function test_scenario1() {
-      $data = array(array('filename' => 'data/iris.csv', 
+      $data = array(array('filename' => 'data/iris.csv',
                           'params' => array("tags" => array("mytag"), 'missing_splits' => false),
 			  'data_input' => array(array("petal width"=> 0.5), array("petal length"=> 6, "petal width"=> 2), array("petal length"=> 4, "petal width"=> 1.5)),
 			  'tag' => 'mytag',
@@ -67,7 +68,7 @@ class BigMLTestMultimodelBatch extends PHPUnit_Framework_TestCase
           print "And I create a model with " . json_encode($item["params"]) . "\n";
           $model_1 = self::$api->create_model($dataset->resource, $item["params"]);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $model_1->code);
- 
+
           $list_of_models = array();
           print "And I wait until the model is ready\n";
           $resource = self::$api->_check_resource($model_1->resource, null, 3000, 30);
@@ -78,7 +79,7 @@ class BigMLTestMultimodelBatch extends PHPUnit_Framework_TestCase
           $model_2 = self::$api->create_model($dataset->resource, $item["params"]);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $model_2->code);
 
-          print "And I wait until the model is ready\n"; 
+          print "And I wait until the model is ready\n";
           $resource = self::$api->_check_resource($model_2->resource, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
           array_push($list_of_models, self::$api->get_model($model_2->resource));
@@ -87,28 +88,28 @@ class BigMLTestMultimodelBatch extends PHPUnit_Framework_TestCase
           $model_3 = self::$api->create_model($dataset->resource, $item["params"]);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $model_3->code);
 
-          print "And I wait until the model is ready\n"; 
+          print "And I wait until the model is ready\n";
           $resource = self::$api->_check_resource($model_3->resource, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
           array_push($list_of_models, self::$api->get_model($model_3->resource));
- 
+
           print "And I create a local multi model\n";
           $local_multimodel = new MultiModel($list_of_models);
 
           if (!is_dir($item["path"]) )
               mkdir($item["path"]);
 
-          print "When I create a batch prediction for ". json_encode($item["data_input"]). 
+          print "When I create a batch prediction for ". json_encode($item["data_input"]).
                  "and save it in " . $item["path"] . "\n";
           $batch_predict = $local_multimodel->batch_predict($item["data_input"], $item["path"]);
- 
-          print "And I combine the votes in " . $item["path"] . "\n"; 
+
+          print "And I combine the votes in " . $item["path"] . "\n";
           $votes=$local_multimodel->batch_votes($item["path"]);
-         
+
           print "Then the plurarity combined predictions are ". json_encode($item["predictions"]) . "\n";
           $i=0;
           foreach($votes as $vote) {
-             $this->assertEquals($item["predictions"][$i], $vote->combine()); 
+             $this->assertEquals($item["predictions"][$i], $vote->combine());
              $i+=1;
           }
 
@@ -116,10 +117,10 @@ class BigMLTestMultimodelBatch extends PHPUnit_Framework_TestCase
           $i=0;
           foreach($votes as $vote) {
              $this->assertEquals($item["predictions"][$i], $vote->combine(1));
-            $i+=1; 
+            $i+=1;
           }
- 
-      } 
+
+      }
     }
 
-}    
+}

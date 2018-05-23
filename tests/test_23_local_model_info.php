@@ -21,6 +21,7 @@ class BigMLTestLocalModelInfo extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, false);
        if (!file_exists('tmp')) {
           mkdir('tmp');

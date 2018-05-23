@@ -4,7 +4,7 @@ include 'test_utils.php';
 
 if (!class_exists('BigML\BigML')) {
    include '../bigml/bigml.php';
-}   
+}
 if (!class_exists('BigML\MultiVote')) {
    include '../bigml/multivote.php';
 }
@@ -20,6 +20,7 @@ class BigMLTestMultiVote extends PHPUnit_Framework_TestCase
     protected static $api;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
     }
@@ -28,13 +29,13 @@ class BigMLTestMultiVote extends PHPUnit_Framework_TestCase
       Successfully computing predictions combinations
      */
     public function test_scenario1() {
-        $data = array(array("predictions" => "./data/predictions_c.json", "method" => 0, "prediction" => "a", "confidence" => 0.450471270879), 
+        $data = array(array("predictions" => "./data/predictions_c.json", "method" => 0, "prediction" => "a", "confidence" => 0.450471270879),
 	              array("predictions" => "./data/predictions_c.json", "method" => 1, "prediction" => "a", "confidence" => 0.552021302649),
 		      array("predictions" => "./data/predictions_c.json", "method" => 2, "prediction" => "a", "confidence" => 0.403632421178),
 		      array("predictions" => "./data/predictions_r.json", "method" => 0, "prediction" => 1.55555556667, "confidence" => 0.400079152063),
 		      array("predictions" => "./data/predictions_r.json", "method" => 1, "prediction" => 1.59376845074, "confidence" => 0.248366474212),
 		      array("predictions" => "./data/predictions_r.json", "method" => 2, "prediction" => 1.55555556667 , "confidence" => 0.400079152063));
-	
+
         foreach($data as $item) {
 	   print "\nSuccessfully computing predictions combinations\n";
 	   $predictions = json_decode(file_get_contents($item["predictions"]));
@@ -44,8 +45,8 @@ class BigMLTestMultiVote extends PHPUnit_Framework_TestCase
 	   print "When I compute the prediction with confidence using method " . $item["method"] . "\n";
 	   $combined_results = $multivote->combine($item["method"], true);
 	   print "And I compute the prediction without confidence using method " . $item["method"] . "\n";
-           $combined_results_no_confidence = $multivote->combine($item["method"]); 
-          
+           $combined_results_no_confidence = $multivote->combine($item["method"]);
+
 
            if ($multivote->is_regression()) {
 	      print "Then the combined prediction is "  . $item["prediction"] . "\n";
@@ -63,4 +64,4 @@ class BigMLTestMultiVote extends PHPUnit_Framework_TestCase
 	   $this->assertEquals(round($combined_results[1], 6), round($item["confidence"],6));
         }
     }
-}    
+}

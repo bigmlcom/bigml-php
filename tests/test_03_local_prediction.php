@@ -4,9 +4,9 @@ include 'test_utils.php';
 
 if (!class_exists('BigML\BigML')) {
   include '../bigml/bigml.php';
-} 
+}
 
-if (!class_exists('BigML\Model')) {  
+if (!class_exists('BigML\Model')) {
  include '../bigml/model.php';
 }
 
@@ -21,6 +21,7 @@ class BigMLTestLocalPredictions extends PHPUnit_Framework_TestCase
     protected static $api;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
     }
@@ -51,15 +52,15 @@ class BigMLTestLocalPredictions extends PHPUnit_Framework_TestCase
      Successfully creating a multiple prediction from a local model in a json file
     */
     public function test_scenario2() {
-        $data = array(array("model"=> 'data/iris_model.json', 
-                            "data_input" => array("petal length" => 3), 
-                            "prediction" => array(array("count" => 42, 
-                                                        "confidence" => 0.4006020980792863, 
-                                                        "prediction" => "Iris-versicolor", 
-                                                        "probability" => 0.5060240963855421), 
-                                            array("count" => 41, 
-                                                  "confidence" => 0.3890868795664999, 
-                                                  "prediction" => "Iris-virginica", 
+        $data = array(array("model"=> 'data/iris_model.json',
+                            "data_input" => array("petal length" => 3),
+                            "prediction" => array(array("count" => 42,
+                                                        "confidence" => 0.4006020980792863,
+                                                        "prediction" => "Iris-versicolor",
+                                                        "probability" => 0.5060240963855421),
+                                            array("count" => 41,
+                                                  "confidence" => 0.3890868795664999,
+                                                  "prediction" => "Iris-virginica",
                                                   "probability" => 0.4939759036144578))));
 
 
@@ -75,4 +76,4 @@ class BigMLTestLocalPredictions extends PHPUnit_Framework_TestCase
 
     }
 
-}    
+}

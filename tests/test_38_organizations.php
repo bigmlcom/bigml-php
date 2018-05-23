@@ -19,6 +19,7 @@ class BigMLTestOrganizations extends PHPUnit_Framework_TestCase
 
     public static function setUpBeforeClass() {
 
+       print __FILE__;
        $org = getenv("BIGML_ORGANIZATION");
        if ($org == null) {
           throw new Exception("You need to define env variable " .
@@ -48,7 +49,7 @@ class BigMLTestOrganizations extends PHPUnit_Framework_TestCase
                             "objective" => "000004",
                             "prediction" => "Iris-setosa")
         );
-        
+
         foreach($data as $item) {
 
            print "\nSuccessfully creating a prediction:\n";
@@ -59,37 +60,37 @@ class BigMLTestOrganizations extends PHPUnit_Framework_TestCase
            $this->assertEquals(BigMLRequest::HTTP_CREATED, $source->code);
            $this->assertEquals(1, $source->object->status->code);
            $this->assertEquals(self::$project->resource, $source->object->project);
-           
+
            print "And I wait until the source is ready\n";
            $resource = self::$api->_check_resource($source->resource, null, 3000, 30);
            $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
-           
+
            print "And I create dataset with local source\n";
            $dataset = self::$api->create_dataset($source->resource);
            $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
            $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
-           
+
            print "And I wait until the dataset is ready\n";
            $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
            $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
-           
+
            print "And I create model\n";
            $model = self::$api->create_model($dataset->resource);
            $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
-           
+
            print "And I wait until the model is ready\n";
            $resource = self::$api->_check_resource($model->resource, null, 3000, 30);
            $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
-           
+
            print "When I create a prediction for " . json_encode($item["data_input"]) . "\n";
            $prediction = self::$api->create_prediction($model, $item["data_input"]);
            $this->assertEquals(BigMLRequest::HTTP_CREATED, $prediction->code);
-           
+
            print "Then the prediction for " . $item["objective"] . " is " . $item["prediction"];
-           
+
            $this->assertEquals($item["prediction"],
                                $prediction->object->prediction->{$item["objective"]});
-           
+
         }
     }
 }

@@ -4,7 +4,7 @@ include 'test_utils.php';
 
 if (!class_exists('BigML\BigML')) {
   include '../bigml/bigml.php';
-} 
+}
 
 use BigML\BigML;
 use BigML\BigMLRequest;
@@ -17,6 +17,7 @@ class BigMLTestExecutions extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
        $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
@@ -46,8 +47,8 @@ class BigMLTestExecutions extends PHPUnit_Framework_TestCase
           print "And I wait until the script is ready\n";
           $resource = self::$api->_check_resource($script->resource, null, 10000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
-     
-          print "And I create a whizzml script execution from an existing script\n"; 
+
+          print "And I create a whizzml script execution from an existing script\n";
           $execution = self::$api->create_execution($script);
 	  print "And I wait until the execution is ready\n";
 	  $resource = self::$api->_check_resource($execution->resource, null, 10000, 30);
@@ -63,21 +64,21 @@ class BigMLTestExecutions extends PHPUnit_Framework_TestCase
 	  print "Then the script id is correct and the value of ". $item["param"] . " is " . $item["param_value"] . " and the result is " . $item["result"] . "\n";
 	  $this->assertEquals($execution->object->{$item["param"]},  $item["param_value"]);
 	  $this->assertEquals($execution->object->execution->results[0],  $item["result"]);
-	  
-      } 
+
+      }
     }
 
     public function test_scenario2() {
       $data = array(array('source_code' => '(+ 1 1)', 'param' => 'name', 'param_value' => 'my execution', 'result' => array(2,2)));
-  
+
       foreach($data as $item) {
           print "\nScenario: Successfully creating a whizzml script execution from a list of scripts:\n";
           print "Given I create a whizzml script from a excerpt of code ". json_encode($item["source_code"]) . "\n";
           $script = self::$api->create_script($item["source_code"]);
-          
+
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $script->code);
           $this->assertEquals(1, $script->object->status->code);
-          
+
           print "And I wait until the script is ready\n";
           $resource = self::$api->_check_resource($script->resource, null, 10000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
@@ -96,10 +97,10 @@ class BigMLTestExecutions extends PHPUnit_Framework_TestCase
           print "And I wait until the execution is ready\n";
           $resource = self::$api->_check_resource($execution->resource, null, 10000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
-          
+
           print "And I update the execution with " . $item["param"] .  ", ".  $item["param_value"] . "\n";
           $resource = self::$api->update_execution($execution->resource, array($item["param"]=>$item["param_value"]));
-          
+
           print "And I wait until the script is ready\n";
           $resource = self::$api->_check_resource($execution->resource, null, 10000, 30);
           $execution = self::$api->get_execution($execution->resource);
@@ -107,8 +108,8 @@ class BigMLTestExecutions extends PHPUnit_Framework_TestCase
           print "Then the script id is correct and the value of ". $item["param"] . " is " . $item["param_value"] . " and the result is " . json_encode($item["result"]) . "\n";
           $this->assertEquals($execution->object->{$item["param"]},  $item["param_value"]);
           $this->assertEquals($execution->object->execution->results,  $item["result"]);
-          
-      } 
+
+      }
     }
 
-}    
+}

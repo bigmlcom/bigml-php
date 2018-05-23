@@ -23,6 +23,7 @@ class BigMLTestDeepnets extends PHPUnit_Framework_TestCase
    protected static $project;
 
    public static function setUpBeforeClass() {
+       print __FILE__;
       self::$api =  new BigML(self::$username, self::$api_key, false);
       ini_set('memory_limit', '5120M');
       $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
@@ -36,29 +37,29 @@ class BigMLTestDeepnets extends PHPUnit_Framework_TestCase
 
    public function test_scenario1() {
 
-      $data2 = array(array("filename" => "data/iris.csv", 
+      $data2 = array(array("filename" => "data/iris.csv",
                           "data_input" => array("petal width" => 4),
                           "objective" => "000004",
                           "prediction" => "Iris-virginica",
                           "params" => array()));
 
-      $data = array(array("filename" => "data/iris.csv", 
+      $data = array(array("filename" => "data/iris.csv",
                            "data_input" => array("petal width" => 4),
                            "objective" => "000004",
                            "prediction" => "Iris-virginica",
                            "params" => array()),
-                     array("filename" => "data/iris.csv", 
-                           "data_input" => array("sepal length" => 4.1, 
+                     array("filename" => "data/iris.csv",
+                           "data_input" => array("sepal length" => 4.1,
                                                  "sepal width" => 2.4),
                            "objective" => "000004",
                            "prediction" => "Iris-setosa",
                            "params" => array()),
-                     array("filename" => "data/iris_missing2.csv", 
+                     array("filename" => "data/iris_missing2.csv",
                            "data_input" => array(),
                            "objective" => "000004",
                            "prediction" => "Iris-setosa",
                            "params" => array()),
-                     array("filename" => "data/spam.csv", 
+                     array("filename" => "data/spam.csv",
                            "data_input" => array(),
                            "objective" => "000000",
                            "prediction" => "ham",
@@ -66,61 +67,61 @@ class BigMLTestDeepnets extends PHPUnit_Framework_TestCase
                            "update_params" => array(
                               "fields"=> array(
                                  "000001"=> array(
-                                    "optype"=> "text", 
+                                    "optype"=> "text",
                                     "term_analysis"=> array(
-                                       "case_sensitive" => true, 
-                                       "stem_words" => true, 
-                                       "use_stopwords" => false, 
+                                       "case_sensitive" => true,
+                                       "stem_words" => true,
+                                       "use_stopwords" => false,
                                        "language" => "en"))))),
-                     array("filename" => "data/iris.csv", 
-                           "data_input" => array("sepal length" => 4.1, 
+                     array("filename" => "data/iris.csv",
+                           "data_input" => array("sepal length" => 4.1,
                                                  "sepal width" => 2.4),
                            "objective" => "000004",
                            "prediction" => "Iris-setosa",
                            "params" => array("search" => true)),
-                     array("filename" => "data/movies.csv", 
+                     array("filename" => "data/movies.csv",
                            "data_input" => array(
-                              "genres" => "Adventure\$Action", 
-                              "timestamp" => 993906291, 
+                              "genres" => "Adventure\$Action",
+                              "timestamp" => 993906291,
                               "occupation" => "K-12 student"),
                            "update_params" => array(
                               "fields" => array(
                                  "000007" => array(
-                                    "optype"=> "items", 
+                                    "optype"=> "items",
                                     "item_analysis" => array(
                                        "separator" => "\$")))),
                            "objective" => "000009",
                            "prediction" => "4.49741",
                            "params" => array()),
-                     array("filename" => "data/movies.csv", 
-                           "data_input" => array("genres" => "Adventure\$Action", 
-                                                 "timestamp" => 993906291, 
+                     array("filename" => "data/movies.csv",
+                           "data_input" => array("genres" => "Adventure\$Action",
+                                                 "timestamp" => 993906291,
                                                  "occupation" => "K-12 student"),
                            "update_params" => array(
                               "fields" => array(
                                  "000007" => array(
-                                    "optype"=> "items", 
+                                    "optype"=> "items",
                                     "item_analysis" => array(
                                        "separator" => "\$")))),
                            "objective" => "000009",
                            "prediction" => "4.49741",
                            "params" => array(
-                              "hidden_layers" => [["number_of_nodes" => 32, 
+                              "hidden_layers" => [["number_of_nodes" => 32,
                                                    "activation_function" => "sigmoid"]])),
-                     array("filename" => "data/movies.csv", 
-                           "data_input" => array("genres" => "Adventure\$Action", 
-                                                 "timestamp" => 993906291, 
+                     array("filename" => "data/movies.csv",
+                           "data_input" => array("genres" => "Adventure\$Action",
+                                                 "timestamp" => 993906291,
                                                  "occupation" => "K-12 student"),
                            "update_params" => array(
                               "fields" => array(
                                  "000007" => array(
-                                    "optype"=> "items", 
+                                    "optype"=> "items",
                                     "item_analysis" => array(
                                        "separator" => "\$")))),
                            "objective" => "000009",
                            "prediction" => "4.49741",
                            "params" => array("search" => true)));
-      
+
       foreach($data as $item) {
          print "\n\nSuccessfully comparing predictions for deepnets:\n";
          print "Given I create a data source uploading a " . $item["filename"] . " file\n";
@@ -164,7 +165,7 @@ class BigMLTestDeepnets extends PHPUnit_Framework_TestCase
          print "The prediction is ";
          $prediction_value = $prediction->object->prediction->$item["objective"];
          print_r($prediction_value);
-            
+
 
          print "\nAnd I create a local deepnet prediction\n";
          $local_prediction = $local_deepnet->predict($item["data_input"]);
@@ -178,7 +179,7 @@ class BigMLTestDeepnets extends PHPUnit_Framework_TestCase
 
          print "The local prediction is ";
          print_r($local_prediction);
-         $this->assertEquals($prediction_value, 
+         $this->assertEquals($prediction_value,
                              $local_prediction);
 
       }

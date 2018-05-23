@@ -4,7 +4,7 @@ include 'test_utils.php';
 
 if (!class_exists('BigML\BigML')) {
   include '../bigml/bigml.php';
-} 
+}
 
 use BigML\BigML;
 use BigML\BigMLRequest;
@@ -17,6 +17,7 @@ class BigMLTestLibraries extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        #self::$api->setDebug(true);
        ini_set('memory_limit', '512M');
@@ -46,7 +47,7 @@ class BigMLTestLibraries extends PHPUnit_Framework_TestCase
           print "And I wait until the library is ready\n";
           $resource = self::$api->_check_resource($library->resource, null, 10000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
-         
+
 	  print "And I update the library with " . $item["param"] .  ", ".  $item["param_value"] . "\n";
           $resource = self::$api->update_library($library->resource, array($item["param"]=>$item["param_value"]));
 
@@ -56,8 +57,8 @@ class BigMLTestLibraries extends PHPUnit_Framework_TestCase
 
 	  print "Then the library code is " . json_encode($item["source_code"]) . " and the value of ". $item["param"] . " is " . $item["param_value"] . "\n";
           $this->assertEquals($library->object->{$item["param"]},  $item["param_value"]);
-	  
-      } 
+
+      }
     }
 
-}    
+}

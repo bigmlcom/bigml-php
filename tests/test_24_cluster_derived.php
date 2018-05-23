@@ -17,6 +17,7 @@ class BigMLTestClusterDerived extends PHPUnit_Framework_TestCase
     protected static $project;
 
     public static function setUpBeforeClass() {
+       print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
        $test_name=basename(preg_replace('/\.php$/', '', __FILE__));
@@ -44,7 +45,7 @@ class BigMLTestClusterDerived extends PHPUnit_Framework_TestCase
           print "And I wail until the source is ready\n";
           $resource = self::$api->_check_resource($source->resource, null, 20000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
-          
+
           print "And I create dataset with local source\n";
           $dataset = self::$api->create_dataset($source->resource);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
@@ -62,11 +63,11 @@ class BigMLTestClusterDerived extends PHPUnit_Framework_TestCase
           print "And I wait until the cluster is ready\n";
           $resource = self::$api->_check_resource($cluster->resource, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
-   
+
           print "When I create a dataset associated to centroid " . $item["centroid"] ."\n";
           $dataset = self::$api->create_dataset($cluster->resource, array('centroid' => $item["centroid"]));
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $dataset->code);
- 
+
           print "And I wait until the dataset is ready\n";
           $resource = self::$api->_check_resource($dataset->resource, null, 3000, 30);
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
@@ -77,14 +78,14 @@ class BigMLTestClusterDerived extends PHPUnit_Framework_TestCase
 
           $this->assertEquals("dataset/" . $cluster->object->cluster_datasets->{$item["centroid"]}, $dataset->resource);
 
- 
-      } 
+
+      }
     }
 
-    /* Successfully creating models for first centroid of a cluster */ 
+    /* Successfully creating models for first centroid of a cluster */
     public function test_scenario2() {
-      $data = array(array('filename' => 'data/iris.csv', 
-                          'centroid' => '000001', 
+      $data = array(array('filename' => 'data/iris.csv',
+                          'centroid' => '000001',
                           'options' => array("model_clusters"=> true, "k" => 8)));
 
       foreach($data as $item) {
@@ -108,7 +109,7 @@ class BigMLTestClusterDerived extends PHPUnit_Framework_TestCase
           $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
           print "And I create a cluster with options " . json_encode($item["options"]) .  " \n";
-          $cluster = self::$api->create_cluster($dataset->resource, $item["options"]); 
+          $cluster = self::$api->create_cluster($dataset->resource, $item["options"]);
           $this->assertEquals(BigMLRequest::HTTP_CREATED, $cluster->code);
           $this->assertEquals(BigMLRequest::QUEUED, $cluster->object->status->code);
 
@@ -131,6 +132,6 @@ class BigMLTestClusterDerived extends PHPUnit_Framework_TestCase
           $this->assertEquals("dataset/" . $cluster->object->cluster_datasets->{$item["centroid"]}, $dataset->resource);
 
       }
-   }   
+   }
 
-}    
+}
