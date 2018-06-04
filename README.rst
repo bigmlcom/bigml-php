@@ -5,14 +5,18 @@ BigML PHP Bindings v. 2.0
 particular, all static methods have been removed from the BigML
 class. So, if you ever used the syntaxis, e.g.:**
 
+.. code-block:: php
+
     BigML::create_source(...);
 
 **you will get an error. On the other hand, if you followed the syntaxis
 which was documented in this README, i.e.,**
 
+.. code-block:: php
+
     $api->create_source(...)
 
-**you will be fine.
+**you will be fine.**
 
 **Additionally, notice that the old constructor which accepted all of
 its parameters as individual arguments has been deprecated in favour
@@ -24,9 +28,9 @@ In this repository you'll find an open source PHP library that gives
 you a simple way to interact with `BigML <https://bigml.com>`_.
 
 This module is licensed under the `Apache License, Version
-2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>`_.
+2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>`_.**
 
-.. contents:: Table of Contents 
+.. contents:: Table of Contents
 
 Requirements
 ------------
@@ -146,7 +150,7 @@ This will install all necessary dependencies.
 Windows:
 
 Follow the instructions on the Composer website for `downloading <https://getcomposer.org/doc/00-intro.md#installation-windows>`_ Composer, and run::
-  
+
   php composer.phar install
 
 This will install all necessary dependencies.
@@ -193,6 +197,8 @@ a breeze::
 Otherwise, you can initialize directly when instantiating the BigML
 class as follows by manually supplying your credentials:
 
+.. code-block:: php
+
    $api = new BigML\BigML([ "username" => "myusername",
                             "apiKey" => "my_api_key"]);
 
@@ -209,11 +215,15 @@ cache.
 This is how you can set the storage argument when you instantiate the
 BigML class:
 
+.. code-block:: php
+
    $api = new BigML\BigML([ "username" => "myusername",
                             "apiKey" => "my_api_key",
                             "storage" => "storage/data"]);
 
 Or, more succinctly:
+
+.. code-block:: php
 
    $api = new BigML\BigML(["storage" => "storage/data"]);
 
@@ -225,7 +235,9 @@ Virtual Private Clouds
 ----------------------
 
 For Virtual Private Cloud setups, you can change the remote server domain:
-    
+
+.. code-block:: php
+
    $api = new BigML\BigML([ "username" => "myusername",
                             "apiKey" => "my_api_key",
                             "domain" => "my_VPC.bigml.io",
@@ -244,6 +256,8 @@ Projects and Organizations
 When you instantiate the BigML class you can specify a project or
 organization that the instance shall default to:
 
+.. code-block:: php
+
    $api = new BigML\BigML(["username" => "myusername",
                             "apiKey" => "my_api_key",
                             "project" => $projectID]);
@@ -251,6 +265,7 @@ organization that the instance shall default to:
    $api = new BigML\BigML(["username" => "myusername",
                             "apiKey" => "my_api_key",
                             "organization" => $organization]);
+
 
 When $project is set to a project ID and that project exists for an
 organization, the user is considered to be working in an organization
@@ -298,7 +313,7 @@ for).
     5.8,2.8,5.1,2.4,Iris-virginica
 
 If your credentials are stored in the environment as mentioned above,
-you can easily generate a prediction following these steps:
+you can easily generate a prediction following these steps::
 
     $api = new BigML\BigML();
 
@@ -308,6 +323,8 @@ you can easily generate a prediction following these steps:
     $prediction = $api->create_prediction($model, array('sepal length'=> 5, 'sepal width'=> 2.5));
 
 then:
+
+.. code-block:: php
 
     $objective_field_name = $prediction->object->fields->{$prediction->object->objective_fields[0]}->name;
 
@@ -321,10 +338,7 @@ then:
 
     petal width for {"sepal length":5,"sepal width":2.5} is 0.30455
 
-    or get data direct: 
-
-
-also generate an evaluation for the model by using::
+also, you can generate an evaluation for the model by using::
 
     $test_source = $api->create_source('./tests/data/iris.csv');
     $test_dataset = $api->create_dataset($test_source);
@@ -334,7 +348,7 @@ also generate an evaluation for the model by using::
 Dataset
 -------
 
-If you want to get some basic statistics for each field you can retrieve 
+If you want to get some basic statistics for each field you can retrieve
 the fields from the dataset as follows to get a dictionary keyed by field id::
 
     $dataset = $api->get_dataset($dataset);
@@ -349,7 +363,7 @@ limits the number of fields that will be included in dataset to 20.
 Model
 -----
 
-One of the greatest things about BigML is that the models that it generates for you are fully white-boxed. 
+One of the greatest things about BigML is that the models that it generates for you are fully white-boxed.
 To get the explicit tree-like predictive model for the example above::
 
     $model = $api->get_model($model_id);
@@ -376,9 +390,9 @@ limits the number of fields that will be included in model to 5.
 Evaluation
 ----------
 
-The predictive performance of a model can be measured using many different measures. 
-In BigML these measures can be obtained by creating evaluations. 
-To create an evaluation you need the id of the model you are evaluating and the id of 
+The predictive performance of a model can be measured using many different measures.
+In BigML these measures can be obtained by creating evaluations.
+To create an evaluation you need the id of the model you are evaluating and the id of
 the dataset that contains the data to be tested with. The result is shown as::
 
     $evaluation = $api->get_evaluation($evaluation_id);
@@ -386,8 +400,8 @@ the dataset that contains the data to be tested with. The result is shown as::
 Cluster
 -------
 
-For unsupervised learning problems, the cluster is used to classify in a limited number of groups your training data. 
-The cluster structure is defined by the centers of each group of data, named centroids, and the data enclosed in the group. 
+For unsupervised learning problems, the cluster is used to classify in a limited number of groups your training data.
+The cluster structure is defined by the centers of each group of data, named centroids, and the data enclosed in the group.
 As for in the model’s case, the cluster is a white-box resource and can be retrieved as a JSON::
 
     $cluster = $api->get_cluster($cluster_id)
@@ -1117,7 +1131,7 @@ where the number of occurrences of the category or term is store. Thus,
 the linear combination is made on the frequency of the categories or terms.
 
 The JSON structure for a logistic regression is::
- 
+
     {   u'balance_objective': False,
         u'category': 0,
         u'code': 200,
@@ -1527,7 +1541,7 @@ The JSON structure for an association resource is::
                         0.10667,
                         16
                     ],
-                    "support":[  
+                    "support":[
                         0.08667,
                         13
                     ]
@@ -1951,441 +1965,442 @@ similarity among others. The topics found in the dataset can also be
 very useful new features before applying other models like
 classification, clustering, or anomaly detection.
 
-The JSON structure for a topic model is::
+The JSON structure for a topic model is:
 
-{
-  "category": 0,
-  "clones": 0,
-  "code": 200,
-  "columns": 1,
-  "configuration": null,
-  "configuration_status": false,
-  "created": "2017-10-23T18:27:46.118000",
-  "credits": 0.0,
-  "credits_per_prediction": 0.0,
-  "dataset": "dataset/59ee239eaf447f0b0b0001ff",
-  "dataset_field_types": {
-    "categorical": 1,
-    "datetime": 0,
-    "effective_fields": 672,
-    "items": 0,
-    "numeric": 0,
-    "preferred": 2,
-    "text": 1,
-    "total": 2
-  },
-  "dataset_status": true,
-  "dataset_type": 0,
-  "description": "",
-  "excluded_fields": [
-    
-  ],
-  "fields_meta": {
-    "count": 1,
-    "limit": 1000,
-    "offset": 0,
-    "query_total": 1,
-    "total": 1
-  },
-  "input_fields": [
-    "000001"
-  ],
-  "locale": "en-us",
-  "max_columns": 2,
-  "max_rows": 656,
-  "name": "spam_ topics",
-  "name_options": "number of topics=12, top-n terms=10, term limit=4096",
-  "number_of_batchtopicdistributions": 0,
-  "number_of_public_topicdistributions": 0,
-  "number_of_topicdistributions": 0,
-  "ordering": 0,
-  "out_of_bag": false,
-  "price": 0.0,
-  "private": true,
-  "project": null,
-  "range": [
-    1,
-    656
-  ],
-  "replacement": false,
-  "resource": "topicmodel/59ee34a23645274acf003cab",
-  "rows": 656,
-  "sample_rate": 1.0,
-  "shared": false,
-  "short_url": "",
-  "size": 54739,
-  "source": "source/59ee23257811dd79430001d9",
-  "source_status": true,
-  "status": {
-    "code": 5,
-    "elapsed": 4992,
-    "message": "The topic model has been created",
-    "progress": 1.0
-  },
-  "subscription": true,
-  "tags": [
-    
-  ],
-  "topic_model": {
-    "alpha": 4.166666666666667,
-    "beta": 0.1,
-    "bigrams": false,
-    "case_sensitive": false,
-    "fields": {
-      "000001": {
-        "column_number": 1,
-        "datatype": "string",
-        "name": "Message",
-        "optype": "text",
-        "order": 0,
-        "preferred": true,
-        "summary": {
-          "average_length": 78.14787,
-          "missing_count": 0,
-          "tag_cloud": [
-            [
-              "call",
-              72
-            ],
-            [
-              "ok",
-              36
-            ],
-            [
-              "gt",
-              34
-            ],
-            [
-              "lt",
-              31
-            ],
-            [
-              "free",
-              30
-            ],
-            [
-              "time",
-              27
-            ],
-            [
-              "ur",
-              27
-            ],
-            [
-              "lor",
-              23
-            ],
-            [
-              "send",
-              23
-            ],
-            [
-              "dont",
-              22
-            ],
-            [
-              "tell",
-              20
-            ],
-            [
-              "text",
-              20
-            ]
-          ],
-          "term_forms": {
-            
+.. code-block:: php
+
+     {"category": 0,
+      "clones": 0,
+      "code": 200,
+      "columns": 1,
+      "configuration": null,
+      "configuration_status": false,
+      "created": "2017-10-23T18:27:46.118000",
+      "credits": 0.0,
+      "credits_per_prediction": 0.0,
+      "dataset": "dataset/59ee239eaf447f0b0b0001ff",
+      "dataset_field_types": {
+        "categorical": 1,
+        "datetime": 0,
+        "effective_fields": 672,
+        "items": 0,
+        "numeric": 0,
+        "preferred": 2,
+        "text": 1,
+        "total": 2
+      },
+      "dataset_status": true,
+      "dataset_type": 0,
+      "description": "",
+      "excluded_fields": [
+
+      ],
+      "fields_meta": {
+        "count": 1,
+        "limit": 1000,
+        "offset": 0,
+        "query_total": 1,
+        "total": 1
+      },
+      "input_fields": [
+        "000001"
+      ],
+      "locale": "en-us",
+      "max_columns": 2,
+      "max_rows": 656,
+      "name": "spam_ topics",
+      "name_options": "number of topics=12, top-n terms=10, term limit=4096",
+      "number_of_batchtopicdistributions": 0,
+      "number_of_public_topicdistributions": 0,
+      "number_of_topicdistributions": 0,
+      "ordering": 0,
+      "out_of_bag": false,
+      "price": 0.0,
+      "private": true,
+      "project": null,
+      "range": [
+        1,
+        656
+      ],
+      "replacement": false,
+      "resource": "topicmodel/59ee34a23645274acf003cab",
+      "rows": 656,
+      "sample_rate": 1.0,
+      "shared": false,
+      "short_url": "",
+      "size": 54739,
+      "source": "source/59ee23257811dd79430001d9",
+      "source_status": true,
+      "status": {
+        "code": 5,
+        "elapsed": 4992,
+        "message": "The topic model has been created",
+        "progress": 1.0
+      },
+      "subscription": true,
+      "tags": [
+
+      ],
+      "topic_model": {
+        "alpha": 4.166666666666667,
+        "beta": 0.1,
+        "bigrams": false,
+        "case_sensitive": false,
+        "fields": {
+          "000001": {
+            "column_number": 1,
+            "datatype": "string",
+            "name": "Message",
+            "optype": "text",
+            "order": 0,
+            "preferred": true,
+            "summary": {
+              "average_length": 78.14787,
+              "missing_count": 0,
+              "tag_cloud": [
+                [
+                  "call",
+                  72
+                ],
+                [
+                  "ok",
+                  36
+                ],
+                [
+                  "gt",
+                  34
+                ],
+                [
+                  "lt",
+                  31
+                ],
+                [
+                  "free",
+                  30
+                ],
+                [
+                  "time",
+                  27
+                ],
+                [
+                  "ur",
+                  27
+                ],
+                [
+                  "lor",
+                  23
+                ],
+                [
+                  "send",
+                  23
+                ],
+                [
+                  "dont",
+                  22
+                ],
+                [
+                  "tell",
+                  20
+                ],
+                [
+                  "text",
+                  20
+                ]
+              ],
+              "term_forms": {
+
+              }
+            },
+            "term_analysis": {
+              "case_sensitive": false,
+              "enabled": true,
+              "language": "en",
+              "stem_words": false,
+              "token_mode": "all",
+              "use_stopwords": false
+            }
           }
         },
-        "term_analysis": {
-          "case_sensitive": false,
-          "enabled": true,
-          "language": "en",
-          "stem_words": false,
-          "token_mode": "all",
-          "use_stopwords": false
-        }
-      }
-    },
-    "hashed_seed": 62146850,
-    "language": "en",
-    "number_of_topics": 12,
-    "term_limit": 4096,
-    "term_topic_assignments": [
-      [
-        0,
-        5,
-        0,
-        1,
-        0,
-        19,
-        0,
-        0,
-        19,
-        0,
-        1,
-        0
-      ],
-      [
-        0,
-        0,
-        0,
-        13,
-        0,
-        0,
-        0,
-        0,
-        5,
-        0,
-        0,
-        0
-      ],
-      [
-        5,
-        0,
-        0,
-        0,
-        0,
-        17,
-        0,
-        0,
-        0,
-        5,
-        0,
-        0
-      ],
-      [
-        0,
-        1,
-        5,
-        0,
-        1,
-        8,
-        12,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      [
-        0,
-        0,
-        0,
-        2,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        16
-      ],
-      [
-        3,
-        0,
-        0,
-        0,
-        0,
-        2,
-        1,
-        0,
-        0,
-        0,
-        12,
-        0
-      ],
-    ],
-    "termset": [
-      "000",
-      "03",
-      "04",
-      "06",
-      "08000839402",
-      "08712460324",
-      "able",
-      "acc",
-      "account",
-      "actually",
-      "address",
-      "afternoon",
-      "aftr",
-      "age",
-      "ah",
-      "aight",
-      "album",
-      "amp",
-      "b'day",
-      "babe",
-      "baby",
-      "babysit",
-      "bad",
-      "bags",
-      "bank",
-      "basic",
-      "bathe",
-      "battery",
-      "claim",
-      "class",
-      "close",
-      "co",
-      "code",
-      "colleagues",
-      "collection",
-      "college",
-      "colour",
-    ],
-    "top_n_terms": 10,
-    "topicmodel_seed": "26c386d781963ca1ea5c90dab8a6b023b5e1d180",
-    "topics": [
-      {
-        "id": "000000",
-        "name": "Topic 00",
-        "probability": 0.09375,
-        "top_terms": [
+        "hashed_seed": 62146850,
+        "language": "en",
+        "number_of_topics": 12,
+        "term_limit": 4096,
+        "term_topic_assignments": [
           [
-            "im",
-            0.04849
+            0,
+            5,
+            0,
+            1,
+            0,
+            19,
+            0,
+            0,
+            19,
+            0,
+            1,
+            0
           ],
           [
-            "hi",
-            0.04717
+            0,
+            0,
+            0,
+            13,
+            0,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0,
+            0
           ],
           [
-            "love",
-            0.04585
+            5,
+            0,
+            0,
+            0,
+            0,
+            17,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0
           ],
           [
-            "please",
-            0.02867
+            0,
+            1,
+            5,
+            0,
+            1,
+            8,
+            12,
+            0,
+            0,
+            0,
+            0,
+            0
           ],
           [
-            "tomorrow",
-            0.02867
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            16
           ],
           [
-            "cos",
-            0.02823
+            3,
+            0,
+            0,
+            0,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            12,
+            0
           ],
-          [
-            "sent",
-            0.02647
-          ],
-          [
-            "da",
-            0.02383
-          ],
-          [
-            "meet",
-            0.02207
-          ],
-          [
-            "dinner",
-            0.01898
-          ]
-        ]
+        ],
+        "termset": [
+          "000",
+          "03",
+          "04",
+          "06",
+          "08000839402",
+          "08712460324",
+          "able",
+          "acc",
+          "account",
+          "actually",
+          "address",
+          "afternoon",
+          "aftr",
+          "age",
+          "ah",
+          "aight",
+          "album",
+          "amp",
+          "b'day",
+          "babe",
+          "baby",
+          "babysit",
+          "bad",
+          "bags",
+          "bank",
+          "basic",
+          "bathe",
+          "battery",
+          "claim",
+          "class",
+          "close",
+          "co",
+          "code",
+          "colleagues",
+          "collection",
+          "college",
+          "colour",
+        ],
+        "top_n_terms": 10,
+        "topicmodel_seed": "26c386d781963ca1ea5c90dab8a6b023b5e1d180",
+        "topics": [
+          {
+            "id": "000000",
+            "name": "Topic 00",
+            "probability": 0.09375,
+            "top_terms": [
+              [
+                "im",
+                0.04849
+              ],
+              [
+                "hi",
+                0.04717
+              ],
+              [
+                "love",
+                0.04585
+              ],
+              [
+                "please",
+                0.02867
+              ],
+              [
+                "tomorrow",
+                0.02867
+              ],
+              [
+                "cos",
+                0.02823
+              ],
+              [
+                "sent",
+                0.02647
+              ],
+              [
+                "da",
+                0.02383
+              ],
+              [
+                "meet",
+                0.02207
+              ],
+              [
+                "dinner",
+                0.01898
+              ]
+            ]
+          },
+          {
+            "id": "000001",
+            "name": "Topic 01",
+            "probability": 0.08215,
+            "top_terms": [
+              [
+                "lt",
+                0.1015
+              ],
+              [
+                "gt",
+                0.1007
+              ],
+              [
+                "wish",
+                0.03958
+              ],
+              [
+                "feel",
+                0.0272
+              ],
+              [
+                "shit",
+                0.02361
+              ],
+              [
+                "waiting",
+                0.02281
+              ],
+              [
+                "stuff",
+                0.02001
+              ],
+              [
+                "name",
+                0.01921
+              ],
+              [
+                "comp",
+                0.01522
+              ],
+              [
+                "forgot",
+                0.01482
+              ]
+            ]
+          },
+          {
+            "id": "000002",
+            "name": "Topic 02",
+            "probability": 0.08771,
+            "top_terms": [
+              [
+                "ok",
+                0.15142
+              ],
+              [
+                "pls",
+                0.03938
+              ],
+              [
+                "hey",
+                0.03083
+              ],
+              [
+                "send",
+                0.02998
+              ],
+              [
+                "drive",
+                0.02955
+              ],
+              [
+                "msg",
+                0.02827
+              ],
+              [
+                "min",
+                0.01758
+              ],
+              [
+                "joking",
+                0.01672
+              ],
+              [
+                "changed",
+                0.01544
+              ],
+              [
+                "mom",
+                0.01415
+              ]
+            ]
+          }
+        ],
+        "use_stopwords": false
       },
-      {
-        "id": "000001",
-        "name": "Topic 01",
-        "probability": 0.08215,
-        "top_terms": [
-          [
-            "lt",
-            0.1015
-          ],
-          [
-            "gt",
-            0.1007
-          ],
-          [
-            "wish",
-            0.03958
-          ],
-          [
-            "feel",
-            0.0272
-          ],
-          [
-            "shit",
-            0.02361
-          ],
-          [
-            "waiting",
-            0.02281
-          ],
-          [
-            "stuff",
-            0.02001
-          ],
-          [
-            "name",
-            0.01921
-          ],
-          [
-            "comp",
-            0.01522
-          ],
-          [
-            "forgot",
-            0.01482
-          ]
-        ]
-      },
-      {
-        "id": "000002",
-        "name": "Topic 02",
-        "probability": 0.08771,
-        "top_terms": [
-          [
-            "ok",
-            0.15142
-          ],
-          [
-            "pls",
-            0.03938
-          ],
-          [
-            "hey",
-            0.03083
-          ],
-          [
-            "send",
-            0.02998
-          ],
-          [
-            "drive",
-            0.02955
-          ],
-          [
-            "msg",
-            0.02827
-          ],
-          [
-            "min",
-            0.01758
-          ],
-          [
-            "joking",
-            0.01672
-          ],
-          [
-            "changed",
-            0.01544
-          ],
-          [
-            "mom",
-            0.01415
-          ]
-        ]
-      }
-    ],
-    "use_stopwords": false
-  },
-  "type": 0,
-  "updated": "2017-10-23T18:31:59.793000",
-  "white_box": false
-}
+      "type": 0,
+      "updated": "2017-10-23T18:31:59.793000",
+      "white_box": false
+    }
 
 Note that the output in the snippet above has been abbreviated.
 
@@ -2436,7 +2451,7 @@ contents of a remote file is:
     $api =  new BigML\BigML();
 
     # creating a script directly from the source code.
- 
+
     $api->create_script(array('source_code' => '(+ 1 1)'));
     $api->create_script('/files/diabetes.csv');
 
@@ -2471,7 +2486,7 @@ As you can see, the execution resource contains information about the result
 of the execution, the resources that have been generated while executing and
 users can define some variables in the code to be exported as outputs. Please
 refer to the
-`Developers documentation for Executions <https://bigml.com/developers/executions#we_execution_arguments>`_ 
+`Developers documentation for Executions <https://bigml.com/developers/executions#we_execution_arguments>`_
 for details on how to define execution outputs.
 the `developers section <https://bigml.com/developers/associations>`_ .
 
@@ -2500,25 +2515,25 @@ for more details.
 
 Statuses
 --------
-Please, bear in mind that resource creation is almost always asynchronous (predictions are the only exception). 
-Therefore, when you create a new source, a new dataset or a new model, even if you receive an immediate response from the BigML servers, 
-the full creation of the resource can take from a few seconds to a few days, depending on the size of the resource and BigML’s load. 
-A resource is not fully created until its status is bigml.api.FINISHED. 
+Please, bear in mind that resource creation is almost always asynchronous (predictions are the only exception).
+Therefore, when you create a new source, a new dataset or a new model, even if you receive an immediate response from the BigML servers,
+the full creation of the resource can take from a few seconds to a few days, depending on the size of the resource and BigML’s load.
+A resource is not fully created until its status is bigml.api.FINISHED.
 See the documentation on status codes for the listing of potential states and their semantics::
 
-        BigMLRequest::WAITING 
-        BigMLRequest::QUEUED 
-        BigMLRequest::STARTED 
-        BigMLRequest::IN_PROGRESS 
-        BigMLRequest::SUMMARIZED 
-        BigMLRequest::FINISHED 
+        BigMLRequest::WAITING
+        BigMLRequest::QUEUED
+        BigMLRequest::STARTED
+        BigMLRequest::IN_PROGRESS
+        BigMLRequest::SUMMARIZED
+        BigMLRequest::FINISHED
         BigMLRequest::UPLOADING
-        BigMLRequest::FAULTY 
+        BigMLRequest::FAULTY
         BigMLRequest::UNKNOWN
-        BigMLRequest::RUNNABLE 
+        BigMLRequest::RUNNABLE
 
 You can query the status of any resource with the status method::
-    
+
     $api->status($source)
     $api->status($dataset)
     $api->status($model)
@@ -2585,17 +2600,17 @@ Creating sources
 To create a source from a local data file, you can use the create_source method. The only required parameter is the path to the data file (or file-like object). You can use a second optional parameter to specify any of the options for source creation described in the `BigML API documentation <https://bigml.com/developers>`_.
 
 Here’s a sample invocation::
-   
+
     $source = $api->create_source('./tests/data/iris.csv', array('name'=> 'my source'));
 
 or you may want to create a source from a file in a remote location::
 
     $source = $api->create_source('s3://bigml-public/csv/iris.csv');
 
-Creating datasets 
+Creating datasets
 -----------------
 
-Once you have created a source, you can create a dataset. The only required argument to create a dataset is a source id. 
+Once you have created a source, you can create a dataset. The only required argument to create a dataset is a source id.
 You can add all the additional arguments accepted by BigML and documented in `the Datasets section of the Developer’s documentation <https://bigml.com/developers/datasets>`_.
 
 For example, to create a dataset named “my dataset” with the first 1024 bytes of a source, you can submit the following request::
@@ -2612,7 +2627,7 @@ It is also possible to generate a dataset from a list of datasets (multidataset)
     $dataset2 = $api->create_dataset($source2);
     $multidataset = $api->create_dataset(array($dataset1, $dataset2));
 
-Clusters can also be used to generate datasets containing the instances grouped around each centroid. 
+Clusters can also be used to generate datasets containing the instances grouped around each centroid.
 You will need the cluster id and the centroid id to reference the dataset to be created. For instance::
 
     $cluster = $api->create_cluster($dataset);
@@ -2624,9 +2639,9 @@ would generate a new dataset containing the subset of instances in the cluster a
 Creating models
 ---------------
 
-Once you have created a dataset you can create a model from it. 
-If you don’t select one, the model will use the last field of the dataset as objective field. 
-The only required argument to create a model is a dataset id. 
+Once you have created a dataset you can create a model from it.
+If you don’t select one, the model will use the last field of the dataset as objective field.
+The only required argument to create a model is a dataset id.
 You can also include in the request all the additional arguments accepted by BigML and documented in `the Models section of the Developer’s documentation <https://bigml.com/developers/models>`_.
 
 For example, to create a model only including the first two fields and the first 10 instances in the dataset, you can use the following invocation::
@@ -2639,16 +2654,16 @@ the model is scheduled for creation.
 Creating clusters
 -----------------
 
-If your dataset has no fields showing the objective information to predict for the training data, 
-you can still build a cluster that will group similar data around some automatically chosen points (centroids). 
-Again, the only required argument to create a cluster is the dataset id. 
+If your dataset has no fields showing the objective information to predict for the training data,
+you can still build a cluster that will group similar data around some automatically chosen points (centroids).
+Again, the only required argument to create a cluster is the dataset id.
 You can also include in the request all the additional arguments accepted by BigML and documented in `the Clusters section of the Developer’s documentation <https://bigml.com/developers/clusters>`_.
 
 Let’s create a cluster from a given dataset::
 
     $cluster = $api->create_cluster($dataset, array("name"=> "my cluster", "k"=> 5}));
 
-that will create a cluster with 5 centroids.    
+that will create a cluster with 5 centroids.
 
 
 Creating anomaly detectors
@@ -2700,22 +2715,22 @@ of the Developer’s documentation <https://bigml.com/api/topicmodels>`_ .
 For example, to create a topic model including exactly 32 topics you
 can use the following invocation::
 
-    $topic_model = $api->create_topicmodel($dataset, 
-                                            array("name" => "my topics", 
+    $topic_model = $api->create_topicmodel($dataset,
+                                            array("name" => "my topics",
                                                   "number_of_topics" => 32));
 
 Topic models can also be created from lists of datasets. Just use the
 list of ids as the first argument in the api call::
 
-    $topic_model = $api->create_topic_model([$dataset1, $dataset2], 
-                                            array("name" => "my topics", 
+    $topic_model = $api->create_topic_model([$dataset1, $dataset2],
+                                            array("name" => "my topics",
                                                   "number_of_topics" => 32));
 
 
 Creating predictions
 --------------------
 
-You can now use the model resource identifier together with some input parameters to ask for predictions, using the create_prediction method. 
+You can now use the model resource identifier together with some input parameters to ask for predictions, using the create_prediction method.
 You can also give the prediction a name::
 
     $prediction = $api->create_prediction($model,
@@ -2730,8 +2745,8 @@ You can also give the prediction a name::
 Creating centroids
 ------------------
 
-To obtain the centroid associated to new input data, you can now use the create_centroid method. 
-Give the method a cluster identifier and the input data to obtain the centroid. 
+To obtain the centroid associated to new input data, you can now use the create_centroid method.
+Give the method a cluster identifier and the input data to obtain the centroid.
 You can also give the centroid predicition a name::
 
     $centroid = $api->create_centroid($cluster,
@@ -2753,7 +2768,7 @@ Creating anomaly scores
 To obtain the anomaly score associated to new input data, you can now use the
 create_anomaly_score method. Give the method an anomaly detector identifier and the input data to obtain the score::
 
-     $anomaly_score = $api->create_anomaly_score($anomaly, 
+     $anomaly_score = $api->create_anomaly_score($anomaly,
                                                  array("src_bytes"=> 350),
                                                  array("name"=> "my score"));
 
@@ -2767,7 +2782,7 @@ by its rules to your input data. These association sets can be obtained calling
 the ``create_association_set`` method. The first argument is the association
 ID or object and the next one is the input data::
 
-     $association_set = $api->create_association_set($association, 
+     $association_set = $api->create_association_set($association,
                                                       array('genres'=> "Action\$Adventure"),
                                                       array('name' => "my association set"));
 
@@ -2775,18 +2790,18 @@ ID or object and the next one is the input data::
 Creating evaluations
 --------------------
 
-Once you have created a model, you can measure its perfomance by running a dataset of test data through it 
-and comparing its predictions to the objective field real values. 
-Thus, the required arguments to create an evaluation are model id and a dataset id. 
+Once you have created a model, you can measure its perfomance by running a dataset of test data through it
+and comparing its predictions to the objective field real values.
+Thus, the required arguments to create an evaluation are model id and a dataset id.
 You can also include in the request all the additional arguments accepted by BigML and documented in `the Evaluations section of the Developer’s documentation <https://bigml.com/developers/evaluations>`_.
 
 For instance, to evaluate a previously created model using at most 10000 rows from an existing dataset you can use the following call::
-    
-    $evaluation = $api->create_evaluation($model, 
-                                          $dataset, 
+
+    $evaluation = $api->create_evaluation($model,
+                                          $dataset,
                                           array("name"=>"my model", "max_rows"=>10000));
 
-Evaluations can also check the ensembles’ performance. 
+Evaluations can also check the ensembles’ performance.
 To evaluate an ensemble you can do exactly what we just did for the model case, using the ensemble object instead of the model as first argument::
 
     $evaluation = $api->create_evaluation($ensemble, $dataset);
@@ -2795,7 +2810,7 @@ To evaluate an ensemble you can do exactly what we just did for the model case, 
 Creating ensembles
 ------------------
 
-To improve the performance of your predictions, you can create an ensemble of models and combine their individual predictions. 
+To improve the performance of your predictions, you can create an ensemble of models and combine their individual predictions.
 The only required argument to create an ensemble is the dataset id::
 
     $ensemble = $api->create_ensemble($datasetid);
@@ -2877,40 +2892,40 @@ Documentation
 Creating batch predictions
 --------------------------
 
-We have shown how to create predictions individually, but when the amount of predictions to make increases, this procedure is far from optimal. 
-In this case, the more efficient way of predicting remotely is to create a dataset containing the input data you want your model to predict 
+We have shown how to create predictions individually, but when the amount of predictions to make increases, this procedure is far from optimal.
+In this case, the more efficient way of predicting remotely is to create a dataset containing the input data you want your model to predict
 from and to give its id and the one of the model to the create_batch_prediction api call::
 
-    $batch_prediction = $api->$create_batch_prediction($model, 
-                                                       $dataset, 
-                                                       array("name"=>"my batch prediction", 
+    $batch_prediction = $api->$create_batch_prediction($model,
+                                                       $dataset,
+                                                       array("name"=>"my batch prediction",
                                                              "all_fields"=> true,
                                                              "header": true,
                                                              "confidence": true));
 
 
-In this example, setting all_fields to true causes the input data to be included in the prediction output, header controls whether a headers line 
-is included in the file or not and confidence set to true causes the confidence of the prediction to be appended. 
+In this example, setting all_fields to true causes the input data to be included in the prediction output, header controls whether a headers line
+is included in the file or not and confidence set to true causes the confidence of the prediction to be appended.
 If none of these arguments is given, the resulting file will contain the name of the objective field as a header row followed by the predictions.
 
-As for the rest of resources, the create method will return an incomplete object, that can be updated by issuing the corresponding 
-$api->get_batch_prediction call until it reaches a FINISHED status. 
+As for the rest of resources, the create method will return an incomplete object, that can be updated by issuing the corresponding
+$api->get_batch_prediction call until it reaches a FINISHED status.
 Then you can download the created predictions file using::
 
    $api->download_batch_prediction('batchprediction/526fc344035d071ea3031d70',
-                                   'my_dir/my_predictions.csv'); 
+                                   'my_dir/my_predictions.csv');
 
 
 Creating batch centroids
 ------------------------
 
-As described in the previous section, it is also possible to make centroids’ predictions in batch. 
-First you create a dataset containing the input data you want your cluster to relate to a centroid. 
+As described in the previous section, it is also possible to make centroids’ predictions in batch.
+First you create a dataset containing the input data you want your cluster to relate to a centroid.
 The create_batch_centroid call will need the id of the dataset and the cluster to assign a centroid to each input data::
 
-    $batch_centroid = $api->create_batch_centroid($cluster, 
-                                                  $dataset, 
-                                                  array("name"=>"my batch centroid", 
+    $batch_centroid = $api->create_batch_centroid($cluster,
+                                                  $dataset,
+                                                  array("name"=>"my batch centroid",
                                                         "all_fields"=> true,
                                                         "header"=> true));
 
@@ -2920,8 +2935,8 @@ Creating batch anomaly scores
 
 Input data can also be assigned an anomaly score in batch. You train an anomaly detector with your training data and then build a dataset from your input data. The create_batch_anomaly_score call will need the id of the dataset and of the anomaly detector to assign an anomaly score to each input data instance::
 
-   $batch_anomaly_score = $api->create_batch_anomaly_score($anomaly, 
-                                                           $dataset, 
+   $batch_anomaly_score = $api->create_batch_anomaly_score($anomaly,
+                                                           $dataset,
                                                            array("name" => "my batch anomaly score"
                                                                  "all_fields" => true,
                                                                  "header" => true))
@@ -2978,7 +2993,7 @@ A few examples:
     $api->list_models("columns__gt=5");
 
 - Ids of predictions whose model has not been deleted::
- 
+
     $api->list_predictions("model_status=true");
 
 Ordering Resources
@@ -2989,7 +3004,7 @@ You can order resources in listings using the syntax and fields labeled as sorta
 A few examples:
 
 - Name of sources ordered by size::
-    
+
      $api->list_sources("order_by=size");
 
 - Number of instances in datasets created before April 1st, 2012 ordered by size::
@@ -2997,17 +3012,17 @@ A few examples:
      $api->list_datasets("created__lt=2012-04-1;order_by=size");
 
 - Model ids ordered by number of predictions (in descending order)::
-  
+
      $api->list_models("order_by=-number_of_predictions");
 
 - Name of predictions ordered by name::
- 
+
      $api->list_predictions("order_by=name");
 
 Updating Resources
 ------------------
 
-When you update a resource, it is returned in a dictionary exactly like the one you get when you create a new one. 
+When you update a resource, it is returned in a dictionary exactly like the one you get when you create a new one.
 However the status code will be bigml.api.HTTP_ACCEPTED if the resource can be updated without problems or one of the HTTP standard error codes otherwise::
 
     $api->update_source($source, array("name"=> "new name"));
@@ -3025,13 +3040,13 @@ However the status code will be bigml.api.HTTP_ACCEPTED if the resource can be u
     $api->update_batch_anomaly_score($batch_anomaly_score, array("name": "new name"));
     $api->update_deepnet($deepnet, array("name": "new name"));
 
-Updates can change resource general properties, such as the name or description attributes of a dataset, or specific properties. 
-As an example, let’s say that your source has a certain field whose contents are numeric integers. 
+Updates can change resource general properties, such as the name or description attributes of a dataset, or specific properties.
+As an example, let’s say that your source has a certain field whose contents are numeric integers.
 BigML will assign a numeric type to the field, but you might want it to be used as a categorical field. You could change its type to categorical by calling::
 
     $api->update_source($source, array("fields"=> array("000001"=> array("optype"=> "categorical"))));
 
-where 000001 is the field id that corresponds to the updated field. 
+where 000001 is the field id that corresponds to the updated field.
 You will find detailed information about the updatable attributes of each resource in `BigML developer’s documentation <https://bigml.com/developers>`_.
 
 Deleting Resources
@@ -3055,7 +3070,7 @@ Resources can be deleted individually using the corresponding method for each ty
 
 Each of the calls above will return a dictionary with the following keys:
 
-code If the request is successful, the code will be a bigml.api.HTTP_NO_CONTENT (204) status code. 
+code If the request is successful, the code will be a bigml.api.HTTP_NO_CONTENT (204) status code.
 Otherwise, it wil be one of the standard HTTP error codes. See the documentation on status codes for more info.
 error If the request does not succeed, it will contain a dictionary with an error code and a message. It will be None otherwise.
 
@@ -3072,11 +3087,11 @@ response of the GET call to the API:
 
     $model = api->get_model('model/538XXXXXXXXXXXXXXXXXXX2');
     $local_model = new BigML\Model(model);
-   
+
 It also accepts the model ID as the first argument. In this case, a
 new connection will be created internally to download the model
 information.::
- 
+
     $local_model = new BigML\Model("model/538XXXXXXXXXXXXXXXXXXX2");
 
 If you want to use a specific connection object for the remote
@@ -3100,7 +3115,7 @@ You can also use the `predict_probability` function to obtain a probability pred
     $predict_probability = $local_model->predict_probability(array("petal width"=> 0.5));
 
 Local predictions have three clear advantages:
-    
+
 - Removing the dependency from BigML to make new predictions.
 
 - No cost (i.e., you do not spend BigML credits).
@@ -3119,7 +3134,7 @@ response of the GET call to the API:
 
     $cluster = $api->get_cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18");
     $local_cluster = new BigML\Cluster($cluster);
-   
+
 It also accepts the cluster ID as the first argument. This will
 retrieve the remote cluster information, using an implicitly built
 BigML() connection object (see the Authentication section for more
@@ -3235,13 +3250,13 @@ input data set::
   $local_deepnet->predict(array("petal length" => 2, "sepal length" => 1.5,
                                 "petal width" => 0.5, "sepal width" => 0.7));
 
-  array('distribution' => array( array('category' => 'Iris-virginica', 
+  array('distribution' => array( array('category' => 'Iris-virginica',
                                        'probability' => 0.5041444478857267),
-                                 array('category' => 'Iris-versicolor', 
+                                 array('category' => 'Iris-versicolor',
                                        'probability' => 0.46926542042788333),
-                                 array('category' => 'Iris-setosa', 
+                                 array('category' => 'Iris-setosa',
                                        'probability' => 0.02659013168639014)),
-        'prediction' => 'Iris-virginica', 
+        'prediction' => 'Iris-virginica',
         'probability' => 0.5041444478857267)
 
 As you can see, the prediction contains the predicted category and the
@@ -3329,32 +3344,32 @@ or set default storage if you have storage unset in `$api`::
 The combination method used by default is plurality for categorical predictions and mean value for numerical ones. You can also use:
 
 confidence weighted::
-    
-    $prediction = $multimodel->predict(array("petal length"=> 3, "petal width"=> 1), 1);  
-        
+
+    $prediction = $multimodel->predict(array("petal length"=> 3, "petal width"=> 1), 1);
+
 that will weight each vote using the confidence/error given by the model to each prediction, or even probability weighted::
 
-    $prediction = $multimodel->predict(array("petal length"=> 3, "petal width"=> 1), 2); 
+    $prediction = $multimodel->predict(array("petal length"=> 3, "petal width"=> 1), 2);
 
 that weights each vote by using the probability associated to the training distribution at the prediction node.
 
 
-There’s also a threshold method that uses an additional set of options: threshold and category. 
-The category is predicted if and only if the number of predictions for that category is at least the threshold value. 
+There’s also a threshold method that uses an additional set of options: threshold and category.
+The category is predicted if and only if the number of predictions for that category is at least the threshold value.
 Otherwise, the prediction is plurality for the rest of predicted values.
 
 An example of threshold combination method would be::
 
-    $prediction = $multimodel->predict(array("petal length"=> 3, "petal width"=> 1), 3, false, array('threshold'=> 3, 'category'=> 'Iris-virginica'));    
+    $prediction = $multimodel->predict(array("petal length"=> 3, "petal width"=> 1), 3, false, array('threshold'=> 3, 'category'=> 'Iris-virginica'));
 
-When making predictions on a test set with a large number of models, batch_predict can be useful to log each model’s predictions in a separated file. 
+When making predictions on a test set with a large number of models, batch_predict can be useful to log each model’s predictions in a separated file.
 It expects a list of input data values and the directory path to save the prediction files in::
-     
+
     $multimodel->batch_predict(array("petal length"=> 3, "petal width"=> 1, "petal length"=> 1, "petal width"=> 5.1), "data/predictions");
 
-The predictions generated for each model will be stored in an output file in data/predictions using the syntax model_[id of the model]__predictions.csv. 
-For instance, when using model/50c0de043b563519830001c2 to predict, the output file name will be model_50c0de043b563519830001c2__predictions.csv. 
-An additional feature is that using reuse=True as argument will force the function to skip the creation of the file if it already exists. 
+The predictions generated for each model will be stored in an output file in data/predictions using the syntax model_[id of the model]__predictions.csv.
+For instance, when using model/50c0de043b563519830001c2 to predict, the output file name will be model_50c0de043b563519830001c2__predictions.csv.
+An additional feature is that using reuse=True as argument will force the function to skip the creation of the file if it already exists.
 This can be helpful when using repeatedly a bunch of models on the same test set::
 
     $multimodel->batch_predict(array("petal length"=> 3, "petal width"=> 1, "petal length"=> 1, "petal width"=> 5.1), "data/predictions", true, true);
@@ -3384,10 +3399,10 @@ You can also get a confidence measure for the combined prediction::
 
     $prediction = $multivote->combine(0, true);
 
-For classification, the confidence associated to the combined prediction is derived by first selecting the model’s predictions 
-that voted for the resulting prediction and computing the weighted average of their individual confidence. 
-Nevertheless, when probability weighted is used, the confidence is obtained by using each model’s distribution at the prediction 
-node to build a probability distribution and combining them. The confidence is then computed as the wilson score interval of the combined distribution 
+For classification, the confidence associated to the combined prediction is derived by first selecting the model’s predictions
+that voted for the resulting prediction and computing the weighted average of their individual confidence.
+Nevertheless, when probability weighted is used, the confidence is obtained by using each model’s distribution at the prediction
+node to build a probability distribution and combining them. The confidence is then computed as the wilson score interval of the combined distribution
 (using as total number of instances the sum of all the model’s distributions original instances at the prediction node)
 
 In regression, all the models predictions’ confidences contribute to the weighted average confidence.
@@ -3401,19 +3416,19 @@ Remote ensembles can also be used locally through the Ensemble class. The simple
 
     $ensemble->predict(array("petal length"=>3, "petal width"=> 1));
 
-This call will download all the ensemble related info and store it in a ./storage directory ready to be used to predict. 
+This call will download all the ensemble related info and store it in a ./storage directory ready to be used to predict.
 As in MultipleModel, several prediction combination methods are available, and you can choose another storage directory or even avoid storing at all, for instance::
 
     $api = new BigML("username", "password", false, "storagedirectory");
 
     ensemble = $api->create_ensemble('dataset/5143a51a37203f2cf7000972');
 
-    $ensemble = new BigML\Ensemble($ensemble, $api); 
+    $ensemble = new BigML\Ensemble($ensemble, $api);
 
     $ensemble->predict(array("petal length"=>3, "petal width"=> 1), true, 1);
 
 creates a new ensemble and stores its information in ./storagedirectory folder. Then this information is used to predict locally using the confidence weighted method.
-   
+
 Similarly, local ensembles can also be created by giving a list of models to be combined to issue the final prediction::
 
     $ensemble = new BigML\Ensemble(array('model/50c0de043b563519830001c2','model/50c0de043b5635198300031b'));
@@ -3430,7 +3445,7 @@ Rule Generation
 You can also use a local model to generate a IF-THEN rule set that can be very helpful to understand how the model works internally::
 
     $local_model->rules();
-    
+
     IF petal_length > 2.45 AND
        IF petal_width > 1.65 AND
           IF petal_length > 5.05 THEN
