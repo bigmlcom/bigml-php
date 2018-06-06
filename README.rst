@@ -44,13 +44,17 @@ You will also need to have the non-default extensions `mbstring
 how you installed PHP, you may already have one or more of these
 extensions.
 
-To check which modules you have currently installed, run::
+To check which modules you have currently installed, run
+
+.. code-block:: bash
 
   php -m
 
 To install with Linux:
 
-At the command line, run::
+At the command line, run
+
+.. code-block:: bash
 
   sudo apt-get install phpXY-mbstring
   sudo apt-get install phpXY-curl
@@ -60,7 +64,9 @@ php72-curl).
 
 To install with MacOS:
 
-At the command line, run::
+At the command line, run
+
+.. code-block:: bash
 
   sudo port install phpXY-mbstring
   sudo port install phpXY-curl
@@ -70,14 +76,18 @@ where XY is the PHP version currently installed on your system (e.g.,
 php72-curl).
 
 If you installed PHP by tapping homebrew-php, mbstring should already
-be installed. You will still need to install curl and openssl using::
+be installed. You will still need to install curl and openssl using
+
+.. code-block:: bash
 
   brew install --with-openssl curl
 
 To install with Windows:
 
 If you have access to the php.ini, remove the semicolon in front of
-these lines in the php.ini::
+these lines in the php.ini
+
+.. code-block:: bash
 
   extension = php_mbstring.dll
   extension = php_curl.dll
@@ -97,7 +107,9 @@ Using Composer
 """"""""""""""
 
 If you are currently using Composer to manage your project's
-libraries, simply add the following to your current `composer.json`::
+libraries, simply add the following to your current `composer.json`
+
+.. code-block:: json
 
     {
         "repositories": [
@@ -115,7 +127,9 @@ libraries, simply add the following to your current `composer.json`::
         }
     }
 
-At the command line, run the command::
+At the command line, run the command
+
+.. code-block:: bash
 
     php composer.phar install
 
@@ -124,7 +138,9 @@ This will install this library and all required library dependencies
 
 In your code:
 
-At the beginning of your file include the line::
+At the beginning of your file include the line
+
+.. code-block:: php
 
     <? php
     require 'vendor/autoload.php';
@@ -141,7 +157,9 @@ If you haven't already done so, you will need to install `Composer
 Linux/OSX:
 
 Follow the instructions in the `download section <https://getcomposer.org/download/>`_ to get the
-`composer.phar` file, and run::
+`composer.phar` file, and run
+
+.. code-block:: bash
 
   php composer.phar install
 
@@ -149,7 +167,9 @@ This will install all necessary dependencies.
 
 Windows:
 
-Follow the instructions on the Composer website for `downloading <https://getcomposer.org/doc/00-intro.md#installation-windows>`_ Composer, and run::
+Follow the instructions on the Composer website for `downloading <https://getcomposer.org/doc/00-intro.md#installation-windows>`_ Composer, and run
+
+.. code-block:: bash
 
   php composer.phar install
 
@@ -160,7 +180,10 @@ In your code:
 At the beginning of your file you will need to include the various
 files you will be using. If you will be making any remote calls, you
 will need bigml.php. If you will be making any local models, you will
-need their specific files. The most common files to include are::
+need their specific files. The most common files to include are
+
+
+.. code-block:: php
 
   <?php
   include('bigml.php');
@@ -184,13 +207,18 @@ transmitted over HTTPS.
 This module will look for your username and API key in the environment
 variables BIGML_USERNAME and BIGML_API_KEY respectively.  You can add
 the following lines to your .bashrc or .bash_profile to set those
-variables automatically when you log in::
+variables automatically when you log in
+
+
+.. code-block:: bash
 
     export BIGML_USERNAME=myusername
     export BIGML_API_KEY=a11e579e7e53fb9abd646a6ff8aa99d4afe83ac2
 
 With that environment and your aliases set up, connecting to BigML is
-a breeze::
+a breeze
+
+.. code-block:: php
 
    $api = new BigML\BigML();
 
@@ -297,7 +325,7 @@ By default, BigML considers the last field in the dataset as the
 objective field (i.e., the field that you want to generate predictions
 for).
 
-::
+.. code-block:: php
 
     sepal length,sepal width,petal length,petal width,species
     5.1,3.5,1.4,0.2,Iris-setosa
@@ -313,7 +341,9 @@ for).
     5.8,2.8,5.1,2.4,Iris-virginica
 
 If your credentials are stored in the environment as mentioned above,
-you can easily generate a prediction following these steps::
+you can easily generate a prediction following these steps
+
+.. code-block:: php
 
     $api = new BigML\BigML();
 
@@ -338,7 +368,9 @@ then:
 
     petal width for {"sepal length":5,"sepal width":2.5} is 0.30455
 
-also, you can generate an evaluation for the model by using::
+also, you can generate an evaluation for the model by using
+
+.. code-block:: php
 
     $test_source = $api->create_source('./tests/data/iris.csv');
     $test_dataset = $api->create_dataset($test_source);
@@ -349,12 +381,16 @@ Dataset
 -------
 
 If you want to get some basic statistics for each field you can retrieve
-the fields from the dataset as follows to get a dictionary keyed by field id::
+the fields from the dataset as follows to get a dictionary keyed by field id
+
+.. code-block:: php
 
     $dataset = $api->get_dataset($dataset);
     print_r($api->get_fields($dataset))
 
-The field filtering options are also available using a query string expression, for instance::
+The field filtering options are also available using a query string expression, for instance
+
+.. code-block:: php
 
     $dataset = $api->get_dataset($dataset, "limit=20")
 
@@ -364,7 +400,9 @@ Model
 -----
 
 One of the greatest things about BigML is that the models that it generates for you are fully white-boxed.
-To get the explicit tree-like predictive model for the example above::
+To get the explicit tree-like predictive model for the example above
+
+.. code-block:: php
 
     $model = $api->get_model($model_id);
 
@@ -380,7 +418,9 @@ To get the explicit tree-like predictive model for the example above::
                         (
                             [0] => stdClass Object...
 
-Again, filtering options are also available using a query string expression, for instance::
+Again, filtering options are also available using a query string expression, for instance
+
+.. code-block:: php
 
     $model = $api->get_model($model_id, "limit=5");
 
@@ -393,7 +433,9 @@ Evaluation
 The predictive performance of a model can be measured using many different measures.
 In BigML these measures can be obtained by creating evaluations.
 To create an evaluation you need the id of the model you are evaluating and the id of
-the dataset that contains the data to be tested with. The result is shown as::
+the dataset that contains the data to be tested with. The result is shown as
+
+.. code-block:: php
 
     $evaluation = $api->get_evaluation($evaluation_id);
 
@@ -402,16 +444,20 @@ Cluster
 
 For unsupervised learning problems, the cluster is used to classify in a limited number of groups your training data.
 The cluster structure is defined by the centers of each group of data, named centroids, and the data enclosed in the group.
-As for in the model’s case, the cluster is a white-box resource and can be retrieved as a JSON::
+As for in the model’s case, the cluster is a white-box resource and can be retrieved as a JSON
+
+.. code-block:: php
 
     $cluster = $api->get_cluster($cluster_id)
 
 Anomaly detector
 ----------------
 
-For anomaly detection problems, BigML anomaly detector uses iforest as an unsupervised kind of model that detects anomalous data in a dataset. The information it returns encloses a top_anomalies block that contains a list of the most anomalous points. For each, we capture a score from 0 to 1. The closer to 1, the more anomalous. We also capture the row which gives values for each field in the order defined by input_fields. Similarly we give a list of importances which match the row values. These importances tell us which values contributed most to the anomaly score. Thus, the structure of an anomaly detector is similar to::
+For anomaly detection problems, BigML anomaly detector uses iforest as an unsupervised kind of model that detects anomalous data in a dataset. The information it returns encloses a top_anomalies block that contains a list of the most anomalous points. For each, we capture a score from 0 to 1. The closer to 1, the more anomalous. We also capture the row which gives values for each field in the order defined by input_fields. Similarly we give a list of importances which match the row values. These importances tell us which values contributed most to the anomaly score. Thus, the structure of an anomaly detector is similar to
 
-    {   'category': 0,
+.. code-block:: json
+
+    {'category': 0,
     'code': 200,
     'columns': 14,
     'constraints': False,
@@ -677,7 +723,9 @@ the metrics used to compute the correlation degree will be:
   , and `Cramer's V <https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V>`_
   and `Tschuprow's T <https://en.wikipedia.org/wiki/Tschuprow%27s_T>`_ coefficients.
 
-An example of the correlation resource JSON structure is::
+An example of the correlation resource JSON structure is
+
+.. code-block:: json
 
     {   u'category': 0,
         u'clones': 0,
@@ -870,7 +918,9 @@ at least one value in each numeric field differs significantly from the mean
 using Grubb's test for outliers. If an outlier is found, then its value will
 be returned.
 
-The JSON structure for ``statisticaltest`` resources is similar to this one::
+The JSON structure for ``statisticaltest`` resources is similar to this one
+
+.. code-block:: json
 
      {  u'category': 0,
         u'clones': 0,
@@ -1130,7 +1180,9 @@ are expanded as a set of new fields, one per category or term (respectively)
 where the number of occurrences of the category or term is store. Thus,
 the linear combination is made on the frequency of the categories or terms.
 
-The JSON structure for a logistic regression is::
+The JSON structure for a logistic regression is
+
+.. code-block:: json
 
     {   u'balance_objective': False,
         u'category': 0,
@@ -1406,7 +1458,9 @@ You can refine the behavior of the transformation using
 `discretization <https://bigml.com/developers/associations#ad_create_discretization>`_
 and `field_discretizations <https://bigml.com/developers/associations#ad_create_field_discretizations>`_.
 
-The JSON structure for an association resource is::
+The JSON structure for an association resource is
+
+.. code-block:: json
 
  {
         "associations":{
@@ -1967,7 +2021,7 @@ classification, clustering, or anomaly detection.
 
 The JSON structure for a topic model is:
 
-.. code-block:: php
+.. code-block:: json
 
      {"category": 0,
       "clones": 0,
@@ -2504,6 +2558,8 @@ As an example, we build a ``library`` to store the definition of two functions:
 ``mu`` and ``g``. The first one adds one to the value set as argument and
 the second one adds two variables and increments the result by one.
 
+.. code-block:: php
+
     $library = $api->create_library("(define (mu x) (+ x 1)) (define (g z y) (mu (+ y z)))");
 
 Libraries can be imported in scripts. The ``imports`` attribute of a ``script``
@@ -2519,7 +2575,10 @@ Please, bear in mind that resource creation is almost always asynchronous (predi
 Therefore, when you create a new source, a new dataset or a new model, even if you receive an immediate response from the BigML servers,
 the full creation of the resource can take from a few seconds to a few days, depending on the size of the resource and BigML’s load.
 A resource is not fully created until its status is bigml.api.FINISHED.
-See the documentation on status codes for the listing of potential states and their semantics::
+See the documentation on status codes for the listing of potential states and their semantics
+
+.. code-block:: php
+
 
         BigMLRequest::WAITING
         BigMLRequest::QUEUED
@@ -2532,7 +2591,9 @@ See the documentation on status codes for the listing of potential states and th
         BigMLRequest::UNKNOWN
         BigMLRequest::RUNNABLE
 
-You can query the status of any resource with the status method::
+You can query the status of any resource with the status method
+
+.. code-block:: php
 
     $api->status($source)
     $api->status($dataset)
@@ -2560,12 +2621,16 @@ and assigned a certain ``project_id``, the rest of resources generated from
 this source will remain in this project.
 
 The REST calls to manage the ``project`` resemble the ones used to manage the
-rest of resources. When you create a ``project``::
+rest of resources. When you create a ``project``
+
+.. code-block:: php
 
     $api = new BigML\BigML();
     $project = $api->create_project(array('name' => 'my first project'));
 
-the resulting resource is similar to the rest of resources, although shorter::
+the resulting resource is similar to the rest of resources, although shorter
+
+.. code-block:: php
 
     {'code': 201,
      'resource': u'project/54a1bd0958a27e3c4c0002f0',
@@ -2581,7 +2646,9 @@ the resulting resource is similar to the rest of resources, although shorter::
                 u'description': u''},
      'error': None}
 
-and you can use its project id to get, update or delete it::
+and you can use its project id to get, update or delete it
+
+.. code-block:: php
 
     $project = $api->get_project('project/54a1bd0958a27e3c4c0002f0');
     $api->update_project($project->resource,
@@ -2599,11 +2666,15 @@ Creating sources
 
 To create a source from a local data file, you can use the create_source method. The only required parameter is the path to the data file (or file-like object). You can use a second optional parameter to specify any of the options for source creation described in the `BigML API documentation <https://bigml.com/developers>`_.
 
-Here’s a sample invocation::
+Here’s a sample invocation
+
+.. code-block:: php
 
     $source = $api->create_source('./tests/data/iris.csv', array('name'=> 'my source'));
 
-or you may want to create a source from a file in a remote location::
+or you may want to create a source from a file in a remote location
+
+.. code-block:: php
 
     $source = $api->create_source('s3://bigml-public/csv/iris.csv');
 
@@ -2613,22 +2684,30 @@ Creating datasets
 Once you have created a source, you can create a dataset. The only required argument to create a dataset is a source id.
 You can add all the additional arguments accepted by BigML and documented in `the Datasets section of the Developer’s documentation <https://bigml.com/developers/datasets>`_.
 
-For example, to create a dataset named “my dataset” with the first 1024 bytes of a source, you can submit the following request::
+For example, to create a dataset named “my dataset” with the first 1024 bytes of a source, you can submit the following request
+
+.. code-block:: php
 
     $dataset = $api->create_dataset($source, array("name"=> "mydata", "size"=> 1024));
 
-You can also extract samples from an existing dataset and generate a new one with them using the api.create_dataset method::
+You can also extract samples from an existing dataset and generate a new one with them using the api.create_dataset method
+
+.. code-block:: php
 
     $dataset = $api->create_dataset($origin_dataset, array("sample_rate"=> 0.8));
 
-It is also possible to generate a dataset from a list of datasets (multidataset)::
+It is also possible to generate a dataset from a list of datasets (multidataset)
+
+.. code-block:: php
 
     $dataset1 = $api->create_dataset($source1);
     $dataset2 = $api->create_dataset($source2);
     $multidataset = $api->create_dataset(array($dataset1, $dataset2));
 
 Clusters can also be used to generate datasets containing the instances grouped around each centroid.
-You will need the cluster id and the centroid id to reference the dataset to be created. For instance::
+You will need the cluster id and the centroid id to reference the dataset to be created. For instance
+
+.. code-block:: php
 
     $cluster = $api->create_cluster($dataset);
     $cluster_dataset_1 = $api->create_dataset($cluster,array('centroid'=>'000000'));
@@ -2644,7 +2723,9 @@ If you don’t select one, the model will use the last field of the dataset as o
 The only required argument to create a model is a dataset id.
 You can also include in the request all the additional arguments accepted by BigML and documented in `the Models section of the Developer’s documentation <https://bigml.com/developers/models>`_.
 
-For example, to create a model only including the first two fields and the first 10 instances in the dataset, you can use the following invocation::
+For example, to create a model only including the first two fields and the first 10 instances in the dataset, you can use the following invocation
+
+.. code-block:: php
 
     $model = $api->create_model($dataset, array("name"=>"my model", "input_fields"=> array("000000", "000001"), "range"=> array(1, 10)));
 
@@ -2659,7 +2740,9 @@ you can still build a cluster that will group similar data around some automatic
 Again, the only required argument to create a cluster is the dataset id.
 You can also include in the request all the additional arguments accepted by BigML and documented in `the Clusters section of the Developer’s documentation <https://bigml.com/developers/clusters>`_.
 
-Let’s create a cluster from a given dataset::
+Let’s create a cluster from a given dataset
+
+.. code-block:: php
 
     $cluster = $api->create_cluster($dataset, array("name"=> "my cluster", "k"=> 5}));
 
@@ -2671,7 +2754,9 @@ Creating anomaly detectors
 
 If your problem is finding the anomalous data in your dataset, you can build an anomaly detector, that will use iforest to single out the anomalous records. Again, the only required argument to create an anomaly detector is the dataset id. You can also include in the request all the additional arguments accepted by BigML and documented in the `Anomaly detectors section of the Developer’s documentation <https://bigml.com/developers/anomalies>`_.
 
-Let’s create an anomaly detector from a given dataset::
+Let’s create an anomaly detector from a given dataset
+
+.. code-block:: php
 
     $anomaly = $api->create_anomaly($dataset, array("name"=>"my anomaly"})
 
@@ -2688,7 +2773,9 @@ documentation <https://bigml.com/developers/associations>`_.
 
 For example, to create an association only including the first two fields and
 the first 10 instances in the dataset, you can use the following
-invocation::
+invocation
+
+.. code-block:: php
 
     $model = $api->create_association($dataset,
                                        array("name" => "my association",
@@ -2696,7 +2783,9 @@ invocation::
                                              "range" => array(1,10)));
 
 Associations can also be created from lists of datasets. Just use the
-list of ids as the first argument in the api call::
+list of ids as the first argument in the api call
+
+.. code-block:: php
 
     $model = $api->create_association(array(dataset1, dataset2),
                                       array("name" => "my association",
@@ -2713,14 +2802,18 @@ arguments accepted by BigML and documented in the `Topic Model section
 of the Developer’s documentation <https://bigml.com/api/topicmodels>`_ .
 
 For example, to create a topic model including exactly 32 topics you
-can use the following invocation::
+can use the following invocation
+
+.. code-block:: php
 
     $topic_model = $api->create_topicmodel($dataset,
                                             array("name" => "my topics",
                                                   "number_of_topics" => 32));
 
 Topic models can also be created from lists of datasets. Just use the
-list of ids as the first argument in the api call::
+list of ids as the first argument in the api call
+
+.. code-block:: php
 
     $topic_model = $api->create_topic_model([$dataset1, $dataset2],
                                             array("name" => "my topics",
@@ -2731,7 +2824,9 @@ Creating predictions
 --------------------
 
 You can now use the model resource identifier together with some input parameters to ask for predictions, using the create_prediction method.
-You can also give the prediction a name::
+You can also give the prediction a name
+
+.. code-block:: php
 
     $prediction = $api->create_prediction($model,
                                           array("sepal length"=> 5,
@@ -2747,7 +2842,9 @@ Creating centroids
 
 To obtain the centroid associated to new input data, you can now use the create_centroid method.
 Give the method a cluster identifier and the input data to obtain the centroid.
-You can also give the centroid predicition a name::
+You can also give the centroid predicition a name
+
+.. code-block:: php
 
     $centroid = $api->create_centroid($cluster,
                                       array("pregnancies"=> 0,
@@ -2766,7 +2863,9 @@ Creating anomaly scores
 -----------------------
 
 To obtain the anomaly score associated to new input data, you can now use the
-create_anomaly_score method. Give the method an anomaly detector identifier and the input data to obtain the score::
+create_anomaly_score method. Give the method an anomaly detector identifier and the input data to obtain the score
+
+.. code-block:: php
 
      $anomaly_score = $api->create_anomaly_score($anomaly,
                                                  array("src_bytes"=> 350),
@@ -2780,7 +2879,9 @@ Creating association sets
 Using the association resource, you can obtain the consequent items associated
 by its rules to your input data. These association sets can be obtained calling
 the ``create_association_set`` method. The first argument is the association
-ID or object and the next one is the input data::
+ID or object and the next one is the input data
+
+.. code-block:: php
 
      $association_set = $api->create_association_set($association,
                                                       array('genres'=> "Action\$Adventure"),
@@ -2795,14 +2896,18 @@ and comparing its predictions to the objective field real values.
 Thus, the required arguments to create an evaluation are model id and a dataset id.
 You can also include in the request all the additional arguments accepted by BigML and documented in `the Evaluations section of the Developer’s documentation <https://bigml.com/developers/evaluations>`_.
 
-For instance, to evaluate a previously created model using at most 10000 rows from an existing dataset you can use the following call::
+For instance, to evaluate a previously created model using at most 10000 rows from an existing dataset you can use the following call
+
+.. code-block:: php
 
     $evaluation = $api->create_evaluation($model,
                                           $dataset,
                                           array("name"=>"my model", "max_rows"=>10000));
 
 Evaluations can also check the ensembles’ performance.
-To evaluate an ensemble you can do exactly what we just did for the model case, using the ensemble object instead of the model as first argument::
+To evaluate an ensemble you can do exactly what we just did for the model case, using the ensemble object instead of the model as first argument
+
+.. code-block:: php
 
     $evaluation = $api->create_evaluation($ensemble, $dataset);
 
@@ -2811,11 +2916,16 @@ Creating ensembles
 ------------------
 
 To improve the performance of your predictions, you can create an ensemble of models and combine their individual predictions.
-The only required argument to create an ensemble is the dataset id::
+The only required argument to create an ensemble is the dataset id
+
+.. code-block:: php
 
     $ensemble = $api->create_ensemble($datasetid);
 
-but you can also specify the number of models to be built and the parallelism level for the task::
+but you can also specify the number of models to be built and the parallelism level for the task
+
+
+.. code-block:: php
 
     $args = array('number_of_models'=> 20, 'tlp'=> 3);
     $ensemble = $api->create_ensemble($datasetid, $args);
@@ -2872,7 +2982,9 @@ regression problems.
 Deepnets predictions compute a probability associated to each class in
 the objective field for classification problems. As the rest of
 models, deepnets can be created from a dataset by calling the
-corresponding create method::
+corresponding create method:
+
+.. code-block:: php
 
   $deepnet = $api->create_deepnet('dataset/5143a51a37203f2cf7000972',
                                   array("name" => "my deepnet",
@@ -2894,7 +3006,9 @@ Creating batch predictions
 
 We have shown how to create predictions individually, but when the amount of predictions to make increases, this procedure is far from optimal.
 In this case, the more efficient way of predicting remotely is to create a dataset containing the input data you want your model to predict
-from and to give its id and the one of the model to the create_batch_prediction api call::
+from and to give its id and the one of the model to the create_batch_prediction api call
+
+.. code-block:: php
 
     $batch_prediction = $api->$create_batch_prediction($model,
                                                        $dataset,
@@ -2910,7 +3024,9 @@ If none of these arguments is given, the resulting file will contain the name of
 
 As for the rest of resources, the create method will return an incomplete object, that can be updated by issuing the corresponding
 $api->get_batch_prediction call until it reaches a FINISHED status.
-Then you can download the created predictions file using::
+Then you can download the created predictions file using
+
+.. code-block:: php
 
    $api->download_batch_prediction('batchprediction/526fc344035d071ea3031d70',
                                    'my_dir/my_predictions.csv');
@@ -2921,7 +3037,9 @@ Creating batch centroids
 
 As described in the previous section, it is also possible to make centroids’ predictions in batch.
 First you create a dataset containing the input data you want your cluster to relate to a centroid.
-The create_batch_centroid call will need the id of the dataset and the cluster to assign a centroid to each input data::
+The create_batch_centroid call will need the id of the dataset and the cluster to assign a centroid to each input data
+
+.. code-block:: php
 
     $batch_centroid = $api->create_batch_centroid($cluster,
                                                   $dataset,
@@ -2933,7 +3051,9 @@ The create_batch_centroid call will need the id of the dataset and the cluster t
 Creating batch anomaly scores
 -----------------------------
 
-Input data can also be assigned an anomaly score in batch. You train an anomaly detector with your training data and then build a dataset from your input data. The create_batch_anomaly_score call will need the id of the dataset and of the anomaly detector to assign an anomaly score to each input data instance::
+Input data can also be assigned an anomaly score in batch. You train an anomaly detector with your training data and then build a dataset from your input data. The create_batch_anomaly_score call will need the id of the dataset and of the anomaly detector to assign an anomaly score to each input data instance
+
+.. code-block:: php
 
    $batch_anomaly_score = $api->create_batch_anomaly_score($anomaly,
                                                            $dataset,
@@ -2944,7 +3064,9 @@ Input data can also be assigned an anomaly score in batch. You train an anomaly 
 Listing Resources
 -----------------
 
-You can list resources with the appropriate api method::
+You can list resources with the appropriate api method:
+
+.. code-block:: php
 
     $api->list_sources()
     $api->list_datasets()
@@ -2980,19 +3102,27 @@ You can filter resources in listings using the syntax and fields labeled as filt
 
 A few examples:
 
-- Ids of the first 5 sources created before April 1st, 2012::
+- Ids of the first 5 sources created before April 1st, 2012:
+
+.. code-block:: php
 
     $api->list_sources("limit=5;created__lt=2012-04-1");
 
-- Name of the first 10 datasets bigger than 1MB::
+- Name of the first 10 datasets bigger than 1MB:
+
+.. code-block:: php
 
     $api->list_datasets("limit=10;size__gt=1048576");
 
-- Name of models with more than 5 fields (columns)::
+- Name of models with more than 5 fields (columns):
+
+.. code-block:: php
 
     $api->list_models("columns__gt=5");
 
-- Ids of predictions whose model has not been deleted::
+- Ids of predictions whose model has not been deleted:
+
+.. code-block:: php
 
     $api->list_predictions("model_status=true");
 
@@ -3003,19 +3133,27 @@ You can order resources in listings using the syntax and fields labeled as sorta
 
 A few examples:
 
-- Name of sources ordered by size::
+- Name of sources ordered by size:
+
+.. code-block:: php
 
      $api->list_sources("order_by=size");
 
-- Number of instances in datasets created before April 1st, 2012 ordered by size::
+- Number of instances in datasets created before April 1st, 2012 ordered by size:
+
+.. code-block:: php
 
      $api->list_datasets("created__lt=2012-04-1;order_by=size");
 
-- Model ids ordered by number of predictions (in descending order)::
+- Model ids ordered by number of predictions (in descending order):
+
+.. code-block:: php
 
      $api->list_models("order_by=-number_of_predictions");
 
-- Name of predictions ordered by name::
+- Name of predictions ordered by name:
+
+.. code-block:: php
 
      $api->list_predictions("order_by=name");
 
@@ -3023,7 +3161,9 @@ Updating Resources
 ------------------
 
 When you update a resource, it is returned in a dictionary exactly like the one you get when you create a new one.
-However the status code will be bigml.api.HTTP_ACCEPTED if the resource can be updated without problems or one of the HTTP standard error codes otherwise::
+However the status code will be bigml.api.HTTP_ACCEPTED if the resource can be updated without problems or one of the HTTP standard error codes otherwise:
+
+.. code-block:: php
 
     $api->update_source($source, array("name"=> "new name"));
     $api->update_dataset($dataset, array("name"=> "new name"));
@@ -3042,7 +3182,9 @@ However the status code will be bigml.api.HTTP_ACCEPTED if the resource can be u
 
 Updates can change resource general properties, such as the name or description attributes of a dataset, or specific properties.
 As an example, let’s say that your source has a certain field whose contents are numeric integers.
-BigML will assign a numeric type to the field, but you might want it to be used as a categorical field. You could change its type to categorical by calling::
+BigML will assign a numeric type to the field, but you might want it to be used as a categorical field. You could change its type to categorical by calling:
+
+.. code-block:: php
 
     $api->update_source($source, array("fields"=> array("000001"=> array("optype"=> "categorical"))));
 
@@ -3051,7 +3193,9 @@ You will find detailed information about the updatable attributes of each resour
 
 Deleting Resources
 ------------------
-Resources can be deleted individually using the corresponding method for each type of resource::
+Resources can be deleted individually using the corresponding method for each type of resource
+
+.. code-block:: php
 
     $api->delete_source($source);
     $api->delete_dataset($dataset);
@@ -3083,6 +3227,8 @@ to produce predictions with no further connection to the remote
 API. The local Model object can be instantiated by using the entire
 response of the GET call to the API:
 
+.. code-block:: php
+
     $api = new BigML\BigML();
 
     $model = api->get_model('model/538XXXXXXXXXXXXXXXXXXX2');
@@ -3090,27 +3236,37 @@ response of the GET call to the API:
 
 It also accepts the model ID as the first argument. In this case, a
 new connection will be created internally to download the model
-information.::
+information.:
+
+.. code-block:: php
 
     $local_model = new BigML\Model("model/538XXXXXXXXXXXXXXXXXXX2");
 
 If you want to use a specific connection object for the remote
-retrieval, you can set it as the second parameter::
+retrieval, you can set it as the second parameter:
+
+.. code-block:: php
 
     $local_model = new BigML\Model("model/538XXXXXXXXXXXXXXXXXXX2", $api);
 
-For set default storage::
+To set default storage
+
+.. code-block:: php
 
     $local_model = new BigML\Model("model/538XXXXXXXXXXXXXXXXXXX2", null, 'storagedirectory');
 
 Local Predictions
 -----------------
 
-Once you have a local model you can use to generate predictions locally::
+Once you have a local model you can use to generate predictions locally
+
+.. code-block:: php
 
     $prediction = $local_model->predict(array("petal length"=> 3, "petal width"=> 1));
 
-You can also use the `predict_probability` function to obtain a probability prediction for each possible class of the objective field::
+You can also use the `predict_probability` function to obtain a probability prediction for each possible class of the objective field:
+
+.. code-block:: php
 
     $predict_probability = $local_model->predict_probability(array("petal width"=> 0.5));
 
@@ -3132,6 +3288,8 @@ able to produce predictions with no further connection to the remote
 API. The local Cluster object can be instantiated by using the entire
 response of the GET call to the API:
 
+.. code-block:: php
+
     $cluster = $api->get_cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18");
     $local_cluster = new BigML\Cluster($cluster);
 
@@ -3139,16 +3297,22 @@ It also accepts the cluster ID as the first argument. This will
 retrieve the remote cluster information, using an implicitly built
 BigML() connection object (see the Authentication section for more
 details on how to set your credentials) and return a Cluster object
-that you can use to make local centroid predictions.::
+that you can use to make local centroid predictions.
+
+.. code-block:: php
 
     $local_cluster = new BigML\Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18");
 
 If you want to use a specfic connection object for the remote
-retrieval, you can set it as second parameter::
+retrieval, you can set it as second parameter
+
+.. code-block:: php
 
     $local_cluster = new BigML\Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18", $api);
 
-For set default storage if you have storage unset in your API object::
+To set default storage if you have storage unset in your API object
+
+.. code-block:: php
 
   $local_cluster = new BigML\Cluster("cluster/539xxxxxxxxxxxxxxxxxxxx18", null, $storagedirectory);
 
@@ -3157,7 +3321,9 @@ For set default storage if you have storage unset in your API object::
 Local Centroids
 ---------------
 
-Using the local cluster object, you can predict the centroid associated to an input data set::
+Using the local cluster object, you can predict the centroid associated to an input data set:
+
+.. code-block:: php
 
     $local_cluster->centroid(array("pregnancies"=> 0,
                                    "plasma glucose"=> 118,
@@ -3177,17 +3343,23 @@ As in the local model predictions, producing local centroids can be done indepen
 Local Anomaly Detector
 ----------------------
 
-You can also instantiate a local version of a remote anomaly.::
+You can also instantiate a local version of a remote anomaly.
+
+.. code-block:: php
 
     $local_anomaly = new BigML\Anomaly('anomaly/502fcbff15526876610002435');
 
-This will retrieve the remote anomaly detector information, using an implicitly built BigML() connection object (see the Authentication section for more details on how to set your credentials) and return an Anomaly object that you can use to make local anomaly scores. If you want to use a specfic connection object for the remote retrieval, you can set it as second parameter::
+This will retrieve the remote anomaly detector information, using an implicitly built BigML() connection object (see the Authentication section for more details on how to set your credentials) and return an Anomaly object that you can use to make local anomaly scores. If you want to use a specfic connection object for the remote retrieval, you can set it as second parameter
+
+.. code-block:: php
 
     $api = new BigML\BigML("username", "password");
     $local_anomaly = new BigML\Anomaly('anomaly/502fcbff15526876610002435',
                                  $api);
 
-or even use the remote anomaly information retrieved previously to build the local anomaly detector object::
+or even use the remote anomaly information retrieved previously to build the local anomaly detector object
+
+.. code-block:: php
 
     $api = new BigML\BigML()
     $anomaly = $api->get_anomaly('anomaly/502fcbff15526876610002435',
@@ -3198,7 +3370,9 @@ Note that in this example we used a limit=-1 query string for the anomaly retrie
 Local Anomaly Scores
 --------------------
 
-Using the local anomaly detector object, you can predict the anomaly score associated to an input data set::
+Using the local anomaly detector object, you can predict the anomaly score associated to an input data set
+
+.. code-block:: php
 
     $local_anomaly->anomaly_score(array("src_bytes"=> 350))
     0.9268527808726705
@@ -3208,7 +3382,9 @@ As in the local model predictions, producing local anomaly scores can be done in
 Local Deepnet
 -------------
 
-You can also instantiate a local version of a remote Deepnet.::
+You can also instantiate a local version of a remote Deepnet.
+
+.. code-block:: php
 
     require 'vendor/autoload.php';
 
@@ -3219,7 +3395,9 @@ built ``BigML()`` connection object (see the ``Authentication`` section for
 more details on how to set your credentials) and return a ``Deepnet``
 object that you can use to make local predictions. If you want to use
 a specfic connection object for the remote retrieval, you can set it
-as second parameter::
+as second parameter
+
+.. code-block:: php
 
      require 'vendor/autoload.php';
      $api = new BigML();
@@ -3227,7 +3405,9 @@ as second parameter::
      $local_deepnet = new Deepnet('deepnet/502fdbcf15526876210042435', $api);
 
 You can also reuse a remote Deepnet JSON structure as previously
-retrieved to build the local Deepnet object::
+retrieved to build the local Deepnet object
+
+.. code-block:: php
 
     require 'vendor/autoload.php';
 
@@ -3245,7 +3425,9 @@ Local Deepnet Predictions
 -------------------------
 
 Using the local deepnet object, you can predict the prediction for an
-input data set::
+input data set
+
+.. code-block:: php
 
   $local_deepnet->predict(array("petal length" => 2, "sepal length" => 1.5,
                                 "petal width" => 0.5, "sepal width" => 0.7));
@@ -3271,7 +3453,9 @@ As with local Models, if ``compact`` is ``False`` (the default), the output is
 a list of maps, each with the keys ``prediction`` and ``probability`` mapped
 to the class name and its associated probability.
 
-So, for example::
+So, for example
+
+.. code-block:: php
 
   $local_deepnet->predict_probability(array("petal length" => 2, "sepal length" => 1.5,
                                             "petal width" => 0.5, "sepal width" => 0.7));
@@ -3286,7 +3470,9 @@ a list in class name order, again, as is the case with local Models.
 Local Topic Model
 -----------------
 
-You can also instantiate a local version of a remote topic model.::
+You can also instantiate a local version of a remote topic model.
+
+.. code-block:: php
 
     require 'vendor/autoload.php';
 
@@ -3297,7 +3483,9 @@ implicitly built ``BigML()`` connection object (see the ``Authentication``
 section for more details on how to set your credentials) and return a
 ``TopicModel`` object that you can use to obtain local topic
 distributions. If you want to use a specific connection object for the
-remote retrieval, you can set it as second parameter::
+remote retrieval, you can set it as second parameter
+
+.. code-block:: php
 
     require 'vendor/autoload.php';
 
@@ -3305,7 +3493,9 @@ remote retrieval, you can set it as second parameter::
     $local_topic_model = new BigML\TopicModel('topicmodel/502fdbcf15526876210042435', $api);
 
 You can also reuse a remote topic model JSON structure as previously
-retrieved to build the local topic model object::
+retrieved to build the local topic model object
+
+.. code-block:: php
 
     require 'vendor/autoload.php';
 
@@ -3327,15 +3517,21 @@ Multi Models
 
 Multi Models use a numbers of BigML remote models to build a local
 version that can be used to generate predictions locally. Predictions
-are generated combining the outputs of each model::
+are generated combining the outputs of each model
+
+.. code-block:: php
 
     $multimodel = new BigML\MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"));
 
-or::
+or
+
+.. code-block:: php
 
     $multimodel = new BigML\MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"), $api);
 
-or set default storage if you have storage unset in `$api`::
+or set default storage if you have storage unset in `$api`
+
+.. code-block:: php
 
   $multimodel = new BigML\MultiModel(array("model/5111xxxxxxxxxxxxxxxxxx12",model/538Xxxxxxxxxxxxxxxxxxx32"), null, $storage);
 
@@ -3343,11 +3539,15 @@ or set default storage if you have storage unset in `$api`::
 
 The combination method used by default is plurality for categorical predictions and mean value for numerical ones. You can also use:
 
-confidence weighted::
+confidence weighted
+
+.. code-block:: php
 
     $prediction = $multimodel->predict(array("petal length"=> 3, "petal width"=> 1), 1);
 
-that will weight each vote using the confidence/error given by the model to each prediction, or even probability weighted::
+that will weight each vote using the confidence/error given by the model to each prediction, or even probability weighted
+
+.. code-block:: php
 
     $prediction = $multimodel->predict(array("petal length"=> 3, "petal width"=> 1), 2);
 
@@ -3358,44 +3558,60 @@ There’s also a threshold method that uses an additional set of options: thresh
 The category is predicted if and only if the number of predictions for that category is at least the threshold value.
 Otherwise, the prediction is plurality for the rest of predicted values.
 
-An example of threshold combination method would be::
+An example of threshold combination method would be
+
+.. code-block:: php
 
     $prediction = $multimodel->predict(array("petal length"=> 3, "petal width"=> 1), 3, false, array('threshold'=> 3, 'category'=> 'Iris-virginica'));
 
 When making predictions on a test set with a large number of models, batch_predict can be useful to log each model’s predictions in a separated file.
-It expects a list of input data values and the directory path to save the prediction files in::
+It expects a list of input data values and the directory path to save the prediction files in
+
+.. code-block:: php
 
     $multimodel->batch_predict(array("petal length"=> 3, "petal width"=> 1, "petal length"=> 1, "petal width"=> 5.1), "data/predictions");
 
 The predictions generated for each model will be stored in an output file in data/predictions using the syntax model_[id of the model]__predictions.csv.
 For instance, when using model/50c0de043b563519830001c2 to predict, the output file name will be model_50c0de043b563519830001c2__predictions.csv.
 An additional feature is that using reuse=True as argument will force the function to skip the creation of the file if it already exists.
-This can be helpful when using repeatedly a bunch of models on the same test set::
+This can be helpful when using repeatedly a bunch of models on the same test set
+
+.. code-block:: php
 
     $multimodel->batch_predict(array("petal length"=> 3, "petal width"=> 1, "petal length"=> 1, "petal width"=> 5.1), "data/predictions", true, true);
 
 
-Prediction files can be subsequently retrieved and converted into a votes list using batch_votes::
+Prediction files can be subsequently retrieved and converted into a votes list using batch_votes
+
+.. code-block:: php
 
     $multimodel.batch_votes("data/predictions");
 
 which will return a list of MultiVote objects. Each MultiVote contains a list of predictions.
 
-These votes can be further combined to issue a final prediction for each input data element using the method combine::
+These votes can be further combined to issue a final prediction for each input data element using the method combine
+
+.. code-block:: php
 
    foreach($multimodel->batch_votes("data/predictions") as $multivote) {
       $prediction = $multivote->combine();
    }
 
-Again, the default method of combination is plurality for categorical predictions and mean value for numerical ones. You can also use confidence weighted::
+Again, the default method of combination is plurality for categorical predictions and mean value for numerical ones. You can also use confidence weighted
+
+.. code-block:: php
 
     $prediction = $multivote->combine(1);
 
-or probability weighted::
+or probability weighted
+
+.. code-block:: php
 
     $prediction = $multivote->combine(2);
 
-You can also get a confidence measure for the combined prediction::
+You can also get a confidence measure for the combined prediction
+
+.. code-block:: php
 
     $prediction = $multivote->combine(0, true);
 
@@ -3410,14 +3626,18 @@ In regression, all the models predictions’ confidences contribute to the weigh
 Local Ensembles
 ---------------
 
-Remote ensembles can also be used locally through the Ensemble class. The simplest way to access an existing ensemble and using it to predict locally is::
+Remote ensembles can also be used locally through the Ensemble class. The simplest way to access an existing ensemble and using it to predict locally is
+
+.. code-block:: php
 
     $ensemble = new BigML\Ensemble("ensemble/53dxxxxxxxxxxxxxxxxxxafa");
 
     $ensemble->predict(array("petal length"=>3, "petal width"=> 1));
 
 This call will download all the ensemble related info and store it in a ./storage directory ready to be used to predict.
-As in MultipleModel, several prediction combination methods are available, and you can choose another storage directory or even avoid storing at all, for instance::
+As in MultipleModel, several prediction combination methods are available, and you can choose another storage directory or even avoid storing at all, for instance
+
+.. code-block:: php
 
     $api = new BigML("username", "password", false, "storagedirectory");
 
@@ -3429,20 +3649,26 @@ As in MultipleModel, several prediction combination methods are available, and y
 
 creates a new ensemble and stores its information in ./storagedirectory folder. Then this information is used to predict locally using the confidence weighted method.
 
-Similarly, local ensembles can also be created by giving a list of models to be combined to issue the final prediction::
+Similarly, local ensembles can also be created by giving a list of models to be combined to issue the final prediction
+
+.. code-block:: php
 
     $ensemble = new BigML\Ensemble(array('model/50c0de043b563519830001c2','model/50c0de043b5635198300031b'));
 
     $ensemble->predict(array("petal length": 3, "petal width": 1));
 
-You can also use the `predict_probability` function to obtain a probability prediction for each possible class of the objective field::
+You can also use the `predict_probability` function to obtain a probability prediction for each possible class of the objective field
+
+.. code-block:: php
 
     $ensemble->predict_probability(array("petal width"=> 0.5));
 
 Rule Generation
 ---------------
 
-You can also use a local model to generate a IF-THEN rule set that can be very helpful to understand how the model works internally::
+You can also use a local model to generate a IF-THEN rule set that can be very helpful to understand how the model works internally
+
+.. code-block:: php
 
     $local_model->rules();
 
@@ -3481,13 +3707,17 @@ To run the test you need phpunit that you can download from here `http://phpunit
 
 Make sure that you have set up your authentication variables in your environment.
 
-To run all tests::
+To run all tests
+
+.. code-block:: batch
 
      cd tests
      configtests.xml
      phpunit.phar --configuration configtests.xml
 
 
-To Run a specific test::
+To Run a specific test
+
+.. code-block:: batch
 
      phpunit.phar test_01_prediction.php
