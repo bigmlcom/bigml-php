@@ -35,20 +35,12 @@ class BigMLTestDeepnets extends PHPUnit_Framework_TestCase
       self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
    }
 
+   public function test_scenario4() {
 
-   public function test_scenario3() {
-
-      $data = array(array("filename" => "data/iris.csv",
-                           "data_input" => array("sepal length" => 4.1,
-                                                 "sepal width" => 2.4),
-                           "objective" => "000004",
-                           "prediction" => "Iris-setosa",
-                           "params" => array("search" => true)),
-                     array("filename" => "data/movies.csv",
-                           "data_input" => array(
-                              "genres" => "Adventure\$Action",
-                              "timestamp" => 993906291,
-                              "occupation" => "K-12 student"),
+      $data = array(array("filename" => "data/movies.csv",
+                           "data_input" => array("genres" => "Adventure\$Action",
+                                                 "timestamp" => 993906291,
+                                                 "occupation" => "K-12 student"),
                            "update_params" => array(
                               "fields" => array(
                                  "000007" => array(
@@ -57,7 +49,22 @@ class BigMLTestDeepnets extends PHPUnit_Framework_TestCase
                                        "separator" => "\$")))),
                            "objective" => "000009",
                            "prediction" => "4.49741",
-                           "params" => array()));
+                           "params" => array(
+                              "hidden_layers" => [["number_of_nodes" => 32,
+                                                   "activation_function" => "sigmoid"]])),
+                     array("filename" => "data/movies.csv",
+                           "data_input" => array("genres" => "Adventure\$Action",
+                                                 "timestamp" => 993906291,
+                                                 "occupation" => "K-12 student"),
+                           "update_params" => array(
+                              "fields" => array(
+                                 "000007" => array(
+                                    "optype"=> "items",
+                                    "item_analysis" => array(
+                                       "separator" => "\$")))),
+                           "objective" => "000009",
+                           "prediction" => "4.49741",
+                           "params" => array("search" => true)));
 
       foreach($data as $item) {
          print "\n\nSuccessfully comparing predictions for deepnets:\n";
