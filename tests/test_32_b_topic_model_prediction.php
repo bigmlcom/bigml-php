@@ -15,7 +15,7 @@ use BigML\BigML;
 use BigML\BigMLRequest;
 use BigML\TopicModel;
 
-class BigMLTestBoostedEnsemble extends PHPUnit_Framework_TestCase
+class BigMLTestBoostedEnsembleB extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"

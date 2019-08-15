@@ -29,16 +29,16 @@ if (class_exists('BigML\BigML')) {
 class BigML {
 
    const BIGML_ENDPOINT = "https://bigml.io";
-   const ONLY_MODEL = "only_model=true;limit=-1;"; 
+   const ONLY_MODEL = "only_model=true;limit=-1;";
    /**
-    * The BigML Access Username 
+    * The BigML Access Username
     *
     * @var string
     * @access private
     */
    private $__username = null;
    /**
-    * The BigML Access ApiKey 
+    * The BigML Access ApiKey
     *
     * @var string
     * @access private
@@ -80,7 +80,7 @@ class BigML {
    /**
     * If you need to access an organization's project for which you
     * have been given privileges, set it here.
-    * Otherwise, you can restrict this BigML instance to only 
+    * Otherwise, you can restrict this BigML instance to only
     * operate on one of your projects by specifying it here.
     *
     * @var string
@@ -96,8 +96,8 @@ class BigML {
     */
    private $org;
 
-   /*   
-    * @param string $username 
+   /*
+    * @param string $username
     * @param string $apiKey
     * @param boolean $devMode
     * @param string $domain
@@ -116,7 +116,7 @@ class BigML {
                                $version = "andromeda",
                                $project = null,
                                $org = null) {
-      
+
       if (is_array($username)) {
          $options = $username;
          if (array_key_exists("username", $options))
@@ -142,7 +142,7 @@ class BigML {
       if ($username == null) {
          $username = getenv("BIGML_USERNAME");
       }
-        
+
       if ($apiKey == null) {
          $apiKey = getenv("BIGML_API_KEY");
       }
@@ -239,17 +239,17 @@ class BigML {
    }
    ##########################################################################
    #
-   # Sources 
+   # Sources
    # https://bigml.com/developers/sources
    #
    ##########################################################################
 
-   public function create_source($data, $options=array()) 
+   public function create_source($data, $options=array())
    {
       /*
         Creates a new source
         The source can be a local file path or a URL o stream source
-          
+
       */
       if (filter_var($data, FILTER_VALIDATE_URL)) {
          return $this->_create_remote_source($data, $options);
@@ -258,10 +258,10 @@ class BigML {
       } else {
          error_log("Wrong source file or url");
          return null;
-      } 
+      }
    }
 
-   public function get_source($sourceId, $queryString=null) 
+   public function get_source($sourceId, $queryString=null)
    {
       /*
         Retrieves a remote source.
@@ -277,7 +277,7 @@ class BigML {
       $rest = $this->get_resource_request($sourceId, "source", "GET", $queryString);
       if ($rest == null) return null;
       return $rest->getResponse();
-   }   
+   }
 
    public function list_sources($queryString=null)
    {
@@ -299,10 +299,10 @@ class BigML {
       */
       $rest = $this->get_resource_request($sourceId,
                                          "source",
-                                         "UPDATE", 
-                                         null, 
-                                         true, 
-                                         $waitTime, 
+                                         "UPDATE",
+                                         null,
+                                         true,
+                                         $waitTime,
                                          $retries);
       if ($rest == null) return null;
 
@@ -322,12 +322,12 @@ class BigML {
       return $rest->getResponse();
    }
 
-   private function _check_resource_status($resource, $queryString=null) 
+   private function _check_resource_status($resource, $queryString=null)
    {
       $rest = new BigMLRequest('GET', $resource, $this);
       if ($queryString!=null) {
          $rest->setQueryString($queryString);
-      } 
+      }
 
       $item = $rest->getResponse();
 
@@ -336,7 +336,7 @@ class BigML {
 
       $obj = null;
 
-      if (property_exists($item, "object")) 
+      if (property_exists($item, "object"))
          $obj = $item->object;
 
 
@@ -356,9 +356,9 @@ class BigML {
          $statusCode = $status->code;
          $message = $status->message;
       }
-      $ready = $code == BigMLRequest::HTTP_OK && 
+      $ready = $code == BigMLRequest::HTTP_OK &&
              $statusCode == BigMLRequest::FINISHED;
-      
+
       return array('ready' => $ready,
                    'code' => $statusCode,
                    'message' => $message,
@@ -366,13 +366,13 @@ class BigML {
 
    }
 
-   public function _check_resource($resource, 
-                                   $queryString = null, 
-                                   $waitTime = 3000, 
+   public function _check_resource($resource,
+                                   $queryString = null,
+                                   $waitTime = 3000,
                                    $retries = 0)
    {
       $r = $resource;
-      if (is_string($resource)) 
+      if (is_string($resource))
          $r = json_decode($resource);
 
       if ($r instanceof \STDClass && property_exists($r, "resource")) {
@@ -381,10 +381,10 @@ class BigML {
 
       if (preg_match('/(source|dataset|model|evaluation|ensemble|batchprediction|batchcentroid|prediction|cluster|centroid|anomaly|anomalyscore|sample|project|correlation|statisticaltest|association|logisticregression|library|execution|script|topicmodel|deepnet)(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
          $count = 0;
-         $status = $this->_check_resource_status($resource, $queryString); 
+         $status = $this->_check_resource_status($resource, $queryString);
          while ($count<$retries && !$status["ready"]) {
             $waitTime = 1.1 * $waitTime;
-            usleep($waitTime*1000); 
+            usleep($waitTime*1000);
             $count++;
             $status = $this->_check_resource_status($resource, $queryString);
          }
@@ -407,7 +407,7 @@ class BigML {
    ##########################################################################
 
    public function create_dataset($origin_resource, $args=array(), $waitTime=3000, $retries=10) {
-      /* Uses a remote resource to create a new dataset 
+      /* Uses a remote resource to create a new dataset
        * The allowed remote resources can be:
        *   - source
        *   - dataset
@@ -463,7 +463,7 @@ class BigML {
          } elseif ($resource['type'] == "dataset") {
             $resource['type']="origin_dataset";
          }
-          
+
          $args[$resource['type']] = $resource['id'];
       }
 
@@ -557,7 +557,7 @@ class BigML {
          } else {
             error_log("Wrong dataset id");
             return null;
-         } 
+         }
       }
 
       $resource = $this->_check_resource($dataset, null, $waitTime, $retries);
@@ -583,7 +583,7 @@ class BigML {
       }
 
       return $errors_dict;
- 
+
    }
    ##########################################################################
    #
@@ -595,12 +595,12 @@ class BigML {
    public function create_logistic_regression($datasetIds, $data=array(), $waitTime=3000, $retries=10) {
       /* Creates a logistic regression from a `dataset`
          of a list o `datasets` */
-  
+
       $datasets=array();
       if (!is_array($datasetIds)) {
          $datasetIds=array($datasetIds);
       }
-   
+
       foreach ($datasetIds as $var => $datasetId) {
          $resource = $this->_check_resource($datasetId, null, $waitTime, $retries);
          if ($resource == null || $resource['type'] != "dataset") {
@@ -612,7 +612,7 @@ class BigML {
          }
          array_push($datasets, $resource["id"]);
       }
-  
+
       $rest = new BigMLRequest('CREATE', 'logisticregression', $this);
 
       if (sizeof($datasets) > 1) {
@@ -662,7 +662,7 @@ class BigML {
    public function update_logistic_regression($logisticregressionId, $data, $waitTime=3000, $retries=10) {
 
       /*
-        Updates a logistic regression 
+        Updates a logistic regression
       */
       $rest = $this->get_resource_request($logisticregressionId, "logisticregression", "UPDATE", null, true, $waitTime, $retries);
       if ($rest == null) return null;
@@ -675,7 +675,7 @@ class BigML {
 
    public function delete_logistic_regression($logisticregressionId) {
       /*
-        Deletes a logistic regression 
+        Deletes a logistic regression
       */
       $rest = $this->get_resource_request($logisticregressionId, "logisticregression", "DELETE", null);
       if ($rest == null) return null;
@@ -698,7 +698,7 @@ class BigML {
       if (!is_array($datasetIds)) {
          $datasetIds=array($datasetIds);
       }
-   
+
       foreach ($datasetIds as $var => $datasetId) {
          $resource = $this->_check_resource($datasetId, null, $waitTime, $retries);
          if ($resource == null || !in_array($resource['type'], array("dataset","cluster"))) {
@@ -710,11 +710,11 @@ class BigML {
          }
          array_push($datasets, $resource["id"]);
       }
-         
+
       $rest = new BigMLRequest('CREATE', 'model', $this);
 
       if (sizeof($datasets) > 1) {
-         $data["datasets"] = $datasets;   
+         $data["datasets"] = $datasets;
       } else {
 
          if ($resource['type'] == "cluster") {
@@ -849,18 +849,18 @@ class BigML {
         As an ensemble is an evolving object that is processed
         until it reaches the FINISHED or FAULTY state, the function will
         return a dict that encloses the ensemble values and state info
-        available at the time it is called. 
+        available at the time it is called.
       */
       $rest = $this->get_resource_request($ensembleId, "ensemble", "GET", $queryString);
       if ($rest == null) return null;
       return $rest->getResponse();
 
    }
-   
+
    public function list_ensembles($queryString=null)
    {
       /*
-        Lists all your ensembles 
+        Lists all your ensembles
       */
       $rest = new BigMLRequest('LIST', 'ensemble', $this);
 
@@ -873,7 +873,7 @@ class BigML {
 
    public function update_ensemble($ensembleId, $data, $waitTime=3000, $retries=10) {
       /*
-        Updates a ensemble 
+        Updates a ensemble
       */
       $rest = $this->get_resource_request($ensembleId, "ensemble", "UPDATE", null, true, 3000, 10);
       if ($rest == null) return null;
@@ -886,7 +886,7 @@ class BigML {
 
    public function delete_ensemble($ensembleId) {
       /*
-        Deletes a ensemble 
+        Deletes a ensemble
       */
       $rest = $this->get_resource_request($ensembleId, "ensemble", "DELETE", null);
       if ($rest == null) return null;
@@ -917,7 +917,7 @@ class BigML {
          return null;
       }
 
-      $args = $args == null? array() : $args; 
+      $args = $args == null? array() : $args;
       $args["input_data"] = new \StdClass();
 
       if ($inputData != null) {
@@ -948,7 +948,7 @@ class BigML {
    public function list_predictions($queryString=null)
    {
       /*
-        Lists all your predictions 
+        Lists all your predictions
       */
       $rest = new BigMLRequest('LIST', 'prediction', $this);
 
@@ -959,10 +959,10 @@ class BigML {
       return $rest->getResponse();
    }
 
-   public function update_prediction($predictionId, $data, $waitTime=3000, $retries=10) 
+   public function update_prediction($predictionId, $data, $waitTime=3000, $retries=10)
    {
       /*
-        Updates a  prediction 
+        Updates a  prediction
       */
       $rest = $this->get_resource_request($predictionId, "prediction", "UPDATE", null, true, $waitTime, $retries);
       if ($rest == null) return null;
@@ -1018,9 +1018,9 @@ class BigML {
       } elseif ($resource["status"] != BigMLRequest::FINISHED) {
          error_log($resource['message']);
          return null;
-      }   
+      }
 
-      $args["dataset"] = $resource['id']; 
+      $args["dataset"] = $resource['id'];
 
       $rest = new BigMLRequest('CREATE', 'batchprediction', $this);
 
@@ -1047,7 +1047,7 @@ class BigML {
       return $rest->getResponse();
    }
 
-   public function download_batch_prediction($batchPredictionId, $filename=null){ 
+   public function download_batch_prediction($batchPredictionId, $filename=null){
       /*
         Retrieves the batch predictions file.
 
@@ -1056,12 +1056,12 @@ class BigML {
         and saved locally. A file-like object is returned otherwise.
       */
 
-      $rest = $this->get_resource_request($batchPredictionId, "batchprediction", "DOWNLOAD"); 
+      $rest = $this->get_resource_request($batchPredictionId, "batchprediction", "DOWNLOAD");
       if ($rest == null) return null;
 
       $data = $rest->download();
 
-      if ($data == false) { 
+      if ($data == false) {
          error_log("Error downloading file");
          return null;
       }
@@ -1076,7 +1076,7 @@ class BigML {
    public function source_from_batch_prediction($batchPredictionId, $args=array()) {
 
       $rest = $this->get_resource_request($batchPredictionId, "batchprediction", "DOWNLOAD");
-      if ($rest == null) return null; 
+      if ($rest == null) return null;
       $url = $rest->download_url();
       return $this->_create_remote_source($url, $args);
    }
@@ -1084,7 +1084,7 @@ class BigML {
    public function list_batch_predictions($queryString=null)
    {
       /*
-        Lists all your batch predictions 
+        Lists all your batch predictions
       */
       $rest = new BigMLRequest('LIST', 'batchprediction', $this);
 
@@ -1097,9 +1097,9 @@ class BigML {
 
    public function update_batch_prediction($batchPredictionId, $data, $waitTime=3000, $retries=10) {
       /*
-        Updates a batch prediction 
+        Updates a batch prediction
       */
-      $rest = $this->get_resource_request($batchPredictionId, "batchprediction", "UPDATE", null, true, $waitTime, $retries); 
+      $rest = $this->get_resource_request($batchPredictionId, "batchprediction", "UPDATE", null, true, $waitTime, $retries);
       if ($rest == null) return null;
 
       $rest->setData($data);
@@ -1110,16 +1110,16 @@ class BigML {
 
    public function delete_batch_prediction($batchPredictionId) {
       /*
-        Deletes a batch prediction 
+        Deletes a batch prediction
       */
       $rest = $this->get_resource_request($batchPredictionId, "batchprediction", "DELETE", null);
       if ($rest == null) return null;
       return $rest->getResponse();
    }
-   
+
    ##########################################################################
    #
-   # Evaluations 
+   # Evaluations
    # https://bigml.com/developers/evaluations
    #
    ##########################################################################
@@ -1171,7 +1171,7 @@ class BigML {
         As evaluation is an evolving object that is processed
         until it reaches the FINISHED or FAULTY state, the function will
         return a dict that encloses the evaluation values and state info
-        available at the time it is called. 
+        available at the time it is called.
       */
       $rest = $this->get_resource_request($evaluationId, "evaluation", "GET", $queryString);
       if ($rest == null) return null;
@@ -1215,7 +1215,7 @@ class BigML {
    }
    ##########################################################################
    #
-   # Clusters 
+   # Clusters
    # https://bigml.com/developers/clusters
    #
    ##########################################################################
@@ -1301,7 +1301,7 @@ class BigML {
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
-   }      
+   }
 
    public function delete_cluster($clusterId) {
       /*
@@ -1383,7 +1383,7 @@ class BigML {
    }
 
    public function delete_centroid($centroId) {
-      /*  
+      /*
           Deletes a centroid.
       */
       $rest = $this->get_resource_request($centroId, "centroid", "DELETE", null);
@@ -1516,7 +1516,7 @@ class BigML {
 
    ##########################################################################
    #
-   # Anomaly detector 
+   # Anomaly detector
    # https://bigml.com/developers/anomaly
    #
    ##########################################################################
@@ -1579,7 +1579,7 @@ class BigML {
    public function list_anomalies($queryString=null)
    {
       /*
-        List all your anomalies 
+        List all your anomalies
       */
       $rest = new BigMLRequest('LIST', 'anomaly', $this);
 
@@ -1615,7 +1615,7 @@ class BigML {
 
    ##########################################################################
    #
-   # Anomaly scores 
+   # Anomaly scores
    # https://bigml.com/developers/anomalyscore
    #
    ##########################################################################
@@ -1658,7 +1658,7 @@ class BigML {
    public function list_anomaly_scores($queryString=null)
    {
       /*
-        List all your anomalies score 
+        List all your anomalies score
       */
       $rest = new BigMLRequest('LIST', 'anomalyscore', $this);
 
@@ -1808,7 +1808,7 @@ class BigML {
 
    public function delete_batch_anomaly_score($batch_anomaly_score_Id) {
       /*
-        Deletes a batch prediction 
+        Deletes a batch prediction
       */
       $rest = $this->get_resource_request($batch_anomaly_score_Id, "batchanomalyscore", "DELETE", null);
       if ($rest == null) return null;
@@ -1819,7 +1819,7 @@ class BigML {
    #
    # Samples
    #
-   ##########################################################################   
+   ##########################################################################
    public function create_sample($datasetId, $args=array(), $waitTime=3000, $retries=10) {
       /*
         Creates a new sample.
@@ -1869,10 +1869,10 @@ class BigML {
 
       return $rest->getResponse();
    }
-   
+
    public function update_sample($sampleId, $data, $waitTime=3000, $retries=10) {
       /*
-        Updates a sample 
+        Updates a sample
       */
       $rest = $this->get_resource_request($sampleId, "sample", "UPDATE", null, true,  $waitTime, $retries);
       if ($rest == null) return null;
@@ -1896,7 +1896,7 @@ class BigML {
    #
    # Projects
    #
-   ########################################################################## 
+   ##########################################################################
 
    public function create_project($args=array(), $waitTime=3000, $retries=10) {
       /*
@@ -1912,7 +1912,7 @@ class BigML {
       $rest->setHeader('Content-Length', strlen(json_encode($args)));
       return $rest->getResponse();
    }
-   
+
    public function get_project($projectId)
    {
       /*
@@ -1939,11 +1939,11 @@ class BigML {
 
    public function update_project($projectId, $data, $waitTime=3000, $retries=10) {
       /*
-        Updates a project 
+        Updates a project
       */
       $rest = $this->get_resource_request($projectId, "project", "UPDATE", null, true,  $waitTime, $retries);
       if ($rest == null) return null;
-      
+
       $rest->setData($data);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
@@ -1952,7 +1952,7 @@ class BigML {
 
    public function delete_project($projectId) {
       /*
-        Deletes a project 
+        Deletes a project
       */
       $rest = $this->get_resource_request($projectId, "project", "DELETE", null);
       if ($rest == null) return null;
@@ -1963,7 +1963,7 @@ class BigML {
       /*
         Delete a list from projects by name
       */
-     
+
       $projects = $this->list_projects("name=". $test_name);
 
       if (!is_null($projects)) {
@@ -1975,7 +1975,7 @@ class BigML {
 
    ##########################################################################
    #
-   # Correlations 
+   # Correlations
    # https://bigml.com/developers/correlations
    #
    ##########################################################################
@@ -2031,7 +2031,7 @@ class BigML {
 
    public function update_correlation($correlationId, $data, $waitTime=3000, $retries=10) {
       /*
-        Updates a correlation 
+        Updates a correlation
       */
       $rest = $this->get_resource_request($correlationId, "correlation", "UPDATE", null, true,  $waitTime, $retries);
       if ($rest == null) return null;
@@ -2044,7 +2044,7 @@ class BigML {
 
    public function delete_correlation($correlationId) {
       /*
-        Deletes a correlation 
+        Deletes a correlation
       */
       $rest = $this->get_resource_request($correlationId, "correlation", "DELETE", null);
       if ($rest == null) return null;
@@ -2053,7 +2053,7 @@ class BigML {
 
    ##########################################################################
    #
-   # Associations 
+   # Associations
    # https://bigml.com/developers/associations
    #
    ##########################################################################
@@ -2109,7 +2109,7 @@ class BigML {
 
    public function update_association($association, $data, $waitTime=3000, $retries=10) {
       /*
-        Updates a association 
+        Updates a association
       */
       $rest = $this->get_resource_request($association, "association", "UPDATE", null, true,  $waitTime, $retries);
       if ($rest == null) return null;
@@ -2131,7 +2131,7 @@ class BigML {
 
    ##########################################################################
    #
-   # Statisticaltests 
+   # Statisticaltests
    # https://bigml.com/developers/statisticaltests
    #
    ##########################################################################
@@ -2169,8 +2169,8 @@ class BigML {
       if ($rest == null) return null;
       return $rest->getResponse();
 
-   } 
- 
+   }
+
    public function list_statistical_tests($queryString=null)
    {
       /*
@@ -2206,7 +2206,7 @@ class BigML {
       if ($rest == null) return null;
       return $rest->getResponse();
    }
- 
+
    private function _create_local_source($file_name, $options=array()) {
       $rest = new BigMLRequest('CREATE', 'source', $this);
 
@@ -2214,12 +2214,12 @@ class BigML {
          $options['file'] = '@' . realpath($file_name);
       } else {
          $options['file'] = new \CurlFile(realpath($file_name));
-      }	 
+      }
 
       if ($options != null ){
          foreach ($options as $key => $value) {
             if (is_array($value) ){
-               $options[$key] = json_encode($value); 
+               $options[$key] = json_encode($value);
             }
          }
       }
@@ -2230,7 +2230,7 @@ class BigML {
    }
    ##########################################################################
    #
-   # whizzml scripts REST calls 
+   # whizzml scripts REST calls
    # https://bigml.com/developers/scripts
    #
    ##########################################################################
@@ -2308,7 +2308,7 @@ class BigML {
 
    public function update_script($script, $data, $waitTime=3000, $retries=10) {
       /*
-        Updates a script 
+        Updates a script
       */
       $rest = $this->get_resource_request($script, "script", "UPDATE", null, true,  $waitTime, $retries);
       if ($rest == null) return null;
@@ -2330,14 +2330,14 @@ class BigML {
 
    ##########################################################################
    #
-   # whizzml execution REST calls 
+   # whizzml execution REST calls
    # https://bigml.com/developers/executions
    #
    ##########################################################################
 
    public function create_execution($script, $args=array(), $waitTime=3000, $retries=10) {
       /*
-        Creates a whizzml execution from a script or list of scripts 
+        Creates a whizzml execution from a script or list of scripts
       */
 
       $args = $args == null? array() : $args;
@@ -2361,13 +2361,13 @@ class BigML {
          }
          array_push($scriptsIds, $resource["id"]);
       }
- 
+
       if (sizeof($scriptsIds) > 1) {
          $args["scripts"] = $scriptsIds;
       } else {
          $args["script"] = $scriptsIds[0];
       }
-    
+
       $rest = new BigMLRequest('CREATE', 'execution', $this);
 
       $rest->setQueryString("full=false");
@@ -2375,7 +2375,7 @@ class BigML {
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($args)));
       return $rest->getResponse();
- 
+
    }
 
    public function get_execution($execution, $queryString=null)
@@ -2411,7 +2411,7 @@ class BigML {
 
    public function update_execution($execution, $data, $waitTime=3000, $retries=10) {
       /*
-        Updates a execution 
+        Updates a execution
       */
       $rest = $this->get_resource_request($execution, "execution", "UPDATE", null, true,  $waitTime, $retries);
       if ($rest == null) return null;
@@ -2424,7 +2424,7 @@ class BigML {
 
    public function delete_execution($execution) {
       /*
-        Deletes a execution 
+        Deletes a execution
       */
       $rest = $this->get_resource_request($execution, "execution", "DELETE", null);
       if ($rest == null) return null;
@@ -2433,7 +2433,7 @@ class BigML {
 
    ##########################################################################
    #
-   # whizzml libraries REST calls 
+   # whizzml libraries REST calls
    # https://bigml.com/developers/libraries
    #
    ##########################################################################
@@ -2452,11 +2452,11 @@ class BigML {
          throw new \Exception('A valid code string or a library id must be provided.');
          return null;
       }
- 
+
 
       $resource = $this->_check_resource($source_code, null, $waitTime, $retries);
 
-      if ($resource != null) { 
+      if ($resource != null) {
          if ($resource['type'] != "library") {
             throw new \Exception('A valid code string or a library id must be provided.');
          }
@@ -2464,7 +2464,7 @@ class BigML {
          if ($resource["status"] != BigMLRequest::FINISHED) {
             throw new \Exception($resource['message']);
          }
- 
+
          $args["origin"] = $resource["id"];
 
       } else if (is_string($source_code)) {
@@ -2484,7 +2484,7 @@ class BigML {
    public function get_library($library, $queryString=null)
    {
       /*
-        Retrieves an library 
+        Retrieves an library
         The library parameter should be a string containing the
         library id or the dict returned by create_script.
         As library is an evolving object that is processed
@@ -2524,19 +2524,19 @@ class BigML {
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
    }
-   
+
    public function delete_library($library) {
       /*
-        Deletes a library 
+        Deletes a library
       */
       $rest = $this->get_resource_request($library, "library", "DELETE", null);
       if ($rest == null) return null;
       return $rest->getResponse();
-   }  
+   }
 
    ##########################################################################
    #
-   # Topic Models 
+   # Topic Models
    # https://bigml.com/developers/topicmodels
    #
    ##########################################################################
@@ -2622,7 +2622,7 @@ class BigML {
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
-   }      
+   }
 
    public function delete_topicmodel($topicmodelId) {
       /*
@@ -2721,7 +2721,7 @@ class BigML {
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($data)));
       return $rest->getResponse();
-   }      
+   }
 
    public function delete_deepnet($deepnetId) {
       /*
@@ -2793,7 +2793,7 @@ class BigML {
    public function _checkAnomalyId($stringID) {
       return preg_match("/^anomaly\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
-   
+
    public function _checkAssociationId($stringID) {
       return preg_match("/^association\/[a-f,0-9]{24}$/i", $stringID) ? true : false;
    }
@@ -2836,7 +2836,7 @@ class BigML {
       if (in_array($resource->code, array(BigMLRequest::HTTP_OK, BigMLRequest::HTTP_ACCEPTED)) )  {
 
          if ($this->_checkModelId($resource_id)) {
-            return $resource->object->model->model_fields;   
+            return $resource->object->model->model_fields;
          } else {
             return $resource->object->fields;
          }
@@ -2919,12 +2919,12 @@ class BigML {
             $prediction = $resource->object->prediction->{$resource->object->objective_fields[0]};
             $str = $objective_field_name . " for " . json_encode($input_data) . " is " . $prediction . "\n";
             print_r($str);
-         } 
-         
+         }
+
       } else {
          print_r($resource);
-      } 
-      
+      }
+
    }
 
    public function status($resourceId) {
@@ -2935,8 +2935,8 @@ class BigML {
          error_log("Wrong resource id");
          return null;
       }
-   
-      return array('message' => $resource['message'], 'code'=>$resource['code']);   
+
+      return array('message' => $resource['message'], 'code'=>$resource['code']);
 
    }
 
@@ -2951,7 +2951,7 @@ class BigML {
          return null;
       }
       if (preg_match('/((shared|public)\/)?('.$resourceType. ')(\/)([a-z,0-9]{24}|[a-z,0-9]{27})$/i', $resource, $result)) {
-         return $resource; 
+         return $resource;
       } else {
          error_log("Wrong ". $resourceType . " id");
          return null;
@@ -3038,11 +3038,11 @@ final class BigMLRequest {
 
    public  $response;
    private $parameters = array();
-   private $data = array(); 
+   private $data = array();
    private $queryString;
 
    private $bigml;
-   
+
    private $response_code;
 
    public function __construct($method = 'GET',
@@ -3071,7 +3071,7 @@ final class BigMLRequest {
          } else {
             error_log("Cannot find BIGML AUTH");
          }
-         
+
          if ($bigml == null) {
             $bigml = new BigML();
          }
@@ -3102,17 +3102,17 @@ final class BigMLRequest {
    }
 
    public function setHeader($key, $value)
-   {   
+   {
       $this->headers[$key] = $value;
    }
 
-   public function setData($data, $json=true) 
-   {  
+   public function setData($data, $json=true)
+   {
       if ($json) {
          $this->data = json_encode($data);
-      } else { 
+      } else {
          $this->data = $data;
-      }	
+      }
    }
 
    public function download_url() {
@@ -3144,7 +3144,7 @@ final class BigMLRequest {
    }
    public function download($counter=0, $retries=3, $wait_time=30) {
       try {
-         $data = file_get_contents($this->download_url());       
+         $data = file_get_contents($this->download_url());
          $headers = $this->parseHeaders($http_response_header);
 
          if ($headers["reponse_code"] == BigMLRequest::HTTP_OK) {
@@ -3154,15 +3154,15 @@ final class BigMLRequest {
                   if ($download_status->status->code != 5) {
                      sleep($wait_time);
                      $counter+=1;
-                     return $this->download($counter, $retries, $wait_time); 
+                     return $this->download($counter, $retries, $wait_time);
                   } else {
                      return $this->download($retries+1, $retries, $wait_time);
                   }
-               } 
+               }
             } else if ($counter == $retries) {
-               error_log("The maximum number of retries for the download has been exceeded " . 
+               error_log("The maximum number of retries for the download has been exceeded " .
                          "You can retry your  command again in a while.");
-            }  
+            }
 
          } else if (in_array(intval($headers["reponse_code"]), array(BigMLRequest::HTTP_BAD_REQUEST, BigMLRequest::HTTP_UNAUTHORIZED, BigMLRequest::HTTP_NOT_FOUND, BigMLRequest::HTTP_TOO_MANY_REQUESTS))) {
             error_log("request error");
@@ -3177,19 +3177,19 @@ final class BigMLRequest {
       }
    }
 
-   public function getResponse() 
+   public function getResponse()
    {
       // Set Parameters
       if (sizeof($this->parameters) > 0)
       {
          $query = substr($this->uri, -1) !== '?' ? '?' : '&';
          foreach ($this->parameters as $var => $value) {
-            if ($value == null || $value == '') { 
+            if ($value == null || $value == '') {
                $query .= $var.'&';
             } else {
                $query .= $var.'='.rawurlencode($value).'&';
             }
-         } 
+         }
          $query = substr($query, 0, -1);
          $this->uri .= $query;
       }
@@ -3209,7 +3209,7 @@ final class BigMLRequest {
              $this->bigml->getDebug() != null &&
              $this->bigml->getDebug() == true)
             echo "URL: " . $url . "\n";
-          
+
          $curl = curl_init();
          curl_setopt($curl, CURLOPT_URL, $url);
 
@@ -3226,7 +3226,7 @@ final class BigMLRequest {
             curl_setopt($curl, CURLOPT_POSTFIELDS, $this->data);
          } elseif ($this->method == "DELETE") {
             curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "DELETE");
-         } elseif ($this->method == "DOWNLOAD") { 
+         } elseif ($this->method == "DOWNLOAD") {
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
             curl_setopt($curl, CURLOPT_BINARYTRANSFER, true );
             curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false );
@@ -3240,7 +3240,7 @@ final class BigMLRequest {
             if (strlen($value) > 0) $headers[] = $header.': '.$value;
 
          curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-         
+
          if ($this->bigml &&
              $this->bigml->getDebug() != null &&
              $this->bigml->getDebug() == true) {
@@ -3262,7 +3262,7 @@ final class BigMLRequest {
             $header_size = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
             $header = substr($response, 0, $header_size);
             $body = substr($response, $header_size);
-            $this->response["code"] = $code; 
+            $this->response["code"] = $code;
             $error_message = $this->error_message(json_decode($body), $this->method);
             $this->response["error"]["status"]["message"] = $error_message["message"];
             $this->response["error"]["status"]["code"] = $code;
@@ -3275,12 +3275,12 @@ final class BigMLRequest {
             print_r($response);
             $this->response["code"] = BigMLRequest::HTTP_INTERNAL_SERVER_ERROR;
          }
-          
+
          curl_close($curl);
       } catch (\Exception $e) {
          print("got exception");
 
-         error_log("Unexpected exception error"); 
+         error_log("Unexpected exception error");
       }
 
       return json_decode( json_encode($this->response));
@@ -3291,7 +3291,7 @@ final class BigMLRequest {
 
       $r =json_decode($response,true);
 
-      if ($this->method ==  "LIST") { 
+      if ($this->method ==  "LIST") {
          $this->response["meta"] = $r["meta"];
          $this->response["resources"] = $r["objects"];
          $this->response["error"] = null;
@@ -3314,7 +3314,7 @@ final class BigMLRequest {
          $this->response["resource"] = $r["resource"];
          $this->response["error"] = null;
          $this->response["object"] = $r;
-         
+
          if ($this->bigml) {
             maybe_save($this->response, $this->bigml->getStorage(), $code, $location);
          }
@@ -3324,9 +3324,9 @@ final class BigMLRequest {
    private function setResponse() {
 
       if ($this->method ==  "LIST") {
-         $this->response = array("code"=> BigMLRequest::HTTP_INTERNAL_SERVER_ERROR, 
+         $this->response = array("code"=> BigMLRequest::HTTP_INTERNAL_SERVER_ERROR,
                                  "meta"=>null,
-                                 "resources" => null, 
+                                 "resources" => null,
                                  "error"=>array("status"=> array("code" => BigMLRequest::HTTP_INTERNAL_SERVER_ERROR ,
                                                                  "message"=> "The resource couldn't be listed")));
 
@@ -3334,13 +3334,13 @@ final class BigMLRequest {
 
       } elseif ( in_array($this->method, array("CREATE", "GET", "UPDATE")) ) {
 
-         $this->response = array(); 
+         $this->response = array();
          $this->response["code"] = BigMLRequest::HTTP_INTERNAL_SERVER_ERROR;
          $this->response["resource"] = null;
-         $this->response["location"]= null; 
+         $this->response["location"]= null;
          $this->response["object"] = null;
          $this->response["error"] = array();;
-         $this->response["error"]["status"] = array(); 
+         $this->response["error"]["status"] = array();
          $this->response["error"]["status"]["code"] = BigMLRequest::HTTP_INTERNAL_SERVER_ERROR;
          $this->response["error"]["status"]["message"] = "The resource couldn't be " . $this->method == "CREATE" ? "created" : $this->method == "UPDATE" ? "updated": "retrieved";
 
@@ -3356,7 +3356,7 @@ final class BigMLRequest {
       } elseif ($this->method == "DELETE") {
          $this->response = array("code"=> BigMLRequest::HTTP_INTERNAL_SERVER_ERROR, "error"=> null);
          $this->response_code = BigMLRequest::HTTP_NO_CONTENT;
-      } 
+      }
    }
 
    private function error_message($resource, $method, $resource_type='resource') {
@@ -3373,7 +3373,7 @@ final class BigMLRequest {
          } elseif (property_exists($resource, "code") && property_exists($resource, "status")) {
             $error_info = $resource;
          }
-      } 
+      }
 
 
       if ($error_info != null && property_exists($error_info, "code") )  {
@@ -3388,12 +3388,12 @@ final class BigMLRequest {
             }
             if ($extra != null) {
                if ($extra instanceof \STDClass) {
-                  $error = $error . ":"; 
+                  $error = $error . ":";
                   $error_response["code"] = $extra->error;
                   foreach(get_object_vars($extra) as $key => $value) {
                      $error = $error . $key . ": " . json_encode($value) . " ";
                   }
-                  $error = $error . "\n"; 
+                  $error = $error . "\n";
                } else {
                   $error = $error . ": " . $extra[0];
                }
@@ -3407,17 +3407,17 @@ final class BigMLRequest {
                 $this->bigml->getDomain()!= BigML::BIGML_ENDPOINT) {
                $alternate_message = "The " . $resource_type .
                                   " was not created in " .
-                                  $this->bigml->getDomain() . "\n"; 
-            }   
+                                  $this->bigml->getDomain() . "\n";
+            }
 
-            $error = $error . "\nCouldn\'t find a " . $resource_type . " matching the given id. The most probable causes are:\n\n" . $alternate_message . " A typo in the " . $resource_type . "'s id.\n The " . $resource_type . " id cannot be accessed with your credentials.\n \nDouble-check your " . $resource_type . " and credentials info and retry."; 
+            $error = $error . "\nCouldn\'t find a " . $resource_type . " matching the given id. The most probable causes are:\n\n" . $alternate_message . " A typo in the " . $resource_type . "'s id.\n The " . $resource_type . " id cannot be accessed with your credentials.\n \nDouble-check your " . $resource_type . " and credentials info and retry.";
 
          } elseif ($code == BigMLRequest::HTTP_UNAUTHORIZED) {
             $error = $error. '\nDouble-check your credentials, and the general  domain your account is registered with (currently using '. $this->bigml->getDomain() . '), please.';
-         } elseif ($code == BigMLRequest::HTTP_BAD_REQUEST) { 
+         } elseif ($code == BigMLRequest::HTTP_BAD_REQUEST) {
             $error = $error.'\nDouble-check the arguments for the call, please.';
          } elseif ($code == BigMLRequest::HTTP_TOO_MANY_REQUESTS) {
-            $error = $error.'\nToo many requests. Please stop requests for a while before resuming.';   
+            $error = $error.'\nToo many requests. Please stop requests for a while before resuming.';
          } elseif ($code == BigMLRequest::HTTP_PAYMENT_REQUIRED) {
             $error = $error.'\nYou\'ll need to buy some more credits to perform the chosen action';
          }

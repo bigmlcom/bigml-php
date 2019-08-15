@@ -72,8 +72,30 @@ class BigMLTestLocalPredictions extends PHPUnit_Framework_TestCase
 	   $prediction = $model->predict($item["data_input"], true, false, STDOUT, false, \BigML\Tree::LAST_PREDICTION, false, false, false, false, false, false, false, false, false, 'all');
 	   print " Then the multiple local prediction is " . json_encode($item["prediction"]) . "\n";
 	   $this->assertEquals($prediction, $item["prediction"]);
-	}
-
+	    }
     }
+
+    /*
+     Successfully creating a prediction from a local model in a json file
+    */
+    public function test_scenario3() {
+        $data = array(array("model"=> 'data/compras.json',
+                            "data_input" => array("productos" => "vegetales"),
+                            "prediction" => "false",
+                            "confidence" => 0.49036000000000002));
+
+
+        foreach($data as $item) {
+	   print "\nSuccessfully creating a multiple prediction from a local model in a json file\n";
+	   print "Given I create a local model from a " . $item["model"] . "\n";
+	   $model =  new Model($item["model"], self::$api);
+	   print "When I create a local prediction for " . json_encode($item["data_input"]) . " with confidence\n";
+       $prediction = $model->predict($item["data_input"]);
+	   print "Then the local prediction is " . $item["prediction"] . "\n";
+       $this->assertEquals($prediction->output, $item["prediction"]);
+	   print "And the local prediction's confidence is " . $item["confidence"] . "\n";
+	   $this->assertEquals($prediction->confidence, $item["confidence"]);
+	}
+  }
 
 }

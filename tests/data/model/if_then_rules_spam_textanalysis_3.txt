@@ -1,4 +1,4 @@
-IF message contains call  AND
+ IF message contains call  AND
      IF message contains mobile  THEN
          type = spam
      IF message does not contain mobile  AND

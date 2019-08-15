@@ -29,7 +29,7 @@ use BigML\Anomaly;
 use BigML\Model;
 use BigML\LogisticRegression;
 
-class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
+class BigMLTestComparePredictionsC extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
@@ -284,7 +284,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                                                                                           "language" => "en")))),
                           'data_input' => array("Message"=> "A normal message"),
                           'prediction' => 'ham',
-                          'probability' => 0.9169
+                          'probability' => 0.8795
                          ),
                      array('filename' => 'data/movies.csv',
                            'objective' => '000002',
@@ -297,9 +297,9 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                                   "zipcode" => 59583,
                                                   "rating" => 3),
                            'prediction' => 'Under 18',
-                           'probability' => 0.8393)
+                           'probability' => 0.8344)
                    );
-
+      $waitTime = 2000;
       foreach($data as $item) {
          print "Successfully comparing predictions with text options\n";
          print "Given I create a data source uploading a ". $item["filename"]. " file\n";
@@ -308,7 +308,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
          $this->assertEquals(1, $source->object->status->code);
 
          print "And I wait until the source is ready\n";
-         $resource = self::$api->_check_resource($source->resource, null, 30000, 30);
+         $resource = self::$api->_check_resource($source->resource, null, $waitTime, 30);
          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
          print "And I update the source with params " . json_encode($item["options"]) . "\n";
@@ -320,7 +320,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
          $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
          print "And I wait until the dataset is ready " . $dataset->resource . " \n";
-         $resource = self::$api->_check_resource($dataset->resource, null, 30000, 30);
+         $resource = self::$api->_check_resource($dataset->resource, null, $waitTime, 30);
          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
          print "And I create a logistic regresssion model with objective field ". $item["objective"] . "\n";
@@ -329,7 +329,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
          $this->assertEquals(BigMLRequest::HTTP_CREATED, $logistic_regression->code);
 
          print "And I wait until the logistic regression model is ready " . $logistic_regression->resource . "\n";
-         $resource = self::$api->_check_resource($logistic_regression->resource, null, 10000, 30);
+         $resource = self::$api->_check_resource($logistic_regression->resource, null, $waitTime, 30);
          $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
          $logistic_regression = self::$api->get_logistic_regression($logistic_regression->resource);

@@ -238,7 +238,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                                   "source_parser"=> array("separator" => ";")),
                             'data_input' => array("timestamp" => "999999999"),
                             'prediction' => "4",
-                            'probability' => 0.4028,
+                            'probability' => 0.4079,
                             'objective' => "000009",
                             'parms' => array("balance_fields" => false)
                           ),
@@ -257,7 +257,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                                   "source_parser"=> array("separator" => ";")),
                             'data_input' => array("timestamp" => "999999999"),
                             'prediction' => "4",
-                            'probability' => 0.2622,
+                            'probability' => 0.2547,
                             'objective' => "000009",
                             'parms' => array("normalize" => true)
                           ),
@@ -276,7 +276,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
                                                   "source_parser"=> array("separator" => ";")),
                             'data_input' => array("timestamp" => "999999999"),
                             'prediction' => "4",
-                            'probability' => 0.2622,
+                            'probability' => 0.2547,
                             'objective' => "000009",
                             'parms' => array("balance_fields" => true, "normalize" => true)
                           )

@@ -48,7 +48,11 @@ function term_matches_tokens($text, $forms_list, $case_sensitive) {
     Counts the number of occurences of the words in forms_list in the text
   */
   $flags = get_tokens_flags($case_sensitive);
-  $expression = "/(\b|_)" . join("(\b|_)|(\b|_)",$forms_list) . "(\b|_)/" . $flags;
+  $terms = array();
+  foreach ($forms_list as $term) {
+      $terms[] = str_replace("/", "\/", preg_quote($term));
+  }
+  $expression = "/(\b|_)" . join("(\b|_)|(\b|_)",$terms) . "(\b|_)/" . $flags;
   $total = preg_match_all($expression, $text, $matches);
   return $total;
 
@@ -74,10 +78,11 @@ function count_items_matches($text, $item, $regexp) {
   /*
    Counts the number of occurences of the item in the text
   */
+  # escaping the item to avoid forward slashes breaking the regexp
+  $item = str_replace("/", "\/", preg_quote($item));
   $expression="/(^|". $regexp  .")". $item ."($|". $regexp .")/u";
 
   #expression = ur'(^|%s)%s($|%s)' % (regexp, item, regexp)
-
   $total = preg_match_all($expression, $text, $matches);
   return $total;
 
@@ -140,9 +145,9 @@ class Predicate {
    const TM_TOKENS = 'tokens_only';
    const TM_FULL_TERM = 'full_terms_only';
    const TM_ALL = 'all';
-   const FULL_TERM_PATTERN = "/^.+\b.+$/u"; 
+   const FULL_TERM_PATTERN = "/^.+\b.+$/u";
 
-   private static $RELATIONS = array('<=' => 'no more than %s %s', 
+   private static $RELATIONS = array('<=' => 'no more than %s %s',
                   '>=' => '%s %s at most',
                    '>' => 'more than %s %s',
                    '<' => 'less than %s %s');
@@ -196,7 +201,7 @@ class Predicate {
       */
 
       if (is_null($missing)){
-        $missing = $this->missing; 
+        $missing = $this->missing;
       }
       if (!is_null($label)) {
         $name=$fields->{$this->field}->{$label};
@@ -244,7 +249,7 @@ class Predicate {
       }
 
       return $name . " " . $this->operator . " ". $value . $relation_missing;
- 
+
    }
 
    function apply($input_data, $fields) {
@@ -257,7 +262,7 @@ class Predicate {
         // text and item fields will treat missing values by following the
 	// doesn't contain branch
 	if (is_null($this->term)){
-           return ( $this->missing || ($this->operator == '=' && is_null($this->value)) ); 
+           return ( $this->missing || ($this->operator == '=' && is_null($this->value)) );
 	}
       } else if ($this->operator == "!=" && is_null($this->value)) {
         return true;
@@ -268,9 +273,9 @@ class Predicate {
       if ($this->term != null ) {
 
          if ($fields->{$this->field}->optype == 'text') {
-            $term_forms = property_exists($fields->{$this->field}->summary, 'term_forms') && !empty($fields->{$this->field}->summary->term_forms) ? 
-                           property_exists($fields->{$this->field}->summary->term_forms, $this->term) ? $fields->{$this->field}->summary->term_forms->{$this->term} 
-                           : array() 
+            $term_forms = property_exists($fields->{$this->field}->summary, 'term_forms') && !empty($fields->{$this->field}->summary->term_forms) ?
+                           property_exists($fields->{$this->field}->summary->term_forms, $this->term) ? $fields->{$this->field}->summary->term_forms->{$this->term}
+                           : array()
                            : array();
             $terms = array($this->term);
 	    $terms = array_merge($terms, $term_forms);
@@ -279,14 +284,14 @@ class Predicate {
 	 } else {
 	    $options = $fields->{$this->field}->item_analysis;
 	    return $op(item_matches(array_key_exists($this->field, $input_data) ? $input_data[$this->field] : "", $this->term, $options), $this->value);
-	 } 
-      } 
+	 }
+      }
 
       if ($this->operator == "in") {
           return $op($this->value, $input_data[$this->field]);
       } else {
           return $op($input_data[$this->field], $this->value);
-      }  
+      }
    }
 
    function to_list_rule($fields) {

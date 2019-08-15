@@ -29,7 +29,7 @@ use BigML\Anomaly;
 use BigML\Model;
 use BigML\LogisticRegression;
 
-class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
+class BigMLTestComparePredictionsB extends PHPUnit_Framework_TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
@@ -133,8 +133,8 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
 													   "language" => "en")))),
 			   "data_input" => array("Message" => "Mobile call"),
 			   "objective" => "000000",
-			   "prediction" => "ham"),
-                     array("filename" => "data/spam.csv",
+			   "prediction" => "spam") ,
+                array("filename" => "data/spam.csv",
                            "options" => array("fields" => array("000001" => array("optype" => "text",
 			   							  "term_analysis" => array("case_sensitive" => true,
 										  	                   "stem_words" => true,
@@ -183,7 +183,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
 		            "options" => array("fields" => array("000007" => array("optype"=> "items", "item_analysis" => array("separator" => "\$")))),
 			    "data_input" => array("genres" => "Adventure\$Action", "timestamp" => 993906291, "occupation" => "K-12 student"),
 			    "objective" => "000009",
-			    "prediction" => 3.93064
+			    "prediction" => 3.92135
 		           ),
 		      array("filename"=> "data/text_missing.csv",
 		            "options" => array("fields" => array("000001" => array("optype" => "text", "term_analysis" => array("token_mode" => "all", "language" => "en")), "000000" => array("optype" => "text", "term_analysis" => array("token_mode" => "all", "language" => "en" )))),
@@ -192,7 +192,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
 			    "prediction" => "swap"
 		           )
 		     );
-
+       $waitTime = 2000;
        foreach($data as $item) {
 	    print "Given I create a data source uploading a ". $item["filename"]. " file\n";
             $source = self::$api->create_source($item["filename"], $options=array('name'=>'local_test_source', 'project'=> self::$project->resource));
@@ -200,7 +200,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
             $this->assertEquals(1, $source->object->status->code);
 
             print "And I wait until the source is ready\n";
-            $resource = self::$api->_check_resource($source->resource, null, 5000, 30);
+            $resource = self::$api->_check_resource($source->resource, null, $waitTime, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
             print "And I update the source with params " . json_encode($item["options"]) . "\n";
@@ -212,7 +212,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
             $this->assertEquals(BigMLRequest::QUEUED, $dataset->object->status->code);
 
             print "And I wait until the dataset is ready\n";
-            $resource = self::$api->_check_resource($dataset->resource, null, 5000, 30);
+            $resource = self::$api->_check_resource($dataset->resource, null, $waitTime, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
             print "And I create model\n";
@@ -220,7 +220,7 @@ class BigMLTestComparePredictions extends PHPUnit_Framework_TestCase
             $this->assertEquals(BigMLRequest::HTTP_CREATED, $model->code);
 
             print "And I wait until the model is ready\n";
-            $resource = self::$api->_check_resource($model->resource, null, 5000, 30);
+            $resource = self::$api->_check_resource($model->resource, null, $waitTime, 30);
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
             print "And I create a local model";
