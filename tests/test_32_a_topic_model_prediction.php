@@ -81,10 +81,10 @@ class BigMLTestBoostedEnsemble extends TestCase
                             "resource" => "topicmodel/aaaaaabbbbbbccccccdddddd",
                             "status" => array("code" => 5)),
                       "text" => array("TEST TEXT" => "uńąnimous court 'UŃĄNIMOUS COURT' `play``the plays PLAYing SHOULDN'T CYCLE cycling shouldn't uńąnimous or court's"),
-                      "expected" => array(array("name" => 'Topic 1', "probability" => 0.1211135786802),
-                                          array("name" => 'Topic 2', "probability" => 0.23017131979695),
-                                          array("name" => 'Topic 3', "probability" => 0.49785850253807),
-                                          array("name" => 'Topic 4', "probability" => 0.15085659898477))));
+                      "expected" => array(array("name" => 'Topic 1', "probability" => 0.17068527918781726),
+                                          array("name" => 'Topic 2', "probability" => 0.1865482233502538),
+                                          array("name" => 'Topic 3', "probability" => 0.5157043147208121),
+                                          array("name" => 'Topic 4', "probability" => 0.12706218274111675))));
 
         foreach($data as $item) {
             print "\nSuccessfully creating a local distribution from a Topic Model\n";
