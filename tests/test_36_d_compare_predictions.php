@@ -51,9 +51,7 @@ class BigMLTestDeepnetsC extends TestCase
                                        "separator" => "\$")))),
                            "objective" => "000009",
                            "prediction" => "4.49741",
-                           "params" => array(
-                              "hidden_layers" => [["number_of_nodes" => 32,
-                                                   "activation_function" => "sigmoid"]])));
+                           "params" => array("search" => true)));
 
       foreach($data as $item) {
          print "\n\nSuccessfully comparing predictions for deepnets:\n";

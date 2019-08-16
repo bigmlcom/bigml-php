@@ -13,6 +13,7 @@ env:
   - BML_TESTS="21 22 24 25 26 27 28 29 30 31"
   - BML_TESTS="23 38"
   - BML_TESTS="36_c"
+  - BML_TESTS="36_d"
 script:
   - composer update
   - cd tests
