@@ -1,4 +1,6 @@
 <?php
+use PHPUnit\Framework\TestCase;
+
 
 include 'test_utils.php';
 
@@ -14,14 +16,14 @@ use BigML\BigML;
 use BigML\BigMLRequest;
 use BigML\Model;
 
-class BigMLTestRenameDuplicatedNames extends PHPUnit_Framework_TestCase
+class BigMLTestRenameDuplicatedNames extends TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
     protected static $api;
     protected static $project;
 
-    public static function setUpBeforeClass() {
+    public static function setUpBeforeClass(): void {
        print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
@@ -30,7 +32,7 @@ class BigMLTestRenameDuplicatedNames extends PHPUnit_Framework_TestCase
        self::$project=self::$api->create_project(array('name'=> $test_name));
     }
 
-    public static function tearDownAfterClass() {
+    public static function tearDownAfterClass(): void {
        self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
     }
 

@@ -1,4 +1,6 @@
 <?php
+use PHPUnit\Framework\TestCase;
+
 
 include('test_utils.php');
 
@@ -9,7 +11,7 @@ if (!class_exists('bigml')) {
 use BigML\BigML;
 use BigML\BigMLRequest;
 
-class BigMLTestOrganizations extends PHPUnit_Framework_TestCase
+class BigMLTestOrganizations extends TestCase
 {
     protected static $api;
     protected static $api_org;
@@ -17,7 +19,7 @@ class BigMLTestOrganizations extends PHPUnit_Framework_TestCase
     protected static $project;
     protected static $test_name;
 
-    public static function setUpBeforeClass() {
+    public static function setUpBeforeClass(): void {
 
        print __FILE__;
        $org = getenv("BIGML_ORGANIZATION");
@@ -36,7 +38,7 @@ class BigMLTestOrganizations extends PHPUnit_Framework_TestCase
        self::$api = new BigML(["project" => self::$project->resource]);
     }
 
-    public static function tearDownAfterClass() {
+    public static function tearDownAfterClass(): void {
        self::$api_org->delete_all_project_by_name(self::$test_name);
     }
 

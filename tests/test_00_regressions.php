@@ -1,4 +1,6 @@
 <?php
+use PHPUnit\Framework\TestCase;
+
 
 include 'test_utils.php';
 
@@ -14,12 +16,12 @@ use BigML\BigML;
 use BigML\BigMLRequest;
 use BigML\BaseModel;
 
-class BigMLTestCompareRegressions extends PHPUnit_Framework_TestCase
+class BigMLTestCompareRegressions extends TestCase
 {
     protected static $api;
     protected static $project;
 
-    public static function setUpBeforeClass() {
+    public static function setUpBeforeClass(): void {
         print __FILE__;
         self::$api = new BigML([
             "storage" => "./test-cache"]);
@@ -30,7 +32,7 @@ class BigMLTestCompareRegressions extends PHPUnit_Framework_TestCase
         self::$project = self::$api->create_project(array('name'=> $test_name));
     }
 
-    public static function tearDownAfterClass() {
+    public static function tearDownAfterClass(): void {
         self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
     }
 

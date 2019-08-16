@@ -1,7 +1,10 @@
 language: php
+php:
+  - "7.2"
 env:
   - BML_TESTS="05_a 05_c"
   - BML_TESTS="05_b"
+  - BML_TESTS="05_d"
   - BML_TESTS="01 03 04 06 07"
   - BML_TESTS="08 09 10 11 12 36_a"
   - BML_TESTS="32_a 32_b 36_b"

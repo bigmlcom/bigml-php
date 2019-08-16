@@ -1,4 +1,6 @@
 <?php
+use PHPUnit\Framework\TestCase;
+
 
 include 'test_utils.php';
 
@@ -15,14 +17,14 @@ use BigML\BigML;
 use BigML\BigMLRequest;
 use BigML\Deepnet;
 
-class BigMLTestDeepnets extends PHPUnit_Framework_TestCase
+class BigMLTestDeepnets extends TestCase
 {
    protected static $username; # "you_username"
    protected static $api_key; # "your_api_key"
    protected static $api;
    protected static $project;
 
-   public static function setUpBeforeClass() {
+   public static function setUpBeforeClass(): void {
       print __FILE__;
       self::$api =  new BigML(self::$username, self::$api_key, false);
       ini_set('memory_limit', '5120M');
@@ -31,7 +33,7 @@ class BigMLTestDeepnets extends PHPUnit_Framework_TestCase
       self::$project=self::$api->create_project(array('name'=> $test_name));
    }
 
-   public static function tearDownAfterClass() {
+   public static function tearDownAfterClass(): void {
       self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
    }
 
@@ -90,7 +92,7 @@ class BigMLTestDeepnets extends PHPUnit_Framework_TestCase
          $prediction = self::$api->create_prediction($deepnet->resource, $item["data_input"]);
 
          print "The prediction is ";
-         $prediction_value = $prediction->object->prediction->$item["objective"];
+         $prediction_value = $prediction->object->prediction->{$item["objective"]};
          print_r($prediction_value);
 
 
@@ -175,7 +177,7 @@ class BigMLTestDeepnets extends PHPUnit_Framework_TestCase
          $prediction = self::$api->create_prediction($deepnet->resource, $item["data_input"]);
 
          print "The prediction is ";
-         $prediction_value = $prediction->object->prediction->$item["objective"];
+         $prediction_value = $prediction->object->prediction->{$item["objective"]};
          print_r($prediction_value);
 
 

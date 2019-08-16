@@ -10,7 +10,7 @@ function assign_dir($path) {
    if ($path == null || !is_string($path)) {
       return null;
    }
-      
+
    return check_dir($path);
 }
 
@@ -22,10 +22,10 @@ function check_dir($path) {
       if (!is_dir($path)) {
          throw new \Exception("The given path is not a directory");
       }
-   } elseif (count($path) > 0) {
+   } elseif (strlen($path) > 0) {
       if(!mkdir($path, 0777, true)) {
          throw new \Exception("Cannot create a directory");
-      }   
+      }
    }
    return $path;
 }
@@ -48,7 +48,7 @@ function maybe_save($resource, $path, $code, $location)
 
 function compareFiles($file_a, $file_b)
 {
-   if (filesize($file_a) == filesize($file_b) && 
+   if (filesize($file_a) == filesize($file_b) &&
        md5_file($file_a) == md5_file($file_b) ) {
       return true;
    }

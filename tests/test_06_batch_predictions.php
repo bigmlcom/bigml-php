@@ -1,4 +1,6 @@
 <?php
+use PHPUnit\Framework\TestCase;
+
 
 include 'test_utils.php';
 
@@ -9,7 +11,7 @@ if (!class_exists('BigML\BigML')) {
 use BigML\BigML;
 use BigML\BigMLRequest;
 
-class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
+class BigMLTestBatchPredictions extends TestCase
 {
     protected static $username; # "you_username"
     protected static $api_key; # "your_api_key"
@@ -17,7 +19,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
     protected static $api;
     protected static $project;
 
-    public static function setUpBeforeClass() {
+    public static function setUpBeforeClass(): void {
        print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');
@@ -31,7 +33,7 @@ class BigMLTestBatchPredictions extends PHPUnit_Framework_TestCase
 
     }
 
-    public static function tearDownAfterClass() {
+    public static function tearDownAfterClass(): void {
        self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
     }
 

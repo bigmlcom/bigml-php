@@ -125,14 +125,14 @@ function endsWith( $str, $sub ) {
 function operatorFunction($operator) {
    static $OPERATOR;
    if (!isset($OPERATOR)) {
-      $OPERATOR = array("<" => create_function('$ls, $rs', 'return $ls < $rs;'),
-                            "<=" => create_function('$ls, $rs', 'return $ls <= $rs;'),
-                            "=" => create_function('$ls, $rs', 'return $ls == $rs;'),
-                            "!=" => create_function('$ls, $rs', 'return $ls != $rs;'),
-                            "/=" => create_function('$ls, $rs', 'return $ls != $rs;'),
-                            ">=" => create_function('$ls, $rs', 'return $ls >= $rs;'),
-                            ">" =>  create_function('$ls, $rs', 'return $ls > $rs;'),
-                            "in" => create_function('$ls, $rs', 'return in_array($rs,$ls);'));
+      $OPERATOR = array("<" => function($ls, $rs) {return $ls < $rs;},
+                            "<=" => function($ls, $rs) {return $ls <= $rs;},
+                            "=" => function($ls, $rs) {return $ls == $rs;},
+                            "!=" => function($ls, $rs) {return $ls != $rs;},
+                            "/=" => function($ls, $rs) {return $ls != $rs;},
+                            ">=" => function($ls, $rs) {return $ls >= $rs;},
+                            ">" =>  function($ls, $rs) {return $ls > $rs;},
+                            "in" => function($ls, $rs) {return in_array($rs,$ls);});
    }
    return $OPERATOR[$operator];
 }
