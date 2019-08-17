@@ -45,21 +45,7 @@ class BigMLTestDeepnetsB extends TestCase
                                                  "sepal width" => 2.4),
                            "objective" => "000004",
                            "prediction" => "Iris-setosa",
-                           "params" => array("search" => true)),
-                     array("filename" => "data/movies.csv",
-                           "data_input" => array(
-                              "genres" => "Adventure\$Action",
-                              "timestamp" => 993906291,
-                              "occupation" => "K-12 student"),
-                           "update_params" => array(
-                              "fields" => array(
-                                 "000007" => array(
-                                    "optype"=> "items",
-                                    "item_analysis" => array(
-                                       "separator" => "\$")))),
-                           "objective" => "000009",
-                           "prediction" => "4.49741",
-                           "params" => array()));
+                           "params" => array("search" => true)));
 
       foreach($data as $item) {
          print "\n\nSuccessfully comparing predictions for deepnets:\n";
