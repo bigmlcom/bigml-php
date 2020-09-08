@@ -130,8 +130,8 @@ class Ensemble {
       $this->class_names = null;
       $number_of_models = count($models);
       $this->models_splits = array();
-      
-      if ($this->fields[$this->objective_id]->optype == 'numeric') {
+
+      if ($this->fields->{$this->objective_id}->optype == 'numeric') {
           $this->regression = true;
       } else {
           $this->regression = false;
@@ -179,7 +179,7 @@ class Ensemble {
 
       if (!$this->regression) {
           try {
-              $objective_field = $this->fields[$this->objective_id];
+              $objective_field = $this->fields->{$this->objective_id};
               $categories = $objective_field->summary->categories;
               $classes = [];
               foreach ($categories as $category) {
@@ -263,7 +263,6 @@ class Ensemble {
       if ($this->boosting) {
            return $this->boostedensemble->predict($input_data, $by_name, $missing_strategy);
       }
-
       if (count($this->models_splits) > 1) {
          $votes = new MultiVote(array());
          $models = array();
@@ -328,16 +327,16 @@ class Ensemble {
       return $result;
    }
 
-   function predict_probability($input_data, $by_name=true, $method=MultiVote::PROBABILITY_CODE, 
+   function predict_probability($input_data, $by_name=true, $method=MultiVote::PROBABILITY_CODE,
                     $missing_strategy=Tree::LAST_PREDICTION, $compact=false) {
- 
+
          // For classification models, predicts a probability for
          // each possible output class, based on input values.  The input
          // fields must be a dictionary keyed by field name or field ID.
- 
+
          // For regressions, the output is a single element list
          // containing the prediction.
- 
+
          // :param input_data: Input data to be predicted
          // :param by_name: Boolean that is set to True if field_names (as
          //                 alternative to field ids) are used in the
@@ -420,7 +419,7 @@ class Ensemble {
          Retrieves the fields used as predictors in all the ensemble models
       */
 
-      $fields = array();
+      $fields = (object) [];
       $models= array();
 
       if ($this->boosting) {
@@ -433,12 +432,9 @@ class Ensemble {
          } else {
            $local_model=new Model($model_id, $this->api);
          }
-         $new_array = array();
          foreach($local_model->fields as $property => $value)  {
-            $new_array[$property] = $value;
+            $fields->{$property} = $value;
          }
-
-         $fields = array_merge($fields, $new_array);
       }
 
       return $fields;
@@ -480,7 +476,7 @@ class Ensemble {
 
                   if (!array_key_exists($field_id, $field_importance)) {
                      $field_importance[$field_id] = 0.0;
-                     $field_names[$field_id] = array('name' => $this->fields[$field_id]->name);
+                     $field_names[$field_id] = array('name' => $this->fields->{$field_id}->name);
                   }
 
                   $field_importance[$field_id]+=$field_info[1];
@@ -502,7 +498,7 @@ class Ensemble {
                  $field_id = $field_info[0];
                  if (!array_key_exists($field_id, $field_importance)) {
                     $field_importance[$field_id] = 0.0;
-                    $field_names[$field_id] = array('name' => $this->fields[$field_id]->name);
+                    $field_names[$field_id] = array('name' => $this->fields->{$field_id}->name);
                  }
                  $field_importance[$field_id]+=$field_info[1];
               }

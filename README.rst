@@ -3857,7 +3857,26 @@ Similarly, local ensembles can also be created by giving a list of models to be 
 
     $ensemble->predict(array("petal length": 3, "petal width": 1));
 
-You can also use the `predict_probability` function to obtain a probability prediction for each possible class of the objective field
+Also, an ensemble previously stored in a directory can be used to build a local
+Ensemble object. In next example, the "storagedirectory" directory contains
+a JSON file ``ensemble_5143a51a37203f2cf7000928``
+and some additional JSON files,
+one per model contained in the ensemble, named after their IDs where slashes
+have been replaced by underscores.
+
+.. code-block:: php
+
+    $api = new BigML("username", "password", false, "storagedirectory");
+
+    $ensemble = $api->retrieve_resource('ensemble/5143a51a37203f2cf7000928');
+
+    $local_ensemble = new BigML\Ensemble($ensemble, api=$api);
+
+    $local_ensemble->predict(array("petal length"=>3, "petal width"=> 1), true, 1);
+
+
+Local ensembles also offer the `predict_probability` function to
+obtain a probability prediction for each possible class of the objective field
 
 .. code-block:: php
 

@@ -409,6 +409,45 @@ class BigMLTestLocalEnsemble extends TestCase
             }
             $this->assertEquals($item["probabilities"], $predict_probability);
         }
+
+    }
+
+    // Successfully creating a prediction from a locally stored ensemble
+
+    public function test_scenario7() {
+
+        $data = array(array("storage" => 'data/iris_ensemble',
+                            "ensemble_id" => "ensemble/5f57ff0495a9306a99000263",
+                            "data_input" => array("petal width" => 1.5),
+                            "prediction" => "Iris-versicolor",
+                            "probabilities" => array(0.0593, 0.723, 0.2177)),
+                     );
+
+        foreach($data as $item) {
+            print "\nSuccessfully creating a local prediction from a locally stored Ensemble\n";
+            print "I create local ensemble with files in storage ". $item["storage"]. " file\n";
+
+            print "When I create a local ensemble\n";
+            $local_ensemble = new Ensemble($item["ensemble_id"], null, null, $item["storage"]);
+
+            print "When I create prediction for local ensemble for " . json_encode($item["data_input"]) . " \n";
+            $prediction = $local_ensemble->predict($item["data_input"]);
+
+            print "Then the prediction for local ensemble is equals " . $item["prediction"] . "\n";
+            if(is_numeric($prediction)) {
+                $this->assertEquals($item["prediction"], round($prediction, 2));
+            } else {
+                $this->assertEquals($item["prediction"], $prediction);
+            }
+
+            print "And the local probabilities are " . json_encode($item["probabilities"]) . "\n";
+            $predict_probability = $local_ensemble->predict_probability($item["data_input"], true, \BigML\MultiVote::PROBABILITY_CODE, \BigML\Tree::LAST_PREDICTION, true);
+            foreach (range(0, count($predict_probability) - 1) as $index) {
+                $predict_probability[$index] = round($predict_probability[$index], 4);
+            }
+            $this->assertEquals($item["probabilities"], $predict_probability);
+        }
+
     }
 
 }

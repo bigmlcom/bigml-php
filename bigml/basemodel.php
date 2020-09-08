@@ -34,8 +34,8 @@ function print_importance($instance, $out=STDOUT) {
      $importance = $item[1];
      fwrite($out,"    " . $count . ". " .  $fields->{$field}->name . ": " . number_format(strval(round($importance, 4, PHP_ROUND_HALF_UP)*100), 2)  . "%\n");
      fflush($out);
-     $count+=1; 
-   }   
+     $count+=1;
+   }
 }
 
 class BaseModel extends ModelFields {
@@ -56,7 +56,7 @@ class BaseModel extends ModelFields {
          // with get_object_vars function
          $d = get_object_vars($d);
       }
- 
+
       if (is_array($d)) {
          /*
          * Return array converted to object
@@ -79,17 +79,16 @@ class BaseModel extends ModelFields {
          if ($api == null) {
              $api = new BigML(null, null, null);
          }
- 
-         if (is_string($model)) {                                
+
+         if (is_string($model)) {
             if (!($api->_checkModelId($model)) ) {
                error_log("Wrong model id");
                return null;
             }
             $model = $api->retrieve_resource($model, BigML::ONLY_MODEL);
-         } 
+         }
 
-      } 
-         
+      }
       if (property_exists($model, "object") && $model->object instanceof \STDClass) {
          $model=$model->object;
       }
@@ -98,11 +97,11 @@ class BaseModel extends ModelFields {
          if ($model->status->code == BigMLRequest::FINISHED) {
 
             if (property_exists($model->model, "model_fields")) {
-              
+
                foreach($model->model->model_fields as $key => $value) {
 			      if (!property_exists($model->model->fields, $key)) {
                      throw new \Exception("Some fields are missing to generate a local model " . $key .  "  Please, provide a model with the complete list of fields.");
-                  }	
+                  }
                   if (property_exists($model->model->fields->{$key}, "summary")) {
                      $model->model->model_fields->{$key}->summary = $model->model->fields->{$key}->summary;
                   }
@@ -110,7 +109,7 @@ class BaseModel extends ModelFields {
                }
 
              }
-              
+
              parent::__construct($model->model->model_fields, extract_objective($model->objective_fields));
              $this->description = $model->description;
              $this->field_importance = property_exists($model->model, "importance") ? $model->model->importance : null;
@@ -120,9 +119,9 @@ class BaseModel extends ModelFields {
                foreach($this->field_importance as $field => $value) {
                   if (property_exists($model->model->model_fields, $value[0]) ) {
                      array_push($fields_importance, $value);
-                  } 
-               }      
-                  
+                  }
+               }
+
                $this->field_importance = $fields_importance;
              }
 
@@ -144,7 +143,7 @@ class BaseModel extends ModelFields {
         Tests if the fields names are unique. If they aren't, a
         transformation is applied to ensure unicity.
        */
-       $unique_names = array(); 
+       $unique_names = array();
        $len=0;
        foreach($fields as $field) {
           array_push($unique_names, $field->name);
@@ -166,14 +165,14 @@ class BaseModel extends ModelFields {
          The objective field treated first to avoid changing it
        */
        $unique_names =array($fields->{$this->objective_field}->name);
-            
-       foreach($fields as $field) { 
-          $new_name = $field->name; 
+
+       foreach($fields as $field) {
+          $new_name = $field->name;
           if (in_array($new_name, $unique_names) ) {
              $new_name = $field->name . strval($field->column_number);
              if (in_array($new_name, $unique_names) ) {
                 $new_name = $field->name . "_" . strval($field->column_number);
-             }   
+             }
              $field->name = $new_name;
           }
           array_push($unique_names, $new_name);
@@ -192,7 +191,7 @@ class BaseModel extends ModelFields {
     function field_importance_data() {
        /*
         Returns field importance related info
-       */ 
+       */
        return array($this->field_importance, $this->fields);
     }
 
