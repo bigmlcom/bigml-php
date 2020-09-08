@@ -417,10 +417,10 @@ class BigMLTestLocalEnsemble extends TestCase
     public function test_scenario7() {
 
         $data = array(array("storage" => 'data/iris_ensemble',
-                            "ensemble_id" => "ensemble/5f57ff0495a9306a99000263",
-                            "data_input" => array("petal width" => 1.5),
+                            "ensemble_id" => "ensemble/5f580eb0e84f942429000c22",
+                            "data_input" => array("petal width" => 1.5, "petal length" => 1),
                             "prediction" => "Iris-versicolor",
-                            "probabilities" => array(0.0593, 0.723, 0.2177)),
+                            "probabilities" => array(0.0105, 0.8884, 0.1011)),
                      );
 
         foreach($data as $item) {
