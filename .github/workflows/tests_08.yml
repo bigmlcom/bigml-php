@@ -1,0 +1,34 @@
+name: "PHP bindings tests 08"
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests-08:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        PHP: [7.2]
+    env:
+        BIGML_USERNAME: ${{ secrets.BIGML_USERNAME }}
+        BIGML_API_KEY: ${{ secrets.BIGML_API_KEY }}
+        BIGML_ORGANIZATION: ${{ secrets.BIGML_ORGANIZATION }}
+        BIGML_EXTERNAL_CONN_HOST: ${{ secrets.BIGML_EXTERNAL_CONN_HOST }}
+        BIGML_EXTERNAL_CONN_PORT: ${{ secrets.BIGML_EXTERNAL_CONN_PORT }}
+        BIGML_EXTERNAL_CONN_DB: ${{ secrets.BIGML_EXTERNAL_CONN_DB }}
+        BIGML_EXTERNAL_CONN_USER: ${{ secrets.BIGML_EXTERNAL_CONN_USER }}
+        BIGML_EXTERNAL_CONN_PWD: ${{ secrets.BIGML_EXTERNAL_CONN_PWD }}
+        BIGML_DELTA: 5
+
+    steps:
+    - name: Install packages
+      uses: actions/checkout@v2
+    - name: Run tests *08 09 10 11 12 36_a*
+      run: |
+       composer update
+       cd tests
+       export TESTS=$(for t in "08" "09" "10" "11" "12" "36_a"; do ls *$t*.php;done|paste -sd " ")
+       echo $TESTS
+       for t in $TESTS; do phpunit --debug $t;done
