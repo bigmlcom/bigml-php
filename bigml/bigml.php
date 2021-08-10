@@ -3342,7 +3342,7 @@ final class BigMLRequest {
          $this->response["error"] = array();;
          $this->response["error"]["status"] = array();
          $this->response["error"]["status"]["code"] = BigMLRequest::HTTP_INTERNAL_SERVER_ERROR;
-         $this->response["error"]["status"]["message"] = "The resource couldn't be " . $this->method == "CREATE" ? "created" : $this->method == "UPDATE" ? "updated": "retrieved";
+         $this->response["error"]["status"]["message"] = "The resource couldn't be " . ($this->method == "CREATE") ? "created" : ($this->method == "UPDATE") ? "updated": "retrieved";
 
          if ($this->method == "CREATE") {
             $this->response_code = BigMLRequest::HTTP_CREATED;
