@@ -262,6 +262,7 @@ class Ensemble {
       if ($this->boosting) {
            return $this->boostedensemble->predict($input_data, $by_name, $missing_strategy);
       }
+      print_r($this->models_splits);
       if (count($this->models_splits) > 1) {
          $votes = new MultiVote(array());
          $models = array();
