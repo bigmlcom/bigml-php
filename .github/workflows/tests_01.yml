@@ -25,6 +25,8 @@ jobs:
     steps:
     - name: Install packages
       uses: actions/checkout@v2
+    - name: Install phpunit
+      uses: php-actions/phpunit@v3
     - name: Run tests *01 03 04 06 07*
       run: |
        composer update
