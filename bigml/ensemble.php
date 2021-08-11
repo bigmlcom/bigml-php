@@ -144,7 +144,6 @@ class Ensemble {
               array_push($this->models_splits, array_slice($models, $index, ($index+$max_models)));
           }
       }
-
       if (count($this->models_splits) == 1) {
          $models = array();
 
