@@ -10,7 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        PHP: [7.2]
+        php-versions: ['7.2']
+        phpunit-versions: ['8.5.2']
     env:
         BIGML_USERNAME: ${{ secrets.BIGML_USERNAME }}
         BIGML_API_KEY: ${{ secrets.BIGML_API_KEY }}
@@ -25,10 +26,11 @@ jobs:
     steps:
     - name: Install packages
       uses: actions/checkout@v2
-    - name: Install phpunit
-      uses: php-actions/phpunit@v3
+    - name: Install PHP
+      uses: shivammathur/setup-php@v2
       with:
-        version: 8.5.2
+        php-version: ${{ matrix.php-versions }}
+        tools: phpunit:${{ matrix.phpunit-versions }}
     - name: Run tests *01 03 04 06 07*
       run: |
        composer update
