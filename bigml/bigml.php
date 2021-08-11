@@ -2853,13 +2853,16 @@ class BigML {
          $stored_resource = $this->storage .
                           DIRECTORY_SEPARATOR .
                           str_replace('/','_',$resource_id);
-
+         print_r($stored_resource);
+         print_r("\n");
          if (file_exists($stored_resource)) {
+         	print_r("exists\n");
             $resource = json_decode(file_get_contents($stored_resource));
             if (property_exists($resource, "object") &&
                 property_exists($resource->object, "status") &&
                 $resource->object->status->code != BigMLRequest::FINISHED ) {
                # get resource again
+               print_r("get again\n");
                try {
                   $rest = new BigMLRequest('GET', $resource->resource, $this);
                   if ($query_string!=null) {
