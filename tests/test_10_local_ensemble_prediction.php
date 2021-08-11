@@ -416,7 +416,7 @@ class BigMLTestLocalEnsemble extends TestCase
 
     public function test_scenario7() {
 
-        $data = array(array("storage" => getcwd() . '/data/iris_ensemble',
+        $data = array(array("storage" => getcwd() . '/data/iris_ensemble/',
                             "ensemble_id" => "ensemble/5f580eb0e84f942429000c22",
                             "data_input" => array("petal width" => 1.5, "petal length" => 1),
                             "prediction" => "Iris-versicolor",
