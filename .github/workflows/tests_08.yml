@@ -37,4 +37,4 @@ jobs:
        cd tests
        export TESTS=$(for t in "08" "09" "10" "11" "12" "36_a"; do ls *$t*.php;done|paste -sd " ")
        echo $TESTS
-       for t in $TESTS; do phpunit --debug $t;done
+       for t in $TESTS; do phpunit --debug --verbose $t;done
