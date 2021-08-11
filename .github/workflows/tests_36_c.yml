@@ -31,6 +31,8 @@ jobs:
         php-version: ${{ matrix.php-versions }}
     - name: Install phpunit
       uses: php-actions/phpunit@v3
+      with:
+        version: 8.5.2
     - name: Run tests *36_c*
       run: |
        composer update
