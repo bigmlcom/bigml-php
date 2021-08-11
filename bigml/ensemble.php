@@ -69,9 +69,7 @@ class Ensemble {
       $this->api = $api;
       $this->ensemble_id = null;
       $models = array();
-      print_r("ensemble\n");
       if (is_array($ensemble)) {
-      	 print_r("array ensemble\n");
          foreach($ensemble as $model_id) {
 
             if (!is_string($model_id) && is_a($model_id, "BigML\Model") ) {
@@ -101,9 +99,9 @@ class Ensemble {
          $this->distributions = null;
 
       } else {
-      	 print_r("string ensemble\n");
          if (is_string($ensemble) && $api != null && $api->_checkEnsembleId($ensemble)) {
-            $ensemble = $api->get_ensemble($ensemble);
+         	
+            $ensemble = $api->retrieve_resource($ensemble);
          }
 
          if ($ensemble instanceof \STDClass && property_exists($ensemble, "resource") && $api->_checkEnsembleId($ensemble->resource) && $ensemble->object->status->code == 5) {
