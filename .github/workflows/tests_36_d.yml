@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        PHP: [7.2]
+        php-versions: [7.2]
     env:
         BIGML_USERNAME: ${{ secrets.BIGML_USERNAME }}
         BIGML_API_KEY: ${{ secrets.BIGML_API_KEY }}
@@ -25,6 +25,10 @@ jobs:
     steps:
     - name: Install packages
       uses: actions/checkout@v2
+    - name: Install PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-versions }}
     - name: Run tests *36_d*
       run: |
        composer update
