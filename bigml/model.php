@@ -548,11 +548,11 @@ class Model extends BaseModel{
             if ($tree->predicate->term) {
                 $term = $tree->predicate->term;
                 if (!array_key_exists($tree->predicate->field, $this->terms)) {
-                    $this->terms->{$tree->predicate->field} = array();
+                    $this->terms[$tree->predicate->field] = array();
                 }
 
-                if (!array_key_exists($term, $this->terms->{$tree->predicate->field})) {
-                    array_push($term, $this->terms->{$tree->predicate->field});
+                if (!array_key_exists($term, $this->terms[$tree->predicate->field])) {
+                    array_push($this->terms[$tree->predicate->field], $term);
                 }
             }
         }
