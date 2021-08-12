@@ -21,7 +21,7 @@ class BigMLTestMultiVote extends TestCase
 
     protected static $api;
 
-    public static function setUpBeforeClass(): void() {
+    public static function setUpBeforeClass(): void {
        print __FILE__;
        self::$api =  new BigML(self::$username, self::$api_key, true);
        ini_set('memory_limit', '512M');

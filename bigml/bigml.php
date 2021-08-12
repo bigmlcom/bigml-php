@@ -1,6 +1,6 @@
 <?php
 #
-# Copyright 2012-2014 BigML
+# Copyright 2012-2021 BigML
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -2853,7 +2853,6 @@ class BigML {
          $stored_resource = $this->storage .
                           DIRECTORY_SEPARATOR .
                           str_replace('/','_',$resource_id);
-
          if (file_exists($stored_resource)) {
             $resource = json_decode(file_get_contents($stored_resource));
             if (property_exists($resource, "object") &&
@@ -2959,7 +2958,8 @@ class BigML {
    }
 
    private function get_resource_request($resourceId, $resourceType, $operation, $queryString=null, $checkStatus=false, $waitTime=3000, $retries=0, $shared_username=null, $shared_api_key=null) {
-
+   	  print_r("getting resource");
+   	  print_r($resourceId);
       $resource=$this->check_resource_type($resourceId,  $resourceType);
 
       if ($resource == null) {
@@ -2991,7 +2991,6 @@ class BigML {
       if ($queryString!=null) {
          $rest->setQueryString($queryString);
       }
-
       return $rest;
    }
 
@@ -3342,7 +3341,7 @@ final class BigMLRequest {
          $this->response["error"] = array();;
          $this->response["error"]["status"] = array();
          $this->response["error"]["status"]["code"] = BigMLRequest::HTTP_INTERNAL_SERVER_ERROR;
-         $this->response["error"]["status"]["message"] = "The resource couldn't be " . $this->method == "CREATE" ? "created" : $this->method == "UPDATE" ? "updated": "retrieved";
+         $this->response["error"]["status"]["message"] = "The resource couldn't be " . $this->method == "CREATE" ? "created" : ($this->method == "UPDATE" ? "updated": "retrieved");
 
          if ($this->method == "CREATE") {
             $this->response_code = BigMLRequest::HTTP_CREATED;

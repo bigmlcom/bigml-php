@@ -1,6 +1,6 @@
 <?php
 #
-# Copyright 2012-2014 BigML
+# Copyright 2012-2021 BigML
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -69,9 +69,7 @@ class Ensemble {
       $this->api = $api;
       $this->ensemble_id = null;
       $models = array();
-
       if (is_array($ensemble)) {
-
          foreach($ensemble as $model_id) {
 
             if (!is_string($model_id) && is_a($model_id, "BigML\Model") ) {
@@ -102,7 +100,8 @@ class Ensemble {
 
       } else {
          if (is_string($ensemble) && $api != null && $api->_checkEnsembleId($ensemble)) {
-            $ensemble = $api->get_ensemble($ensemble);
+         	
+            $ensemble = $api->retrieve_resource($ensemble);
          }
 
          if ($ensemble instanceof \STDClass && property_exists($ensemble, "resource") && $api->_checkEnsembleId($ensemble->resource) && $ensemble->object->status->code == 5) {
@@ -144,7 +143,6 @@ class Ensemble {
               array_push($this->models_splits, array_slice($models, $index, ($index+$max_models)));
           }
       }
-
       if (count($this->models_splits) == 1) {
          $models = array();
 
