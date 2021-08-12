@@ -1,6 +1,6 @@
 <?php
 #
-# Copyright 2012-2014 BigML
+# Copyright 2012-2021 BigML
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -31,15 +31,6 @@ function term_matches($text, $forms_list, $options) {
      return full_term_match($text, $first_term, $case_sensitive);
   }
 
-   # In token_mode='all' we will match full terms using equals and
-   # # tokens using contains
-
-   if ($token_mode == Predicate::TM_ALL && count($forms_list) == 1) {
-      if ( preg_match(Predicate::FULL_TERM_PATTERN, $first_term) ) {
-         return full_term_match($text, $first_term, $case_sensitive);
-      }
-   }
-
   return term_matches_tokens($text, $forms_list, $case_sensitive);
 }
 
@@ -52,7 +43,7 @@ function term_matches_tokens($text, $forms_list, $case_sensitive) {
   foreach ($forms_list as $term) {
       $terms[] = str_replace("/", "\/", preg_quote($term));
   }
-  $expression = "/(\b|_)" . join("(\b|_)|(\b|_)",$terms) . "(\b|_)/" . $flags;
+  $expression = "/(\b|_)" . join("(\b|_)|(\b|_)", $terms) . "(\b|_)/" . $flags;
   $total = preg_match_all($expression, $text, $matches);
   return $total;
 

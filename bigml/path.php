@@ -1,6 +1,6 @@
 <?php
 #
-# Copyright 2012-2014 BigML
+# Copyright 2012-2021 BigML
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -102,14 +102,14 @@ function merge_text_rules($list_of_predicates, $fields, $label='name') {
    $rule = implode(" and ", $rules);
 
    if (!empty($not_contains)) {
-      if ($empty($rules) ) {
+      if (empty($rules) ) {
          array_push($rules_not, trim($not_contains[0]->to_rule($fields, $label)));
       }  else {
          array_push($rules_not, " and " . trim($not_contains[0]->to_rule($fields, $label)) );
       } 
 
       foreach (array_slice($not_contains, 1) as $predicate) {
-         if (!$in_array($predicate->term, $rules_not)) {
+         if (!in_array($predicate->term, $rules_not)) {
             array_push($rules_not, $predicate->term);
 	 }
       }

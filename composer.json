@@ -4,6 +4,6 @@
   "description": "API bindings for BigML",
   "license": "Apache-2.0",
   "require": {
-    "wamania/php-stemmer": "dev-master"
+    "wamania/php-stemmer": "1.3"
   }
 }
