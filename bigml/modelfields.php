@@ -34,11 +34,11 @@ function strip_affixes($value, $field)
       $value = mb_convert_encoding($value, "UTF-8");
    }
 
-   if (array_key_exists('prefix', $field) && substr( $field->prefix, 0, 6 ) === "prefix") {
+   if (property_exists($field, 'prefix') && substr( $field->prefix, 0, 6 ) === "prefix") {
       $value=substr($value, 6);
    }
 
-   if (array_key_exists('suffix', $field) && endsWith($field->suffix, "suffix")) {
+   if (property_exists($field, 'suffix') && endsWith($field->suffix, "suffix")) {
       $value=substr($value, 0, -6);
    }
 
@@ -365,7 +365,7 @@ class ModelFields {
 
          } else {
             foreach($input_data as $key => $value) {
-               if (array_key_exists($key, $this->fields) && (is_null($this->objective_id) || $key != $this->objective_id) ) {
+               if (property_exists($this->fields, $key) && (is_null($this->objective_id) || $key != $this->objective_id) ) {
                   $new_input[$key] = $value;
                } else {
 	         array_push($unused_fields, $key);   

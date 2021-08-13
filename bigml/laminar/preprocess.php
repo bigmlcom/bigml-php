@@ -163,11 +163,11 @@ function transform($vector, $spec) {
     $vtype = $spec->type;
 
     if ($vtype == NUMERIC) {
-        if (array_key_exists(STANDARD_DEVIATION, $spec)) {
+        if (property_exists($spec, STANDARD_DEVIATION)) {
             $mean = moments($spec)[0];
             $stdev = moments($spec)[1];
             $output = standardize($vector, $mean, $stdev);
-        } elseif (array_key_exists(ZERO, $spec)) {
+        } elseif (property_exists($spec, ZERO)) {
             $low = bounds($spec)[0];
             $high = bounds($spec)[1];
             $output = binarize($vector, $low, $high);

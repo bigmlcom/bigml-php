@@ -2,8 +2,6 @@
 use PHPUnit\Framework\TestCase;
 
 
-include 'test_utils.php';
-
 if (!class_exists('BigML\BigML')) {
   include '../bigml/bigml.php';
 }
@@ -97,7 +95,11 @@ class BigMLTestEnsemble extends TestCase
             $this->assertEquals(BigMLRequest::FINISHED, $resource["status"]);
 
             print "Then the prediction for ". $item["objective"] ." is " . $item["prediction"] . "\n";
-            $this->assertEquals(round($item["prediction"], 4), round($prediction->object->prediction->{$item["objective"]}, 4));
+            if (is_string($prediction->object->prediction->{$item["objective"]})) {
+              $this->assertEquals($item["prediction"], $prediction->object->prediction->{$item["objective"]});
+            } else {
+              $this->assertEquals(round($item["prediction"], 4), round($prediction->object->prediction->{$item["objective"]}, 4));
+            }
         }
     }
 }

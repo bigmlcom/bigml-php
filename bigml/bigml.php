@@ -2958,8 +2958,6 @@ class BigML {
    }
 
    private function get_resource_request($resourceId, $resourceType, $operation, $queryString=null, $checkStatus=false, $waitTime=3000, $retries=0, $shared_username=null, $shared_api_key=null) {
-   	  print_r("getting resource");
-   	  print_r($resourceId);
       $resource=$this->check_resource_type($resourceId,  $resourceType);
 
       if ($resource == null) {

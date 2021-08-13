@@ -216,7 +216,7 @@ class LogisticRegression extends ModelFields {
             $this->format_field_codings();
 
             foreach ($this->field_codings as $field_id => $field_coding) {
-                if ( array_key_exists($field_id, $fields) && array_key_exists($field_id,$this->inverted_fields) ) {
+                if (property_exists($fields, $field_id) && array_key_exists($field_id,$this->inverted_fields) ) {
                    $this->field_codings[$this->inverted_fields[$field_id]] = $this->field_codings[$field_id];
                    unset($this->field_codings[$field_id]);
                 }

@@ -2,8 +2,6 @@
 use PHPUnit\Framework\TestCase;
 
 
-include 'test_utils.php';
-
 //importing
 if (!class_exists('BigML\BigML')) {
    include '../bigml/bigml.php';
@@ -101,7 +99,7 @@ class BigMLTestDeepnetsC extends TestCase
          print "\nAnd I create a local deepnet prediction\n";
          $local_prediction = $local_deepnet->predict($item["data_input"]);
 
-         if (is_array($local_prediction["prediction"])) {
+         if (is_array($local_prediction) && $local_prediction["prediction"]) {
             $local_prediction = $local_prediction["prediction"];
          } else {
             $prediction_value = round($prediction_value, 5);

@@ -2,8 +2,6 @@
 use PHPUnit\Framework\TestCase;
 
 
-include 'test_utils.php';
-
 //importing
 if (!class_exists('BigML\BigML')) {
   include '../bigml/bigml.php';

@@ -140,22 +140,22 @@ class Deepnet extends ModelFields{
                     sort($this->class_names);
                 }
 
-                if (array_key_exists("missing_numerics", $deepnet)) {
+                if (property_exists($deepnet, "missing_numerics")) {
                     $this->missing_numerics = $deepnet->missing_numerics;
                 } else {
                     $this->missing_numerics = false;
                 }
 
-                if (array_key_exists("network", $deepnet)) {
+                if (property_exists($deepnet, "network")) {
                     $network = $deepnet->network;
                     $this->network = $network;
-                    if (array_key_exists("networks", $network)) {
+                    if (property_exists($network, "networks")) {
                         $this->networks = $network->networks;
                     } else {
                         $this->networks = [];
                     }
                     $this->preprocess = $network->preprocess;
-                    if (array_key_exists("optimizer", $network)) {
+                    if (property_exists($network, "optimizer")) {
                         $this->optimizer = $network->optimizer;
                     } else {
                         $this->optimizer = [];

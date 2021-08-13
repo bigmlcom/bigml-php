@@ -56,40 +56,40 @@ define("SAMPLES_PER_TOPIC", 128);
 function code_to_name($lang) {
     switch ($lang) {
         case "da":
-            $stemmer = new \Wamania\Snowball\Danish();
+            $stemmer = new \Wamania\Snowball\Stemmer\Danish();
             return $stemmer;
         case "nl":
-            $stemmer = new \Wamania\Snowball\Dutch();
+            $stemmer = new \Wamania\Snowball\Stemmer\Dutch();
             return $stemmer;
         case "en":
-            $stemmer = new \Wamania\Snowball\English();
+            $stemmer = new \Wamania\Snowball\Stemmer\English();
             return $stemmer;
         case "fr":
-            $stemmer = new \Wamania\Snowball\French();
+            $stemmer = new \Wamania\Snowball\Stemmer\French();
             return $stemmer;
         case "de":
-            $stemmer = new \Wamania\Snowball\German();
+            $stemmer = new \Wamania\Snowball\Stemmer\German();
             return $stemmer;
         case "it":
-            $stemmer = new \Wamania\Snowball\Italian();
+            $stemmer = new \Wamania\Snowball\Stemmer\Italian();
             return $stemmer;
         case "nn":
-            $stemmer = new \Wamania\Snowball\Norwegian();
+            $stemmer = new \Wamania\Snowball\Stemmer\Norwegian();
             return $stemmer;
         case "pt":
-            $stemmer = new \Wamania\Snowball\Portuguese();
+            $stemmer = new \Wamania\Snowball\Stemmer\Portuguese();
             return $stemmer;
         case "ro":
-            $stemmer = new \Wamania\Snowball\Romanian();
+            $stemmer = new \Wamania\Snowball\Stemmer\Romanian();
             return $stemmer;
         case "ru":
-            $stemmer = new \Wamania\Snowball\Russian();
+            $stemmer = new \Wamania\Snowball\Stemmer\Russian();
             return $stemmer;
         case "es":
-            $stemmer = new \Wamania\Snowball\Spanish();
+            $stemmer = new \Wamania\Snowball\Stemmer\Spanish();
             return $stemmer;
         case "sv":
-            $stemmer = new \Wamania\Snowball\Swedish();
+            $stemmer = new \Wamania\Snowball\Stemmer\Swedish();
             return $stemmer;
         default:
             throw new \Exception("Your language is not currently supported.");

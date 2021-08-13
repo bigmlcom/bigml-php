@@ -439,7 +439,7 @@ class Tree {
          } else {
 	    uksort($final_distribution, function($x, $y) use ($final_distribution) {
 	       if($final_distribution[$x]==$final_distribution[$y]) {
-		 return $x<$y?-1:$x!=$y;
+		 return $x<$y?-1:($x!=$y ? 1:0);
                }
 	      return $final_distribution[$y]-$final_distribution[$x];
 	    });

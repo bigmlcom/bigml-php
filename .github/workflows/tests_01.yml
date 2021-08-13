@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-versions: ['7.2']
+        php-versions: ['8.0']
         phpunit-versions: ['8.5.2']
     env:
         BIGML_USERNAME: ${{ secrets.BIGML_USERNAME }}

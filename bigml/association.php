@@ -451,8 +451,11 @@ class Association extends ModelFields{
       return $rule_row;
    }   
 
-   function summarize($out=STDOUT, $limit=10, $args) {
+   function summarize($out=STDOUT, $limit=10, $args=null) {
      /* Prints a summary of the obtained rules*/
+     if (is_null($args)) {
+         $args = array();
+     }
      $rules = $this->get_rules($args);
      fwrite($out, "Total number of rules: " . count($rules) . "\n");
      $INDENT = utf8_encode('    ');

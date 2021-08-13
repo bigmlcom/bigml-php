@@ -1,9 +1,16 @@
-BigML PHP Bindings v. 2.0
-=========================
+BigML PHP Bindings
+==================
 
-**Notice: the BigML PHP bindings 2.0 may break existing code. In
-particular, all static methods have been removed from the BigML
-class. So, if you ever used the syntaxis, e.g.:**
+In this repository you'll find an open source PHP library that gives
+you a simple way to interact with `BigML <https://bigml.com>`_ using its
+`API <https://bigml.io>`_.
+
+This module is licensed under the `Apache License, Version
+2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>`_.**
+
+**Notice: the BigML PHP bindings are not entirely backwards compatible
+with versions prior to 2.0. In particular, all static methods have been
+removed from the BigML class. So, if you ever used the syntaxis, e.g.:**
 
 .. code-block:: php
 
@@ -24,18 +31,12 @@ of a new one supporting the specification of named parameters. Use the
 new syntaxis instead, as described below. The old constructor syntaxis
 will be maintained until version 3.0, then removed.**
 
-In this repository you'll find an open source PHP library that gives
-you a simple way to interact with `BigML <https://bigml.com>`_.
-
-This module is licensed under the `Apache License, Version
-2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>`_.**
-
 .. contents:: Table of Contents
 
 Requirements
 ------------
 
-PHP 5.3.2 or higher are currently supported by these bindings.
+PHP 8.0 or higher is currently supported by these bindings.
 
 You will also need to have the non-default extensions `mbstring
 <http://php.net/manual/en/book.mbstring.php>`_, `cURL

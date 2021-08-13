@@ -426,9 +426,9 @@ class Fields {
       if (is_array($input_data)) {
          foreach($input_data as $name => $value) {
            if (array_key_exists($name, $this->fields_by_name)) {
-              $a = "[" . $name  . str_repeat(utf8_encode(' '), 32) . ":" . gettype($input_data->{$name}) . str_repeat(utf8_encode(' '), 16) . ":" . $this->fields->{$this->fields_by_name{$name}}->optype . str_repeat(utf8_encode(' '), 16) . ":";
+           	   $a = "[" . $name  . str_repeat(utf8_encode(' '), 32) . ":" . gettype($input_data->[$name]) . str_repeat(utf8_encode(' '), 16) . ":" . $this->fields->[$this->fields_by_name[$name]]->optype . str_repeat(utf8_encode(' '), 16) . ":";
 
-              if (in_array(gettype($input_data->{$name}), php_map_type($this->fields->{$this->fields_by_name->{$name}}->optype) )) {
+              if (in_array(gettype($input_data->[$name]), php_map_type($this->fields->[$this->fields_by_name->[$name]]->optype) )) {
                 $a = $a . "OK\n"; 
               } else {
                 $a = $a . "WRONG\n";
@@ -483,8 +483,8 @@ class Fields {
        
       $field_id = $this->field_id($field_name);
 
-      if (array_key_exists("summary", $this->fields->{$field_id})) {
-         return $this->fields->{$field_id}->summary;
+      if (array_key_exists("summary", $this->fields->[$field_id])) {
+         return $this->fields->[$field_id]->summary;
       }
 
       return array();
@@ -537,7 +537,7 @@ class Fields {
      **/
      $new_dictionary = array();
      foreach((array_keys(get_object_vars($dictionary))) as $key) {
-         $field_value=$dictionary->{$key}->{$field};
+         $field_value=$dictionary->[$key]->[$field];
          if (!mb_detect_encoding($field_value, 'UTF-8', true)) {
             $field = utf8_encode($field_value);
          }
@@ -565,7 +565,7 @@ function php_map_type($value) {
     $PHP_TYPE_ARRAY = array("categorical" => array("string"), "numeric" => array("integer", "double"), "text" => array("string"));
        
     if (in_array($value, $PHP_TYPE_ARRAY)) {
-       return $PHP_TYPE_ARRAY->{$value};
+       return $PHP_TYPE_ARRAY->[$value];
     } else {
       return array("str");
     }

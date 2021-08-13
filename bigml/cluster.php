@@ -81,7 +81,7 @@ class Cluster extends ModelFields {
          if ($cluster->status->code == BigMLRequest::FINISHED) {
 
 	    $the_clusters = $cluster->clusters;
-	    $cluster_global = array_key_exists("global", $the_clusters) ? $the_clusters->global : null;
+	    $cluster_global = property_exists($the_clusters, "global") ? $the_clusters->global : null;
 	    $clusters = $the_clusters->clusters;
 
             $this->centroids = array();
@@ -108,7 +108,7 @@ class Cluster extends ModelFields {
 
 	    $this->between_ss = $the_clusters->between_ss;
 	    $this->ratio_ss = $the_clusters->ratio_ss;
-	    $this->critical_value = array_key_exists("critical_value", $cluster) ? $cluster->critical_value : null;
+	    $this->critical_value = property_exists($cluster, "critical_value") ? $cluster->critical_value : null;
 	    $this->k = $cluster->k;
 
             $this->scales = $cluster->scales;
