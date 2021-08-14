@@ -29,8 +29,8 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php-versions }}
-    - name: Install PHPUnit
-      uses: php-actions/phpunit@v8.5.2    - name: Run tests *05_b*
+        tools: phpunit:8.5.2
+    - name: Run tests *05_b*
       run: |
        composer update
        cd tests
