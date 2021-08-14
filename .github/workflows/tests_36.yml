@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         php-versions: ['8.0']
-        phpunit-versions: ['8.5.2']
+        phpunit-versions: ['9.0.0']
     env:
         BIGML_USERNAME: ${{ secrets.BIGML_USERNAME }}
         BIGML_API_KEY: ${{ secrets.BIGML_API_KEY }}
