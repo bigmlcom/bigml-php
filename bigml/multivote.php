@@ -733,7 +733,10 @@ class MultiVote {
             if (!in_array($weight_label, array_values($this->COMBINATION_WEIGHTS))) {
                throw new \Exception("Wrong weight_label value.");
             }
-
+            if (is_array($prediction)) {
+            	// batch predictions return predictions as arrays
+            	$prediction = (object) $prediction;
+            }
             if (!property_exists($prediction, $weight_label)) {
                throw new \Exception("Not enough data to use the selected prediction method. Try creating your model anew");
             } else {
