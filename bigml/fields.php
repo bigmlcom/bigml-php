@@ -426,9 +426,9 @@ class Fields {
       if (is_array($input_data)) {
          foreach($input_data as $name => $value) {
            if (array_key_exists($name, $this->fields_by_name)) {
-           	   $a = "[" . $name  . str_repeat(utf8_encode(' '), 32) . ":" . gettype($input_data->[$name]) . str_repeat(utf8_encode(' '), 16) . ":" . $this->fields->[$this->fields_by_name->[$name]]->optype . str_repeat(utf8_encode(' '), 16) . ":";
+           	   $a = "[" . $name  . str_repeat(utf8_encode(' '), 32) . ":" . gettype($input_data[$name]) . str_repeat(utf8_encode(' '), 16) . ":" . $this->fields->[$this->fields_by_name[$name]]->optype . str_repeat(utf8_encode(' '), 16) . ":";
 
-              if (in_array(gettype($input_data->[$name]), php_map_type($this->fields->[$this->fields_by_name->[$name]]->optype) )) {
+              if (in_array(gettype($input_data[$name]), php_map_type($this->fields->[$this->fields_by_name[$name]]->optype) )) {
                 $a = $a . "OK\n"; 
               } else {
                 $a = $a . "WRONG\n";

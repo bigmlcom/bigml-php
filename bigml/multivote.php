@@ -529,7 +529,7 @@ class MultiVote {
       if ($keys != null && (!$probabilities)) {
          foreach($keys as $key) {
             foreach($this->predictions as $prediction) {
-               if (!property_exists($prediction, $key)) {
+               if (!is_array($prediction) && !property_exists($prediction, $key)) {
                   throw new \Exception('Not enough data to use the selected prediction method. Try creating your model anew.');
                }
             }
