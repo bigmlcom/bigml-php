@@ -33,6 +33,7 @@ jobs:
     - name: Run tests *01 03 04 06 07*
       run: |
        composer update
+       phpunit --version
        cd tests
        export TESTS=$(for t in "01" "03" "04" "06" "07"; do ls *$t*.php;done|paste -sd " ")
        echo $TESTS
