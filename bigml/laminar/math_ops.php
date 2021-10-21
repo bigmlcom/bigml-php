@@ -60,7 +60,7 @@ function plus($mat, $vec) {
         $output[] = $new_row;
     }
     return $output;
-}        
+}
 
 function minus($mat, $vec) {
     $output = [];
@@ -72,7 +72,7 @@ function minus($mat, $vec) {
         $output[] = $new_row;
     }
     return $output;
-}        
+}
 
 function times($mat, $vec) {
     $output = [];
@@ -84,7 +84,7 @@ function times($mat, $vec) {
         $output[] = $new_row;
     }
     return $output;
-}        
+}
 
 function divide($mat, $vec) {
     $output = [];
@@ -96,7 +96,7 @@ function divide($mat, $vec) {
         $output[] = $new_row;
     }
     return $output;
-}        
+}
 
 
 function dot($mat1, $mat2) {
@@ -142,7 +142,7 @@ function sigmoid($xs) {
     }
 
     return $out_vec;
-}  
+}
 
 function softplus($xs) {
     $output= [];
@@ -182,6 +182,48 @@ function relu($xs) {
     return $output;
 }
 
+function swish($xs) {
+    $out_vec = [];
+
+    foreach ($xs as $x) {
+        if ($x > 0) {
+            if ($x < LARGE_EXP) {
+                $ex_val = exp($x);
+                $out_vec[] = $x * $ex_val / ($ex_val + 1);
+            } else {
+                $out_vec[] = $x;
+            }
+        } else {
+            if (-$x < LARGE_EXP) {
+                $out_vec[] = $x / (1 + exp(-$x));
+            } else {
+                $out_vec[] = 0;
+            }
+        }
+    }
+
+    return $out_vec;
+}
+
+function mish($xs) {
+    return array_map('tanh', softplus($xs));
+}
+
+
+function relu6($xs) {
+    return array_map(function ($x) {return min($x, 6);}, relu($xs));
+
+}
+
+function leaky_relu($xs) {
+    return array_map(function($x) {if ($x > 0) return $x; return $x * LEAKY_RELU_CONST;}, $xs);
+}
+
+function selu($xs) {
+    return array_map(function($x) {if ($x > 0) return $x * LAMBDA;
+        return LAMBDA * ALPHA * (exp($x) - 1);}, $xs);
+}
+
 function activators($fn) {
     switch ($fn) {
         case "tanh":
@@ -195,7 +237,18 @@ function activators($fn) {
         case "softmax":
             return broadcast('BigML\softmax');
         case "identity":
+        case "linear":
             return broadcast( function($xs) { return array_map('floatval', $xs); });
+        case "swish":
+            return broadcast('BigML\swish');
+        case "mish":
+            return broadcast('BigML\mish');
+        case "relu6":
+            return broadcast('BigML\relu6');
+        case "leaky_relu":
+            return broadcast('BigML\leaky_relu');
+        case "selu":
+            return broadcast('BigML\selu');
     }
 }
 
@@ -266,9 +319,9 @@ function propagate($x_in, $layers) {
         $g = $layer['scale'];
 
         $afn = $layer['activation_function'];
-  
+
         $X_dot_w = dot($last_X, $w);
-        
+
         if (!is_null($m) && !is_null($s)) {
             $next_in = batch_norm($X_dot_w, $m, $s, $b, $g);
         } else {
