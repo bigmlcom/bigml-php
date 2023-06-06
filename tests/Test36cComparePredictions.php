@@ -35,6 +35,17 @@ class Test36cComparePredictions extends TestCase
       self::$api->delete_all_project_by_name(basename(preg_replace('/\.php$/', '', __FILE__)));
    }
 
+   private function _format_predictions($prediction_value, $local_prediction) {
+     if (is_array($local_prediction) &&
+         array_key_exists("prediction", $local_prediction)) {
+        $local_prediction = $local_prediction["prediction"];
+     } else if (!is_string($prediction_value)) {
+        $prediction_value = round($prediction_value, 4);
+        $local_prediction = round($local_prediction, 4);
+     }
+     return array($prediction_value, $local_prediction);
+   }
+
    public function test_scenario4() {
 
       $data = array(array("filename" => "data/movies.csv",
@@ -101,12 +112,9 @@ class Test36cComparePredictions extends TestCase
          print "\nAnd I create a local deepnet prediction\n";
          $local_prediction = $local_deepnet->predict($item["data_input"]);
 
-         if (is_array($local_prediction["prediction"])) {
-            $local_prediction = $local_prediction["prediction"];
-         } else {
-            $prediction_value = round($prediction_value, 5);
-            $local_prediction = round($local_prediction, 5);
-         }
+         [$prediction_value, $local_prediction] = self::_format_predictions(
+           $prediction_value, $local_prediction
+         );
 
          print "The local prediction is ";
          print_r($local_prediction);

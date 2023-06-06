@@ -105,6 +105,7 @@ class BigML {
     * @param string $version
     * @param string $project
     * @param string $org
+    * @param string $debug
     * @return void
     */
    public function __construct($username = null,
@@ -115,7 +116,9 @@ class BigML {
                                $locale = null,
                                $version = "andromeda",
                                $project = null,
-                               $org = null) {
+                               $org = null,
+                               $debug = false
+                               ) {
 
       if (is_array($username)) {
          $options = $username;
@@ -137,6 +140,8 @@ class BigML {
             $project = $options["project"];
          if (array_key_exists("organization", $options))
             $org = $options["organization"];
+         if (array_key_exists("debug", $options))
+            $debug = $options["debug"];
       }
 
       if ($username == null) {
@@ -152,6 +157,7 @@ class BigML {
 
       $this->domain = $domain;
       $this->version= $version;
+      $this->debug = $debug;
 
       if ($locale != null) {
          setlocale(LC_ALL, $$locale);
@@ -927,7 +933,6 @@ class BigML {
       $args[$resource['type']] = $resource['id'];
 
       $rest = new BigMLRequest('CREATE', 'prediction', $this);
-
       $rest->setData($args);
       $rest->setHeader('Content-Type', 'application/json');
       $rest->setHeader('Content-Length', strlen(json_encode($args)));
@@ -3204,8 +3209,10 @@ final class BigMLRequest {
       try {
          if ($this->bigml &&
              $this->bigml->getDebug() != null &&
-             $this->bigml->getDebug() == true)
+             $this->bigml->getDebug() == true) {
+            echo $this->method . "------------------------------------\n";
             echo "URL: " . $url . "\n";
+            }
 
          $curl = curl_init();
          curl_setopt($curl, CURLOPT_URL, $url);
@@ -3218,9 +3225,21 @@ final class BigMLRequest {
          if ($this->method == "CREATE") {
             curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_POSTFIELDS, $this->data);
+            if ($this->bigml &&
+                $this->bigml->getDebug() != null &&
+                $this->bigml->getDebug() == true) {
+               echo "Data: ";
+               var_dump($this->data);
+            }
          } elseif ($this->method == "UPDATE") {
             curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
             curl_setopt($curl, CURLOPT_POSTFIELDS, $this->data);
+            if ($this->bigml &&
+                 $this->bigml->getDebug() != null &&
+                 $this->bigml->getDebug() == true) {
+                echo "Data: ";
+                var_dump($this->data);
+            }
          } elseif ($this->method == "DELETE") {
             curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "DELETE");
          } elseif ($this->method == "DOWNLOAD") {
@@ -3245,6 +3264,11 @@ final class BigMLRequest {
          }
 
          $response = curl_exec($curl);
+         if ($this->bigml &&
+             $this->bigml->getDebug() != null &&
+             $this->bigml->getDebug() == true) {
+            print_r($response);
+         }
          $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
          if ($code == $this->response_code) {
@@ -3299,8 +3323,9 @@ final class BigMLRequest {
 
          $headers = explode("\n", $headers);
          foreach($headers as $header) {
-            if (stripos($header, 'Location:') !== false) {
-               $cad = explode("Location:", $header);
+            if (stripos($header, 'location:') !== false) {
+               $header = str_replace("Location:", "location:", $header);
+               $cad = explode("location:", $header);
                $this->response["location"] =trim($cad[1]);
                $location = $this->response["location"];
                break;

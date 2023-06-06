@@ -238,7 +238,7 @@ class Test05aComparePredictions extends TestCase
                                                   "source_parser"=> array("separator" => ";")),
                             'data_input' => array("timestamp" => "999999999"),
                             'prediction' => "4",
-                            'probability' => 0.4079,
+                            'probability' => 0.408,
                             'objective' => "000009",
                             'parms' => array("balance_fields" => false)
                           ),

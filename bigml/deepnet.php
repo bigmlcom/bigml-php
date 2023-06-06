@@ -24,7 +24,7 @@ offline.  You can also visualize your predictive model in IF-THEN rule
 format and even generate a php function that implements the model.
 Example usage (assuming that you have previously set up the
 BIGML_USERNAME and BIGML_API_KEY environment variables and that you
-own the model/id below): 
+own the model/id below):
 
 include bigml.php;
 include deepnet.php;
@@ -66,7 +66,7 @@ function expand_terms($terms_list, $input_terms = []) {
 
 class Deepnet extends ModelFields{
     /*
-      A lightweight wrapper around a Deepnet model.  
+      A lightweight wrapper around a Deepnet model.
 
       Uses a BigML remote model to build a local version that can be
       used to generate predictions locally.
@@ -92,7 +92,7 @@ class Deepnet extends ModelFields{
         if ($api == null) {
             $api = new BigML(null, null, null, $storage);
         }
-        
+
         if (is_string($deepnet)) {
             if (file_exists($deepnet)) {
                 $deepnet = json_decode(file_get_contents($deepnet));
@@ -101,24 +101,24 @@ class Deepnet extends ModelFields{
                 error_log("Wrong deepnet id");
                 return null;
             } else {
-                $deepnet = $api->retrieve_resource($deepnet, 
+                $deepnet = $api->retrieve_resource($deepnet,
                                                    BigML::ONLY_MODEL);
             }
         }
 
-        if (property_exists($deepnet, "object") && 
-            property_exists($deepnet->object, "status") && 
+        if (property_exists($deepnet, "object") &&
+            property_exists($deepnet->object, "status") &&
             $deepnet->object->status->code != BigMLRequest::FINISHED ) {
             throw new \Exception("The deepnet isn't finished yet");
         }
 
-        if (property_exists($deepnet, "object") && 
+        if (property_exists($deepnet, "object") &&
             $deepnet->object instanceof \STDClass) {
             $deepnet = $deepnet->object;
             $this->input_fields = $deepnet->input_fields;
         }
 
-        if (property_exists($deepnet, "deepnet") && 
+        if (property_exists($deepnet, "deepnet") &&
             $deepnet->deepnet instanceof \STDClass) {
 
             if ($deepnet->status->code == BigMLRequest::FINISHED) {
@@ -127,8 +127,8 @@ class Deepnet extends ModelFields{
                 $deepnet = $deepnet->deepnet;
 
                 $this->fields = $deepnet->fields;
-                parent::__construct($this->fields, 
-                                    $objective_id, 
+                parent::__construct($this->fields,
+                                    $objective_id,
                                     null, null, true, true);
 
                 $this->regression = ($this->fields->$objective_id->optype ==
@@ -153,6 +153,11 @@ class Deepnet extends ModelFields{
                         $this->networks = $network->networks;
                     } else {
                         $this->networks = [];
+                    }
+                    try {
+                        $this->output_exposition = $this->network->output_exposition;
+                    } catch(e) {
+                        $this->output_exposition = $this->networks[0]->output_exposition;
                     }
                     $this->preprocess = $network->preprocess;
                     if (property_exists($network, "optimizer")) {
@@ -187,7 +192,7 @@ class Deepnet extends ModelFields{
             }
 
             if (array_key_exists($field_id, $this->tag_clouds)) {
-                $terms_occurences = expand_terms($this->tag_clouds[$field_id], $unique);          
+                $terms_occurences = expand_terms($this->tag_clouds[$field_id], $unique);
                 $columns = array_merge($columns, $terms_occurences);
             } elseif (array_key_exists($field_id, $this->items)) {
                 $terms_occurences = expand_terms($this->items[$field_id], $unique);
@@ -289,7 +294,7 @@ class Deepnet extends ModelFields{
                 }
             }
         }
-        
+
        return $this->to_prediction(sum_and_normalize($youts, $this->regression));
     }
 
@@ -301,11 +306,10 @@ class Deepnet extends ModelFields{
         $y_out = propagate($input_array, $layers);
 
         if ($this->regression) {
-            $moments = moments($model->output_exposition);
+            $moments = moments($this->output_exposition);
             $y_mean = $moments[0];
             $y_stdev = $moments[1];
             $y_out = destandardize($y_out, $y_mean, $y_stdev);
-
             return $y_out[0][0];
         }
 
@@ -318,7 +322,7 @@ class Deepnet extends ModelFields{
         if ($this->regression) {
             return $y_out;
         }
-        
+
         $y_sort = $y_out;
         arsort($y_sort[0]);
 
@@ -346,7 +350,7 @@ class Deepnet extends ModelFields{
         // based on input values.  The input fields must be an array
         // keyed by field name or field ID.
         //
-        // :param input_data: Input data to be predicted 
+        // :param input_data: Input data to be predicted
         //:param by_name: Boolean that is set to True if field_names
         // (as alternative to field ids) are used in the input_data
         // array
@@ -361,7 +365,7 @@ class Deepnet extends ModelFields{
             return $this->predict($input_data, $by_name);
         } else {
             $distribution = $this->predict($input_data, $by_name)['distribution'];
-            usort($distribution, function ($pred1, $pred2) 
+            usort($distribution, function ($pred1, $pred2)
                                  {return strnatcmp($pred1['category'], $pred2['category']);});
 
             if ($compact) {
