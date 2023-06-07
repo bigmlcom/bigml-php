@@ -3322,11 +3322,10 @@ final class BigMLRequest {
       } else {
 
          $headers_arr = explode("\n", $headers);
-         $headers_arr = array_change_key_case($headers_arr, CASE_LOWER);
          foreach($headers_arr as $header) {
-            if (stripos($header, 'location:') !== false) {
-               $cad = explode("location: ", $header);
-               $this->response["location"] =trim($cad[1]);
+            $cad = explode(": ", $header);
+            if (strtolower($cad[0]) === 'location') {
+               $this->response["location"] = trim($cad[1]);
                $location = $this->response["location"];
                break;
             }
