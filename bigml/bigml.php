@@ -3321,10 +3321,11 @@ final class BigMLRequest {
          $this->response["code"] = $code;
       } else {
 
-         $headers = explode("\n", $headers);
-         foreach($headers as $header) {
-            if (stripos($header, 'Location:') !== false) {
-               $cad = explode(": ", $header);
+         $headers_arr = explode("\n", $headers);
+         $headers_arr = array_change_key_case($headers_arr, CASE_LOWER)
+         foreach($headers_arr as $header) {
+            if (stripos($header, 'location:') !== false) {
+               $cad = explode("location: ", $header);
                $this->response["location"] =trim($cad[1]);
                $location = $this->response["location"];
                break;
@@ -3337,7 +3338,8 @@ final class BigMLRequest {
          $this->response["object"] = $r;
 
          if ($this->bigml) {
-            maybe_save($this->response, $this->bigml->getStorage(), $code, $location);
+            maybe_save($this->response, $this->bigml->getStorage(),
+                       $code, $location);
          }
       }
    }
