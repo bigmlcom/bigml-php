@@ -3323,9 +3323,8 @@ final class BigMLRequest {
 
          $headers = explode("\n", $headers);
          foreach($headers as $header) {
-            if (stripos($header, 'location:') !== false) {
-               $header = str_replace("Location:", "location:", $header);
-               $cad = explode("location:", $header);
+            if (stripos($header, 'Location:') !== false) {
+               $cad = explode(": ", $header);
                $this->response["location"] =trim($cad[1]);
                $location = $this->response["location"];
                break;
