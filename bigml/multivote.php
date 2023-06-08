@@ -1,6 +1,6 @@
 <?php
 #
-# Copyright 2012-2021 BigML
+# Copyright 2012-2023 BigML
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -140,9 +140,9 @@ class MultiVote {
    const DEFAULT_METHOD = 0;
    const BINS_LIMIT = 32;
 
-   public $COMBINATION_WEIGHTS = array(MultiVote::PLURALITY => null, MultiVote::CONFIDENCE => 'confidence', MultiVote::PROBABILITY => 'probability', MultiVote::THRESHOLD => null);
+   public $COMBINATION_WEIGHTS = array(MultiVote::PLURALITY => '', MultiVote::CONFIDENCE => 'confidence', MultiVote::PROBABILITY => 'probability', MultiVote::THRESHOLD => '');
    public $COMBINER_MAP = array(MultiVote::PLURALITY_CODE=>MultiVote::PLURALITY, MultiVote::CONFIDENCE_CODE => MultiVote::CONFIDENCE, MultiVote::PROBABILITY_CODE => MultiVote::PROBABILITY, MultiVote::THRESHOLD_CODE=>MultiVote::THRESHOLD);
-   public $WEIGHT_KEYS = array(MultiVote::PLURALITY => null, MultiVote::CONFIDENCE=> array('confidence'), MultiVote::PROBABILITY=>array('distribution', 'count'), MultiVote::THRESHOLD=> null);
+   public $WEIGHT_KEYS = array(MultiVote::PLURALITY => '', MultiVote::CONFIDENCE=> array('confidence'), MultiVote::PROBABILITY=>array('distribution', 'count'), MultiVote::THRESHOLD=> '');
 
    public $predictions;
    public $probabilities;
@@ -588,7 +588,7 @@ class MultiVote {
          }
 
          return $predictions->combine_categorical( (array_key_exists($method,  $this->COMBINATION_WEIGHTS)) ?
-                                         $this->COMBINATION_WEIGHTS[$method] : null,
+                                         $this->COMBINATION_WEIGHTS[$method] : '',
                                         $with_confidence, $add_confidence, $add_distribution, $add_count);
       }
    }
@@ -706,7 +706,7 @@ class MultiVote {
 
    }
 
-   function combine_categorical($weight_label=null, $with_confidence=false, $add_confidence=false,
+   function combine_categorical($weight_label='', $with_confidence=false, $add_confidence=false,
                                 $add_distribution=false, $add_count=False) {
       /*
          Returns the prediction combining votes by using the given weight:
@@ -722,13 +722,13 @@ class MultiVote {
       $mode = array();
 
       $weight = 0;
-      if ($weight_label == null) {
+      if ($weight_label == '') {
          $weight = 1;
       }
       $instances = 0;
 
       foreach($this->predictions as $prediction) {
-         if ($weight_label != null) {
+         if ($weight_label != '') {
 
             if (!in_array($weight_label, array_values($this->COMBINATION_WEIGHTS))) {
                throw new \Exception("Wrong weight_label value.");
@@ -871,7 +871,7 @@ class MultiVote {
          }
       }
 
-      if ($weight_label != null && (!is_string($weight_label) || (!$check_confidence_and_weight_label)) ) {
+      if ($weight_label != '' && (!is_string($weight_label) || (!$check_confidence_and_weight_label)) ) {
          throw new \Exception("Not enough data to use the selected prediction method. Lacks " . $weight_label . " information.");
       }
 
@@ -880,7 +880,7 @@ class MultiVote {
       $weight = 1;
 
       foreach($predictions as $prediction) {
-         if ($weight_label != null) {
+         if ($weight_label != '') {
             $weight = $prediction->$weight_label;
          }
 
